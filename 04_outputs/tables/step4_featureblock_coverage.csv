@@ -1,0 +1,4 @@
+feature_block,subjects_with_any_data,coverage_pct_of_baseline
+VITALSIGNS,4438,81.64091243561442
+FVC,2896,53.27446651949963
+FINAL (baseline+vitals+fvc),5436,100.0
