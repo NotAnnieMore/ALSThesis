@@ -319,6 +319,55 @@ Based on these findings, we proceed with the \textbf{6-month horizon} as the pri
 
 
 % ============================================================
+\section{Statistical Comparison of Models}
+\label{sec:results_statistical_comparison}
+% ============================================================
+
+To assess whether the performance differences observed among the seven best-per-family models are statistically significant, we re-evaluate each model's best hyperparameters using the same 5-fold GroupKFold cross-validation protocol, collecting per-fold PR-AUC scores.
+
+\subsection{Per-Fold Performance}
+
+Figure~\ref{fig:step7_fold_boxplot} shows the per-fold PR-AUC distribution for each model.
+All seven models exhibit substantial fold-to-fold variance (standard deviations between 0.036 and 0.055), driven by both the small number of folds and the fold-wise label definition protocol, where the 30th-percentile cutoff is recalculated on each training fold.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.88\linewidth]{images/figures/step7_fold_prauc_boxplot.pdf}
+  \caption{Per-fold PR-AUC for the seven best-per-family models across 5-fold GroupKFold on the DEV set (6-month horizon).
+  Individual fold values are annotated; red dashed lines indicate the mean.
+  XGBoost (unbalanced) has the highest mean PR-AUC (0.434), but all models have overlapping distributions.}
+  \label{fig:step7_fold_boxplot}
+\end{figure}
+
+\subsection{Friedman Test and Pairwise Comparisons}
+
+A Friedman test is applied to the $7 \times 5$ matrix of per-fold PR-AUC scores to determine whether at least one model's median rank differs significantly from the others.
+The test yields $\chi^2 = 12.43$ with $p = 0.053$, marginally non-significant at $\alpha = 0.05$.
+
+Despite the non-significant Friedman result, we present the full pairwise Wilcoxon signed-rank analysis with Bonferroni correction (21 comparisons) for completeness.
+As expected given the Friedman outcome, no pair achieves statistical significance after correction (Table~\ref{tab:step7_pairwise} and Figure~\ref{fig:step7_heatmap}).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.75\linewidth]{images/figures/step7_pairwise_heatmap.pdf}
+  \caption{Heatmap of Bonferroni-corrected $p$-values from pairwise Wilcoxon signed-rank tests.
+  Green cells indicate higher $p$-values (no significant difference); no cell reaches $p < 0.05$ after correction.}
+  \label{fig:step7_heatmap}
+\end{figure}
+
+\input{images/tables/step7_pairwise_wilcoxon.tex}
+
+\subsection{Interpretation}
+
+The lack of significant differences among the seven models is consistent with the literature on clinical ALS prediction, where modest sample sizes and high outcome variability limit the statistical power of cross-validated comparisons~\cite{kueffner2019}.
+With only $k\!=\!5$ folds, the Wilcoxon signed-rank test has a minimum achievable $p$-value of $2/2^5 = 0.0625$, which exceeds $\alpha = 0.05$ even before Bonferroni correction.
+In practical terms, this means that no pairwise comparison can reach significance with 5 folds, regardless of the effect size.
+
+Nevertheless, XGBoost (unbalanced) achieves the highest mean PR-AUC in all evaluation stages---Optuna tuning, cross-validation re-evaluation, and held-out testing---providing converging evidence for its selection as the final model.
+The decision to select XGBoost is therefore based on consistent rank ordering across multiple evaluation phases, not on a single statistical test.
+
+
+% ============================================================
 \section{Threshold Optimisation}
 \label{sec:results_threshold_xgb}
 % ============================================================
