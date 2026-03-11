@@ -28,12 +28,16 @@ from scipy.stats import spearmanr
 
 # ── paths ──
 ROOT       = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-FIG_DIR    = os.path.join(ROOT, "04_outputs", "figures")
-TAB_DIR    = os.path.join(ROOT, "04_outputs", "tables")
+FIG_DIR    = os.path.join(ROOT, "04_outputs", "figures", "step5_tuning")
+TAB_DIR    = os.path.join(ROOT, "04_outputs", "tables", "step5_tuning")
+OVERLEAF_FIG = os.path.join(ROOT, "overleaf", "images", "figures")
+OVERLEAF_TAB = os.path.join(ROOT, "overleaf", "images", "tables")
 os.makedirs(FIG_DIR, exist_ok=True)
+os.makedirs(OVERLEAF_FIG, exist_ok=True)
+os.makedirs(OVERLEAF_TAB, exist_ok=True)
 
 SUMMARY_6M        = os.path.join(TAB_DIR, "step5_tuning_summary_6m.csv")
-FVC_MISSINGNESS   = os.path.join(TAB_DIR, "step4_fvc_missingness_analysis.csv")
+FVC_MISSINGNESS   = os.path.join(ROOT, "04_outputs", "tables", "step4", "step4_fvc_missingness_analysis.csv")
 
 t_start = time.time()
 
@@ -281,6 +285,19 @@ fig.savefig(os.path.join(FIG_DIR, "step5v2_fvc_missingness_forest.pdf"), dpi=150
 fig.savefig(os.path.join(FIG_DIR, "step5v2_fvc_missingness_forest.png"), dpi=150)
 plt.close(fig)
 print("  [OK] FVC missingness forest plot saved")
+
+
+# ════════════════════════════════════════════════════════════
+# Copy to overleaf
+# ════════════════════════════════════════════════════════════
+import shutil
+for f in os.listdir(FIG_DIR):
+    if f.endswith(".png"):
+        shutil.copy2(os.path.join(FIG_DIR, f), os.path.join(OVERLEAF_FIG, f))
+for f in os.listdir(TAB_DIR):
+    if f.endswith(".tex"):
+        shutil.copy2(os.path.join(TAB_DIR, f), os.path.join(OVERLEAF_TAB, f))
+print("  → Copied figures/tables to overleaf/images/")
 
 
 # ════════════════════════════════════════════════════════════

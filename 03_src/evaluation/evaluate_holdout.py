@@ -82,9 +82,11 @@ from xgboost import XGBClassifier
 # Config
 # ─────────────────────────────────────────────────────────────
 PROCESSED   = os.path.join("01_data", "processed")
-OUT_TABLES  = os.path.join("04_outputs", "tables")
-OUT_FIGURES = os.path.join("04_outputs", "figures")
-TUNING_DIR  = os.path.join(OUT_TABLES, "step5_tuning")
+OUT_TABLES  = os.path.join("04_outputs", "tables", "step6_holdout")
+OUT_FIGURES = os.path.join("04_outputs", "figures", "step6_holdout")
+TUNING_DIR  = os.path.join("04_outputs", "tables", "step5_tuning")
+OVERLEAF_FIG = os.path.join("overleaf", "images", "figures")
+OVERLEAF_TAB = os.path.join("overleaf", "images", "tables")
 
 HORIZON    = "6m"
 SEED       = 42
@@ -552,6 +554,8 @@ def main():
     t0 = time.time()
     os.makedirs(OUT_FIGURES, exist_ok=True)
     os.makedirs(OUT_TABLES, exist_ok=True)
+    os.makedirs(OVERLEAF_FIG, exist_ok=True)
+    os.makedirs(OVERLEAF_TAB, exist_ok=True)
 
     print("=" * 60)
     print("  Step 6 — Held-Out Test Set Evaluation (6 m)")
@@ -670,6 +674,16 @@ def main():
     # 6) LaTeX table
     tex_path = os.path.join(OUT_TABLES, "step6_test_metrics.tex")
     write_latex_table(all_rows, tex_path)
+
+    # 7) Copy to overleaf
+    import shutil
+    for f in os.listdir(OUT_FIGURES):
+        if f.endswith(".png"):
+            shutil.copy2(os.path.join(OUT_FIGURES, f), os.path.join(OVERLEAF_FIG, f))
+    for f in os.listdir(OUT_TABLES):
+        if f.endswith(".tex"):
+            shutil.copy2(os.path.join(OUT_TABLES, f), os.path.join(OVERLEAF_TAB, f))
+    print("  → Copied figures/tables to overleaf/images/")
 
     elapsed = time.time() - t0
     print(f"\n{'='*60}")

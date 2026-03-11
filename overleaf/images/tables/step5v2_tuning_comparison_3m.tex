@@ -1,0 +1,20 @@
+\begin{table}[ht]
+\centering
+\caption{Optuna-tuned model comparison (3-month horizon, DEV set, GroupKFold $K\!=\!5$, 60 trials). Models ranked by PR-AUC. Best value per metric in \textbf{bold}.}
+\label{tab:step5v2_tuning_3m}
+\small
+\begin{tabular}{llcccc}
+\toprule
+Model & Mode & PR-AUC & ROC-AUC & F1\textsubscript{@0.5} & F2\textsubscript{@0.5} \\
+\midrule
+XGBoost & balanced & \textbf{0.426 $\pm$ 0.036} & \textbf{0.634} & \textbf{0.465} & \textbf{0.523} \\
+XGBoost & unbalanced & 0.423 $\pm$ 0.042 & 0.626 & 0.099 & 0.067 \\
+LightGBM & unbalanced & 0.423 $\pm$ 0.037 & 0.625 & 0.148 & 0.103 \\
+LightGBM & balanced & 0.422 $\pm$ 0.040 & 0.620 & 0.444 & 0.491 \\
+RandomForest & balanced & 0.414 $\pm$ 0.050 & 0.628 & 0.446 & 0.483 \\
+RandomForest & unbalanced & 0.410 $\pm$ 0.026 & 0.627 & 0.000 & 0.000 \\
+LogisticRegression & balanced & 0.396 $\pm$ 0.031 & 0.627 & 0.461 & 0.519 \\
+LogisticRegression & unbalanced & 0.395 $\pm$ 0.032 & 0.627 & 0.052 & 0.034 \\
+\bottomrule
+\end{tabular}
+\end{table}

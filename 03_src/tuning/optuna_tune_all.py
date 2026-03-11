@@ -545,7 +545,7 @@ def main():
         summary = pd.DataFrame(all_results)[summary_cols]
         summary = summary.sort_values("pr_auc_mean", ascending=False)
 
-        out_summary = os.path.join(OUT_TABLES, f"step5_tuning_summary_{horizon}.csv")
+        out_summary = os.path.join(OUT_TUNING, f"step5_tuning_summary_{horizon}.csv")
         summary.to_csv(out_summary, index=False)
 
         print(f"\n{'='*70}")

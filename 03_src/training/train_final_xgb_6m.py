@@ -41,7 +41,7 @@ from xgboost import XGBClassifier
 # ----------------------------
 DATASET_REL_PATH = os.path.join("01_data", "processed", "dataset_6m_v1.csv")
 BEST_PARAMS_REL_PATH = os.path.join(
-    "04_outputs", "tables", "optuna_xgb_6m_best_params.json")
+    "04_outputs", "tables", "step5_tuning", "optuna_xgb_6m_best_params.json")
 
 ID_COL = "subject_id"
 SLOPE_COL = "slope_180d_per_30d"

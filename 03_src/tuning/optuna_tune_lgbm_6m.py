@@ -157,7 +157,7 @@ def main():
     best_params = study.best_params
     best_value = float(study.best_value)
 
-    out_dir = os.path.join("04_outputs", "tables")
+    out_dir = os.path.join("04_outputs", "tables", "step5_tuning")
     os.makedirs(out_dir, exist_ok=True)
 
     trials_path = os.path.join(out_dir, "optuna_lgbm_6m_trials.csv")

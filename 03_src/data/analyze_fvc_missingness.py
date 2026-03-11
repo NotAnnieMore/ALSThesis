@@ -25,7 +25,7 @@ import pandas as pd
 from scipy import stats
 
 PROCESSED  = os.path.join("01_data", "processed")
-OUT_TABLES = os.path.join("04_outputs", "tables")
+OUT_TABLES = os.path.join("04_outputs", "tables", "step4")
 
 
 def cohens_d(group1, group2):

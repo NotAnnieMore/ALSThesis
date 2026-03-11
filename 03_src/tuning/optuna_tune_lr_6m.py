@@ -133,7 +133,7 @@ def main():
         f"[INFO] Starting Optuna for LR (6m) | N={len(X)} | trials={n_trials}")
     study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
 
-    out_dir = os.path.join("04_outputs", "tables")
+    out_dir = os.path.join("04_outputs", "tables", "step5_tuning")
     os.makedirs(out_dir, exist_ok=True)
 
     trials_path = os.path.join(out_dir, "optuna_lr_6m_trials.csv")

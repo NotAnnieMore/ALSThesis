@@ -45,9 +45,11 @@ from lightgbm import LGBMClassifier
 # ── paths ──
 ROOT       = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROCESSED  = os.path.join(ROOT, "01_data", "processed")
-TAB_DIR    = os.path.join(ROOT, "04_outputs", "tables")
-FIG_DIR    = os.path.join(ROOT, "04_outputs", "figures")
-TUNING_DIR = os.path.join(TAB_DIR, "step5_tuning")
+TAB_DIR    = os.path.join(ROOT, "04_outputs", "tables", "step5_ablation")
+FIG_DIR    = os.path.join(ROOT, "04_outputs", "figures", "step5_ablation")
+TUNING_DIR = os.path.join(ROOT, "04_outputs", "tables", "step5_tuning")
+OVERLEAF_FIG = os.path.join(ROOT, "overleaf", "images", "figures")
+OVERLEAF_TAB = os.path.join(ROOT, "overleaf", "images", "tables")
 
 HORIZON    = "6m"
 N_SPLITS   = 5
@@ -291,6 +293,16 @@ def main():
     with open(tex_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
     print(f"  Saved LaTeX → {tex_path}")
+
+    # Copy to overleaf
+    import shutil
+    for fl in os.listdir(FIG_DIR):
+        if fl.endswith(".png"):
+            shutil.copy2(os.path.join(FIG_DIR, fl), os.path.join(OVERLEAF_FIG, fl))
+    for fl in os.listdir(TAB_DIR):
+        if fl.endswith(".tex"):
+            shutil.copy2(os.path.join(TAB_DIR, fl), os.path.join(OVERLEAF_TAB, fl))
+    print("  → Copied figures/tables to overleaf/images/")
 
     elapsed_total = time.time() - t_global
     print(f"\n  Total ablation time: {elapsed_total:.1f}s")

@@ -9,7 +9,7 @@ import pandas as pd
 RAW        = os.path.join("01_data", "raw")
 INTERIM    = os.path.join("01_data", "interim")
 PROCESSED  = os.path.join("01_data", "processed")
-OUT_TABLES = os.path.join("04_outputs", "tables")
+OUT_TABLES = os.path.join("04_outputs", "tables", "step4")
 
 # ---------- Load sources ----------
 base = pd.read_csv(os.path.join(INTERIM, "baseline_table_ALSFRS_R.csv"))

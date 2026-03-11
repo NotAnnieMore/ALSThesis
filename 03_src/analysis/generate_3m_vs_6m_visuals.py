@@ -24,12 +24,17 @@ from matplotlib.patches import Patch
 
 # ── paths ──
 ROOT    = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-FIG_DIR = os.path.join(ROOT, "04_outputs", "figures")
-TAB_DIR = os.path.join(ROOT, "04_outputs", "tables")
-os.makedirs(FIG_DIR, exist_ok=True)
+FIG_DIR_3M = os.path.join(ROOT, "04_outputs", "figures", "step5_3m_vs_6m")
+FIG_DIR_TUNING = os.path.join(ROOT, "04_outputs", "figures", "step5_tuning")
+TAB_DIR_TUNING = os.path.join(ROOT, "04_outputs", "tables", "step5_tuning")
+TAB_DIR_COMP   = os.path.join(ROOT, "04_outputs", "tables", "step5_comparison")
+OVERLEAF_FIG = os.path.join(ROOT, "overleaf", "images", "figures")
+OVERLEAF_TAB = os.path.join(ROOT, "overleaf", "images", "tables")
+for d in [FIG_DIR_3M, FIG_DIR_TUNING, TAB_DIR_TUNING, TAB_DIR_COMP, OVERLEAF_FIG, OVERLEAF_TAB]:
+    os.makedirs(d, exist_ok=True)
 
-SUMMARY_3M = os.path.join(TAB_DIR, "step5_tuning_summary_3m.csv")
-SUMMARY_6M = os.path.join(TAB_DIR, "step5_tuning_summary_6m.csv")
+SUMMARY_3M = os.path.join(TAB_DIR_TUNING, "step5_tuning_summary_3m.csv")
+SUMMARY_6M = os.path.join(TAB_DIR_TUNING, "step5_tuning_summary_6m.csv")
 
 t_start = time.time()
 
@@ -66,8 +71,8 @@ ax.legend(handles=[Patch(color="#3274a1", label="Unbalanced"),
           loc="lower right", fontsize=9)
 ax.set_xlim(0.30, 0.50)
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR, "step5v2_3m_prauc_barchart.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR, "step5v2_3m_prauc_barchart.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_prauc_barchart.pdf"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_prauc_barchart.png"), dpi=150)
 plt.close(fig)
 print("  [OK] 3m PR-AUC bar chart saved")
 
@@ -110,8 +115,8 @@ ax.set_title("PR-AUC Comparison: 3-Month vs 6-Month Horizons (DEV)", fontsize=13
 ax.legend(loc="lower right", fontsize=10)
 ax.set_xlim(0.30, 0.50)
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR, "step5v2_3m_vs_6m_prauc.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR, "step5v2_3m_vs_6m_prauc.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_prauc.pdf"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_prauc.png"), dpi=150)
 plt.close(fig)
 print("  [OK] 3m vs 6m grouped bar chart saved")
 
@@ -159,8 +164,8 @@ ax.set_xlim(lims)
 ax.set_ylim(lims)
 ax.set_aspect("equal")
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR, "step5v2_3m_vs_6m_scatter.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR, "step5v2_3m_vs_6m_scatter.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_scatter.pdf"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_scatter.png"), dpi=150)
 plt.close(fig)
 print("  [OK] 3m vs 6m scatter plot saved")
 
@@ -207,7 +212,7 @@ for _, row in df3_sorted.iterrows():
 
 lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
 
-tex_path = os.path.join(TAB_DIR, "step5v2_tuning_comparison_3m.tex")
+tex_path = os.path.join(TAB_DIR_TUNING, "step5v2_tuning_comparison_3m.tex")
 with open(tex_path, "w", encoding="utf-8") as f:
     f.write("\n".join(lines))
 print(f"  [OK] 3m LaTeX tuning table saved → {tex_path}")
@@ -244,7 +249,7 @@ for _, row in merged_sorted.iterrows():
 
 lines2 += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
 
-tex2_path = os.path.join(TAB_DIR, "step5v2_3m_vs_6m_comparison.tex")
+tex2_path = os.path.join(TAB_DIR_COMP, "step5v2_3m_vs_6m_comparison.tex")
 with open(tex2_path, "w", encoding="utf-8") as f:
     f.write("\n".join(lines2))
 print(f"  [OK] 3m vs 6m LaTeX comparison table saved → {tex2_path}")
@@ -272,10 +277,25 @@ ax.legend(handles=[Patch(color="#3274a1", label="Unbalanced"),
           loc="lower right", fontsize=9)
 ax.set_xlim(0.30, 0.50)
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR, "step5v2_prauc_barchart.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR, "step5v2_prauc_barchart.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_TUNING, "step5v2_prauc_barchart.pdf"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_TUNING, "step5v2_prauc_barchart.png"), dpi=150)
 plt.close(fig)
 print("  [OK] 6m PR-AUC bar chart regenerated with numeric annotations")
+
+
+# ════════════════════════════════════════════════════════════
+# Copy to overleaf
+# ════════════════════════════════════════════════════════════
+import shutil
+for d in [FIG_DIR_3M, FIG_DIR_TUNING]:
+    for f in os.listdir(d):
+        if f.endswith(".png"):
+            shutil.copy2(os.path.join(d, f), os.path.join(OVERLEAF_FIG, f))
+for d in [TAB_DIR_TUNING, TAB_DIR_COMP]:
+    for f in os.listdir(d):
+        if f.endswith(".tex"):
+            shutil.copy2(os.path.join(d, f), os.path.join(OVERLEAF_TAB, f))
+print("  → Copied figures/tables to overleaf/images/")
 
 
 # ════════════════════════════════════════════════════════════

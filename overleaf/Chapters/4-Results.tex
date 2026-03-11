@@ -88,7 +88,7 @@ FVC is available for approximately 56\% of the 6-month cohort.
 Because missing data can introduce bias if its absence is related to the outcome (Missing Not At Random, MNAR), it is essential to test whether patients with and without FVC differ systematically on key clinical variables.
 We compared the two groups across 11 variables using Mann--Whitney~U tests for continuous variables and $\chi^2$ tests for categorical variables, with effect sizes reported as Cohen's~$d$ and Cramér's~$V$ respectively (Table~\ref{tab:fvc_missingness}).
 
-\input{04_outputs/tables/step5v2_fvc_missingness.tex}
+\input{images/tables/step5v2_fvc_missingness.tex}
 
 \noindent\textbf{Key findings.}
 The three variables most directly related to the prediction task---ALSFRS-R at baseline ($p\!=\!0.345$, $d\!=\!0.027$), age ($p\!=\!0.459$, $d\!=\!0.031$), and the target slope ($p\!=\!0.188$, $d\!=\!0.061$)---show \emph{no significant difference} between patients with and without FVC data.
@@ -128,11 +128,11 @@ The full tuning required approximately 35 minutes of wall-clock time on a single
 
 Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the results.
 
-\input{04_outputs/tables/step5v2_tuning_comparison.tex}
+\input{images/tables/step5v2_tuning_comparison.tex}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_prauc_barchart.png}
+  \includegraphics[width=0.95\linewidth]{images/figures/step5v2_prauc_barchart.png}
   \caption{PR-AUC comparison of Optuna-tuned models (6-month, DEV). Blue bars: unbalanced mode; orange bars: balanced mode. Error bars show $\pm 1$ standard deviation across 5 folds.}
   \label{fig:prauc_barchart}
 \end{figure}
@@ -166,7 +166,7 @@ This analysis supports the conclusion that the choice between balanced and unbal
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_balanced_vs_unbalanced.png}
+  \includegraphics[width=0.95\linewidth]{images/figures/step5v2_balanced_vs_unbalanced.png}
   \caption{Paired comparison of unbalanced ($\circ$) vs balanced ($\square$) modes for each model. Left panel: PR-AUC; right panel: ROC-AUC. Lines connect the same model across both modes.}
   \label{fig:bal_vs_unbal}
 \end{figure}
@@ -192,7 +192,7 @@ These findings validate PR-AUC as an appropriate primary metric for model select
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.8\linewidth]{04_outputs/figures/step5v2_metric_heatmap.png}
+  \includegraphics[width=0.8\linewidth]{images/figures/step5v2_metric_heatmap.png}
   \caption{Heatmap of cross-validation metric values for all 13 model $\times$ mode configurations (6-month, DEV set). Models sorted by PR-AUC in descending order. The disconnection between threshold-free (PR-AUC, ROC-AUC) and threshold-dependent ($F_1$, $F_2$ at 0.5) metrics is clearly visible.}
   \label{fig:metric_heatmap}
 \end{figure}
@@ -215,11 +215,11 @@ The four top-ranked models were evaluated across six cumulative feature configur
 \textbf{F}~(full v2 with labs, $n\!=\!35$).
 Blocks C and D are designed to disentangle the independent contribution of FVC (C) from the joint effect of FVC and vitals (D).
 
-\input{04_outputs/tables/step5v2_ablation.tex}
+\input{images/tables/step5v2_ablation.tex}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_ablation_prauc.png}
+  \includegraphics[width=0.95\linewidth]{images/figures/step5v2_ablation_prauc.png}
   \caption{Cumulative feature block ablation (6-month, DEV). PR-AUC with Optuna-tuned hyperparameters. Each line represents one model; each point adds a feature block.}
   \label{fig:ablation_v2}
 \end{figure}
@@ -257,11 +257,11 @@ To assess the generalisability of the pipeline across prediction horizons, we re
 
 Table~\ref{tab:step5v2_tuning_3m} and Figure~\ref{fig:prauc_barchart_3m} present the 3-month results.
 
-\input{04_outputs/tables/step5v2_tuning_comparison_3m.tex}
+\input{images/tables/step5v2_tuning_comparison_3m.tex}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_3m_prauc_barchart.png}
+  \includegraphics[width=0.95\linewidth]{images/figures/step5v2_3m_prauc_barchart.png}
   \caption{PR-AUC comparison of Optuna-tuned models (3-month, DEV, $n\!=\!1{,}925$). Blue: unbalanced; orange: balanced. Numerical annotations show mean PR-AUC.}
   \label{fig:prauc_barchart_3m}
 \end{figure}
@@ -283,18 +283,18 @@ Table~\ref{tab:step5v2_tuning_3m} and Figure~\ref{fig:prauc_barchart_3m} present
 
 Table~\ref{tab:3m_vs_6m} and Figure~\ref{fig:3m_vs_6m_scatter} compare PR-AUC across the two horizons for matched model configurations.
 
-\input{04_outputs/tables/step5v2_3m_vs_6m_comparison.tex}
+\input{images/tables/step5v2_3m_vs_6m_comparison.tex}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_3m_vs_6m_prauc.png}
+  \includegraphics[width=0.95\linewidth]{images/figures/step5v2_3m_vs_6m_prauc.png}
   \caption{Side-by-side PR-AUC comparison between 3-month and 6-month horizons for matched model $\times$ mode configurations. Annotations show exact PR-AUC values.}
   \label{fig:3m_vs_6m_grouped}
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.7\linewidth]{04_outputs/figures/step5v2_3m_vs_6m_scatter.png}
+  \includegraphics[width=0.7\linewidth]{images/figures/step5v2_3m_vs_6m_scatter.png}
   \caption{Scatter plot of 3-month vs 6-month PR-AUC for each model configuration. Points above the parity line perform better at 3 months; below, better at 6 months. Numerical $\Delta$ annotations quantify the difference.}
   \label{fig:3m_vs_6m_scatter}
 \end{figure}
@@ -339,7 +339,7 @@ Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sw
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.82\linewidth]{images/step6_threshold_sweep.png}
+  \includegraphics[width=0.82\linewidth]{images/figures/step6_threshold_sweep.png}
   \caption{Threshold sweep on DEV out-of-fold predictions for XGBoost (unbalanced, 6\,m).
   The $F_1$-optimal threshold ($t\!=\!0.21$, blue dotted) and Youden's~$J$ operating point ($t\!=\!0.35$, purple dotted) are annotated.}
   \label{fig:step6_threshold_sweep}
@@ -396,7 +396,7 @@ Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC acr
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.82\linewidth]{images/step6_test_prauc_bar.png}
+  \includegraphics[width=0.82\linewidth]{images/figures/step6_test_prauc_bar.png}
   \caption{PR-AUC on the held-out TEST set (6\,m) for the seven best-per-family models.
   The dashed line indicates the baseline prevalence (0.30).}
   \label{fig:step6_test_prauc_bar}
@@ -408,14 +408,14 @@ Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the pre
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.82\linewidth]{images/step6_pr_curves.png}
+  \includegraphics[width=0.82\linewidth]{images/figures/step6_pr_curves.png}
   \caption{Precision--Recall curves on the held-out TEST set (6\,m). The dashed line indicates the baseline prevalence ($0.30$).}
   \label{fig:step6_pr_curves}
 \end{figure}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.82\linewidth]{images/step6_roc_curves.png}
+  \includegraphics[width=0.82\linewidth]{images/figures/step6_roc_curves.png}
   \caption{ROC curves on the held-out TEST set (6\,m). The dashed line indicates the random classifier.}
   \label{fig:step6_roc_curves}
 \end{figure}
@@ -462,7 +462,7 @@ XGBoost achieves a Brier score of \textbf{0.197}, the lowest among all models, i
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.65\linewidth]{images/step6_calibration.png}
+  \includegraphics[width=0.65\linewidth]{images/figures/step6_calibration.png}
   \caption{Calibration reliability diagram for XGBoost (unbalanced) on the TEST set. The dashed line indicates perfect calibration.}
   \label{fig:step6_calibration}
 \end{figure}
@@ -474,7 +474,7 @@ Figure~\ref{fig:step6_cm} presents the confusion matrix at the $F_1$-optimal thr
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.50\linewidth]{images/step6_confusion_matrix.png}
+  \includegraphics[width=0.50\linewidth]{images/figures/step6_confusion_matrix.png}
   \caption{Confusion matrix for XGBoost (unbalanced) on the TEST set at $t\!=\!0.21$.}
   \label{fig:step6_cm}
 \end{figure}
