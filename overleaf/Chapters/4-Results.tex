@@ -117,6 +117,121 @@ All v2 datasets (used in tuning, ablation, and all subsequent analyses) were reg
 
 
 % ============================================================
+\section{Exploratory Analysis: Treatment vs Disease Progression}
+\label{sec:results_eda_treatment}
+% ============================================================
+
+Three treatment-related features are available in the v2 dataset: clinical trial arm (\texttt{study\_arm}), pre-baseline riluzole use (\texttt{riluzole\_pre\_t0}), and the number of concomitant medications (\texttt{n\_conmeds\_pre\_t0}).
+Before incorporating these features into the predictive pipeline, we investigate their descriptive association with the ALSFRS-R slope and rapid-progression rate.
+
+\textbf{Important caveat.}
+This analysis is strictly \emph{descriptive} (observational).
+PRO-ACT aggregates data from multiple clinical trials, so ``Active'' denotes the experimental arm of different studies (lithium, dexpramipexole, ceftriaxone, among others), most of which did not demonstrate efficacy.
+Riluzole use is not randomised and is subject to indication bias.
+No causal claims can be drawn without dedicated causal-inference methods (e.g.\ propensity score matching, IPTW).
+
+\subsection{Study Arm: Active vs Placebo}
+\label{subsec:results_eda_arm}
+
+Of the 1{,}392 subjects in the 6-month cohort, 506 belong to the Active arm, 762 to Placebo, and 124 have no arm information.
+The Active group shows a lower rapid-progression rate ($26.5$\%) compared to Placebo ($31.6$\%), with the NaN group at $34.7$\% (Table~\ref{tab:eda_treat_arm}).
+Median slopes are similar: $-0.791$ (Active) vs $-0.819$ (Placebo) points/30\,d.
+
+\begin{table}[ht]
+\centering
+\caption{Descriptive statistics by study arm (6-month cohort).}
+\label{tab:eda_treat_arm}
+\small
+\begin{tabular}{lrccc}
+\toprule
+Group & $N$ & Rapid (\%) & Slope mean & Slope median \\
+\midrule
+Active   & 506 & 26.5 & $-0.901$ & $-0.791$ \\
+Placebo  & 762 & 31.6 & $-0.973$ & $-0.819$ \\
+NaN      & 124 & 34.7 & $-1.022$ & $-0.689$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:eda_arm_dist} shows the slope distributions and boxplots by arm, revealing largely overlapping distributions.
+Figure~\ref{fig:eda_arm_rapid} displays the rapid-progression rates with numeric annotations.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_arm_slope_dist.png}
+  \caption{ALSFRS-R slope distribution by study arm: histogram (left) and boxplot (right). The dashed red line marks the 30th-percentile threshold ($P_{30} = -1.25$).}
+  \label{fig:eda_arm_dist}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.55\linewidth]{images/figures/eda_treat_arm_rapid_rate.png}
+  \caption{Rapid-progression rate by study arm. The dashed line indicates the global prevalence (30\%).}
+  \label{fig:eda_arm_rapid}
+\end{figure}
+
+A $\chi^2$ test of independence between study arm and rapid-progression status yields $\chi^2 = 3.62$, $p = 0.057$ (marginally non-significant at $\alpha = 0.05$).
+A Mann-Whitney~$U$ test comparing the slope distributions of Active vs Placebo gives $U = 200{,}472$, $p = 0.229$, confirming no statistically significant difference.
+The 5-percentage-point gap in rapid rates is therefore likely attributable to the heterogeneity of the ``Active'' arm and chance variation.
+
+\subsection{Riluzole}
+\label{subsec:results_eda_riluzole}
+
+Riluzole---the only disease-modifying therapy approved for ALS at the time of the PRO-ACT trials---was used pre-baseline by 902 subjects (64.8\%).
+Patients with and without riluzole show nearly identical rapid-progression rates ($30.8$\% vs $28.6$\%), consistent with the established literature reporting a modest survival benefit but no significant impact on ALSFRS-R decline~\cite{Miller2012}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_riluzole_slope_dist.png}
+  \caption{Slope distribution (left) and rapid-progression rate (right) by riluzole use. Median slopes are annotated on each bar.}
+  \label{fig:eda_riluzole}
+\end{figure}
+
+A $\chi^2$ test confirms no significant association ($\chi^2 = 0.66$, $p = 0.416$).
+
+\subsection{Interaction: Study Arm $\times$ Riluzole}
+\label{subsec:results_eda_interaction}
+
+Crossing both treatment variables reveals a noteworthy pattern (Figure~\ref{fig:eda_interaction}): the Placebo + riluzole subgroup has the highest rapid-progression rate ($33.5$\%, $n\!=\!526$), while Active + riluzole has the lowest ($25.7$\%, $n\!=\!315$).
+In contrast, both ``no riluzole'' subgroups cluster near $27.5$\%.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.65\linewidth]{images/figures/eda_treat_interaction.png}
+  \caption{Rapid-progression rate by study arm $\times$ riluzole subgroup. The dashed line indicates the global prevalence (30\%).}
+  \label{fig:eda_interaction}
+\end{figure}
+
+This pattern may reflect confounders: riluzole-taking patients in the Placebo arm may have been prescribed riluzole precisely because of perceived faster decline (indication bias), whereas in the Active arm, the experimental treatment may partially offset progression in the same at-risk subgroup.
+Without causal-inference methods, this remains a hypothesis.
+
+\subsection{Concomitant Medications and Top Drugs}
+\label{subsec:results_eda_conmeds}
+
+The number of pre-baseline concomitant medications (\texttt{n\_conmeds\_pre\_t0}) shows a non-linear relationship with rapid-progression rate: patients with 1--2 medications have the lowest rate ($22.8$\%, $n\!=\!149$), while those with 6--9 medications have the highest ($34.2$\%, $n\!=\!310$).
+This may reflect disease severity or comorbidity burden rather than a direct pharmacological effect.
+
+We further analysed the 15 most frequently prescribed pre-baseline medications by linking back to the raw \texttt{PROACT\_CONMEDS} table (Figure~\ref{fig:eda_top_meds}).
+Riluzole is the most common (48.2\% of the cohort), followed by Vitamin~E (25.4\%) and Ascorbic Acid (22.1\%).
+Two supplements---Betacarotene ($25.4$\%) and Nutrasense Createam ($26.9$\%)---are associated with below-average rapid rates, while Colecalciferol ($37.3$\%) and Sertraline ($35.3$\%) show the highest rates, although subgroup sizes are small ($n < 80$) and no corrections for multiple testing are applied.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.85\linewidth]{images/figures/eda_treat_top_meds.png}
+  \caption{Top 15 pre-baseline medications by cohort prevalence, coloured by whether their rapid-progression rate exceeds the global prevalence (30\%, red dashed line). Green bars fall below the global rate.}
+  \label{fig:eda_top_meds}
+\end{figure}
+
+\subsection{Summary}
+\label{subsec:results_eda_treat_summary}
+
+None of the treatment variables show a statistically significant association with rapid progression at the conventional $\alpha = 0.05$ level.
+The Active arm exhibits a marginally lower rapid rate ($p = 0.057$), but this is confounded by the heterogeneity of the experimental arms across trials.
+Riluzole use shows no detectable effect on ALSFRS-R decline ($p = 0.416$), consistent with its known mechanism of action (survival extension rather than functional preservation).
+These findings justify the inclusion of treatment features in the predictive model as \emph{covariates} that capture patient heterogeneity, while reinforcing that no causal interpretation of their coefficients or SHAP values should be made.
+
+
+% ============================================================
 \section{Unified Optuna Hyperparameter Tuning (6-Month Horizon)}
 \label{sec:results_optuna_v2}
 % ============================================================
@@ -572,6 +687,10 @@ The main findings are:
     The 6-month cohort ($N\!=\!1{,}392$) yields slope estimates of high quality (99.8\% based on $\geq 3$ data points).
   \item \textbf{Data quality.} A systematic BMI data-quality issue (147 mis-labelled height records) was identified and corrected.
     FVC missingness was confirmed as MAR (driven by study design, not by the outcome), supporting median imputation without outcome-dependent bias.
+  \item \textbf{Treatment features.} Descriptive analysis reveals no statistically significant association between treatment variables and rapid progression.
+    The Active arm shows a marginally lower rapid rate than Placebo ($26.5$\% vs $31.6$\%, $\chi^2$ $p = 0.057$), but this is confounded by inter-trial heterogeneity.
+    Riluzole use has no detectable association with ALSFRS-R decline ($p = 0.416$), consistent with its known mechanism of action.
+    These features are retained as covariates capturing patient heterogeneity, not as causal predictors.
   \item \textbf{Model selection.} Unified Optuna tuning of 7 model families across 13 configurations identifies XGBoost (unbalanced) as the top-ranked model by PR-AUC ($0.434 \pm 0.049$), followed by RF~unbalanced ($0.431$) and SVM~balanced ($0.425$).
     The narrow performance spread ($\Delta\!<\!0.05$) among the top models suggests a feature-driven, rather than model-driven, performance ceiling.
   \item \textbf{Class balancing.} Balanced vs unbalanced mode has minimal impact on the threshold-free PR-AUC but dramatically affects threshold-dependent metrics at $t\!=\!0.5$, confirming that threshold optimisation---not class weighting---is the appropriate strategy for this level of imbalance.
