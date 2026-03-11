@@ -1,0 +1,23 @@
+horizon,variable,type,n_with_fvc,n_without_fvc,mean_with,mean_without,test,statistic,p_value,effect_size,effect_type,significant_005
+6m,ALSFRS-R at baseline,continuous,784,608,38.107,38.257,Mann-Whitney U,231323.5,0.344988,0.027,Cohen d,False
+6m,Age,continuous,609,603,56.322,56.682,Mann-Whitney U,179101.5,0.458842,0.031,Cohen d,False
+6m,Slope (target),continuous,361,359,-0.792,-0.86,Mann-Whitney U,68474.5,0.187905,0.061,Cohen d,False
+6m,Creatinine,continuous,602,298,70.753,67.802,Mann-Whitney U,95881.0,0.091529,0.158,Cohen d,False
+6m,ALT,continuous,553,408,37.141,35.346,Mann-Whitney U,119858.5,0.097488,0.09,Cohen d,False
+6m,BMI,continuous,252,365,28.261,25.97,Mann-Whitney U,57375.0,0.0,0.468,Cohen d,True
+6m,Weight,continuous,610,493,79.807,77.431,Mann-Whitney U,165886.5,0.003169,0.146,Cohen d,True
+6m,N conmeds,continuous,784,608,6.3,3.931,Mann-Whitney U,289344.5,0.0,0.332,Cohen d,True
+6m,Sex,categorical,784,608,,,Chi-squared,0.7,0.407782,0.022,Cramer V,False
+6m,Study Arm,categorical,692,576,,,Chi-squared,161.5,0.0,0.357,Cramer V,True
+6m,Riluzole,categorical,784,608,,,Chi-squared,5.9,0.015095,0.065,Cramer V,True
+3m,ALSFRS-R at baseline,continuous,1111,1296,37.993,37.456,Mann-Whitney U,748084.5,0.097071,0.097,Cohen d,False
+3m,Age,continuous,1018,1295,56.059,56.954,Mann-Whitney U,632303.5,0.09206,0.08,Cohen d,False
+3m,Slope (target),continuous,1111,1296,-0.879,-0.926,Mann-Whitney U,735096.5,0.37221,0.041,Cohen d,False
+3m,Creatinine,continuous,864,682,67.688,63.44,Mann-Whitney U,326054.0,0.000309,0.236,Cohen d,True
+3m,ALT,continuous,795,859,36.177,33.572,Mann-Whitney U,381278.0,4e-05,0.128,Cohen d,True
+3m,BMI,continuous,190,448,29.154,26.133,Mann-Whitney U,55516.0,0.0,0.603,Cohen d,True
+3m,Weight,continuous,915,928,77.44,77.843,Mann-Whitney U,419448.5,0.654556,0.025,Cohen d,False
+3m,N conmeds,continuous,1111,1296,4.54,4.332,Mann-Whitney U,704322.0,0.353832,0.035,Cohen d,False
+3m,Sex,categorical,1111,1296,,,Chi-squared,0.1,0.748244,0.007,Cramer V,False
+3m,Study Arm,categorical,985,1040,,,Chi-squared,92.0,0.0,0.213,Cramer V,True
+3m,Riluzole,categorical,1111,1296,,,Chi-squared,164.2,0.0,0.261,Cramer V,True

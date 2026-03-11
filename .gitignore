@@ -1,0 +1,19 @@
+# Raw data (large files, not versioned)
+01_data/raw/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Compiled outputs
+*.joblib

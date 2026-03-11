@@ -100,6 +100,6 @@
     "verbosity": 0,
     "tree_method": "hist"
   },
-  "decision_threshold_old": null,
+  "decision_threshold_old": 0.25,
   "decision_threshold_reason": "sanity-check trade-off: chosen to balance recall and operational load"
 }

@@ -1,0 +1,7 @@
+block,n_6m,pct_6m,n_3m,pct_3m
+FVC,784,56.3,1111,46.2
+Labs (alt_t0),961,69.0,1654,68.7
+Labs (creatinine_t0),900,64.7,1546,64.2
+Treatment (riluzole=Yes),902,64.8,1429,59.4
+Treatment (study_arm),1268,91.1,2025,84.1
+Vitals,1121,80.5,1861,77.3

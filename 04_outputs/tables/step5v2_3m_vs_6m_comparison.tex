@@ -1,0 +1,20 @@
+\begin{table}[ht]
+\centering
+\caption{PR-AUC comparison across prediction horizons for matched model configurations. $\Delta$ = 3m $-$ 6m; positive values indicate better performance at 3 months.}
+\label{tab:3m_vs_6m}
+\small
+\begin{tabular}{llccc}
+\toprule
+Model & Mode & PR-AUC\textsubscript{6m} & PR-AUC\textsubscript{3m} & $\Delta$ \\
+\midrule
+XGBoost & unbalanced & 0.434 $\pm$ 0.049 & 0.423 $\pm$ 0.042 & -0.011 \\
+RandomForest & unbalanced & 0.431 $\pm$ 0.042 & 0.410 $\pm$ 0.026 & -0.021 \\
+RandomForest & balanced & 0.425 $\pm$ 0.046 & 0.414 $\pm$ 0.050 & -0.011 \\
+XGBoost & balanced & 0.424 $\pm$ 0.040 & 0.426 $\pm$ 0.036 & +0.002 \\
+LightGBM & balanced & 0.418 $\pm$ 0.036 & 0.422 $\pm$ 0.040 & +0.004 \\
+LightGBM & unbalanced & 0.415 $\pm$ 0.046 & 0.423 $\pm$ 0.037 & +0.008 \\
+LogisticRegression & balanced & 0.407 $\pm$ 0.051 & 0.396 $\pm$ 0.031 & -0.011 \\
+LogisticRegression & unbalanced & 0.401 $\pm$ 0.054 & 0.395 $\pm$ 0.032 & -0.006 \\
+\bottomrule
+\end{tabular}
+\end{table}

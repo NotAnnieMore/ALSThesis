@@ -1,0 +1,9 @@
+model,mode,horizon,pr_auc_mean,pr_auc_std,roc_auc_mean,roc_auc_std,f1_mean,f1_std,f2_mean,f2_std,elapsed_s
+XGBoost,balanced,3m,0.4261,0.0363,0.6342,0.042,0.4652,0.0322,0.5232,0.049,75.0
+XGBoost,unbalanced,3m,0.4234,0.0416,0.6265,0.0345,0.099,0.0105,0.067,0.0084,68.8
+LightGBM,unbalanced,3m,0.4234,0.0373,0.6249,0.0383,0.1479,0.0331,0.1031,0.0254,135.0
+LightGBM,balanced,3m,0.4224,0.0402,0.6203,0.0388,0.444,0.0378,0.4915,0.0491,132.6
+RandomForest,balanced,3m,0.4139,0.0501,0.6284,0.0398,0.4462,0.0386,0.4828,0.0508,219.1
+RandomForest,unbalanced,3m,0.4104,0.0256,0.627,0.0334,0.0,0.0,0.0,0.0,159.1
+LogisticRegression,balanced,3m,0.3959,0.0314,0.6272,0.028,0.4605,0.0224,0.5187,0.0207,9.7
+LogisticRegression,unbalanced,3m,0.3947,0.0321,0.6272,0.0282,0.0517,0.0204,0.0339,0.0133,13.3

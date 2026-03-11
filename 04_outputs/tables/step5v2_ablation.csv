@@ -1,0 +1,25 @@
+model,block,n_features,pr_auc_mean,pr_auc_std,roc_auc_mean,f1_mean,f2_mean,elapsed_s
+XGB_unbalanced,A: Baseline,15,0.4204,0.0555,0.62,0.0,0.0,0.8
+XGB_unbalanced,B: +Vitals,27,0.42,0.0414,0.6184,0.0797,0.0536,1.0
+XGB_unbalanced,C: +FVC,18,0.4296,0.0625,0.6211,0.0334,0.0217,0.9
+XGB_unbalanced,D: +Vitals+FVC,30,0.4318,0.052,0.6238,0.1139,0.0788,1.5
+XGB_unbalanced,E: +Treatment,33,0.423,0.0542,0.6188,0.1104,0.0775,1.0
+XGB_unbalanced,F: Full v2,35,0.4339,0.0492,0.6154,0.121,0.0851,1.0
+RF_unbalanced,A: Baseline,15,0.4088,0.0534,0.6162,0.0,0.0,1.7
+RF_unbalanced,B: +Vitals,27,0.4085,0.0399,0.6078,0.0055,0.0035,1.7
+RF_unbalanced,C: +FVC,18,0.4336,0.0669,0.6179,0.0071,0.0045,1.7
+RF_unbalanced,D: +Vitals+FVC,30,0.4183,0.0573,0.6078,0.029,0.0185,1.7
+RF_unbalanced,E: +Treatment,33,0.4174,0.056,0.6045,0.0301,0.0192,1.7
+RF_unbalanced,F: Full v2,35,0.431,0.0423,0.6101,0.023,0.0147,1.8
+LGBM_balanced,A: Baseline,15,0.4344,0.0663,0.6299,0.4658,0.5189,0.8
+LGBM_balanced,B: +Vitals,27,0.4205,0.0375,0.6244,0.4668,0.5137,1.0
+LGBM_balanced,C: +FVC,18,0.432,0.0656,0.6182,0.4617,0.5285,0.9
+LGBM_balanced,D: +Vitals+FVC,30,0.424,0.0454,0.6173,0.4507,0.5058,1.5
+LGBM_balanced,E: +Treatment,33,0.4254,0.0401,0.6155,0.4463,0.5022,0.9
+LGBM_balanced,F: Full v2,35,0.4184,0.0359,0.6148,0.4434,0.4987,0.9
+LR_balanced,A: Baseline,15,0.3952,0.0326,0.6134,0.458,0.5247,0.1
+LR_balanced,B: +Vitals,27,0.405,0.027,0.6116,0.4567,0.5198,0.1
+LR_balanced,C: +FVC,18,0.3997,0.0543,0.6129,0.4478,0.5134,0.1
+LR_balanced,D: +Vitals+FVC,30,0.4062,0.0492,0.6119,0.462,0.5315,0.1
+LR_balanced,E: +Treatment,33,0.4066,0.05,0.6107,0.4626,0.5306,0.1
+LR_balanced,F: Full v2,35,0.4069,0.0507,0.6112,0.4618,0.5273,0.1

@@ -1,0 +1,544 @@
+\chapter{Results and Discussion}
+\label{ch:results}
+
+% ============================================================
+\section{Cohort and Target Feasibility}
+\label{sec:results_cohort}
+% ============================================================
+
+\subsection{Eligibility by Horizon}
+\label{subsec:results_eligibility}
+Starting from $N\!=\!5{,}436$ subjects with at least one ALSFRS-R record in the PRO-ACT database, the effective cohort size is determined by the availability of follow-up measurements within each target-horizon window (Table~\ref{tab:eligibility}).
+
+For the \textbf{6-month horizon} ($H\!=\!180 \pm 7$\,d), the final dataset contains $N\!=\!1{,}392$ subjects (25.6\% of the initial pool), partitioned into DEV ($n\!=\!1{,}113$, 80\%) and TEST ($n\!=\!279$, 20\%).
+For the \textbf{3-month horizon} ($H\!=\!90 \pm 7$\,d), $N\!=\!2{,}407$ subjects (44.3\%) are eligible, split into DEV ($n\!=\!1{,}925$) and TEST ($n\!=\!482$).
+A total of 720 subjects are eligible at both horizons.
+The substantial attrition from 5{,}436 to 1{,}392 at 6 months reflects the requirement for follow-up ALSFRS-R measurements near the 180-day mark, confirming that longer horizons reduce the available sample but also yield more temporally stable slope estimates.
+
+\begin{table}[ht]
+\centering
+\caption{Cohort size and data partition by prediction horizon.}
+\label{tab:eligibility}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Horizon & $N$ & \% of PRO-ACT & DEV & TEST & Both horizons \\
+\midrule
+3 months & 2{,}407 & 44.3\% & 1{,}925 & 482 & \multirow{2}{*}{720} \\
+6 months & 1{,}392 & 25.6\% & 1{,}113 & 279 & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Target Definition and Slope Distribution}
+\label{subsec:results_target_summary}
+For each subject, functional progression is quantified as the ALSFRS-R slope between baseline and the target horizon, expressed in points per 30~days (see Section~\ref{sec:methods_slope}).
+Negative slopes indicate functional decline; the more negative, the faster the deterioration.
+
+The distribution of slopes is left-skewed for both horizons:
+\begin{itemize}
+  \item \textbf{6-month:} mean $= -0.95 \pm 0.89$\,pts/30d, median $= -0.80$, range $[-5.23,\; +0.85]$.
+  \item \textbf{3-month:} mean $= -0.90 \pm 1.16$\,pts/30d, median $= -0.68$, range $[-7.79,\; +2.16]$.
+\end{itemize}
+The 3-month slopes exhibit higher variance ($\sigma = 1.16$ vs $0.89$), consistent with fewer data points per slope estimate and wider measurement noise over a shorter observation window.
+Despite this, 90.5\% of 3-month slopes are based on $\geq 3$ ALSFRS-R measurements (median $n_{\text{points}} = 4$), and 99.8\% of 6-month slopes use $\geq 3$ points (median $n_{\text{points}} = 7$), confirming adequate estimation quality for both horizons.
+
+The binary target (\textit{rapid} vs \textit{slow}) is derived \textbf{fold-wise} during cross-validation by labelling the worst 30\% slopes in the \emph{training} fold as \textit{rapid}.
+For the 6-month horizon, this corresponds to a slope cutoff of approximately $-1.4$\,pts/30d (30th percentile), identifying subjects who are declining at more than one ALSFRS-R point per month.
+
+\subsection{Feature Coverage}
+\label{subsec:results_coverage}
+Feature availability varies substantially across blocks (Table~\ref{tab:feature_coverage}).
+The baseline block has effectively complete coverage: ALSFRS-R total and sex are available for 100\% of subjects, age for 87.1\%.
+Vital signs are available for 81.6\% of subjects at a block level, with individual features ranging from 44.9\% (height) to 79.2\% (weight).
+FVC data are available for 56.3\% (litres) to 54.5\% (percent of normal), motivating the missingness analysis in Section~\ref{sec:results_fvc_missingness}.
+Treatment features have high coverage (riluzole: 100\%, study arm: 91.1\%, concomitant medication count: 100\%).
+Labs are moderately available (creatinine: 64.7\%, ALT: 69.0\%).
+
+\begin{table}[ht]
+\centering
+\caption{Feature coverage for the 6-month cohort ($N\!=\!1{,}392$). Block-level coverage indicates the fraction of subjects with at least one non-missing feature in the block.}
+\label{tab:feature_coverage}
+\small
+\begin{tabular}{lcc}
+\toprule
+Feature Block & Features ($n$) & Coverage (\%) \\
+\midrule
+Baseline (demographics + ALSFRS-R) & 15 & $\sim$100 \\
+Vitals & 12 & 81.6 \\
+Respiratory (FVC) & 3 & 53.3 \\
+Treatment & 3 & $\sim$100 \\
+Labs & 2 & 64.7--69.0 \\
+\midrule
+All features (v2) & 35 & 100\textsuperscript{$\dagger$} \\
+\bottomrule
+\multicolumn{3}{l}{\footnotesize $\dagger$After median imputation, all subjects have complete feature vectors.}
+\end{tabular}
+\end{table}
+
+The heterogeneous coverage across blocks underscores the importance of an imputation strategy that does not introduce outcome-dependent bias, and supports the use of ablation to quantify whether blocks with lower coverage (e.g.\ FVC, Labs) contribute sufficient predictive signal to justify their inclusion.
+
+
+% ============================================================
+\section{Data Quality: FVC Missingness Analysis}
+\label{sec:results_fvc_missingness}
+% ============================================================
+
+FVC is available for approximately 56\% of the 6-month cohort.
+Because missing data can introduce bias if its absence is related to the outcome (Missing Not At Random, MNAR), it is essential to test whether patients with and without FVC differ systematically on key clinical variables.
+We compared the two groups across 11 variables using Mann--Whitney~U tests for continuous variables and $\chi^2$ tests for categorical variables, with effect sizes reported as Cohen's~$d$ and Cramér's~$V$ respectively (Table~\ref{tab:fvc_missingness}).
+
+\input{04_outputs/tables/step5v2_fvc_missingness.tex}
+
+\noindent\textbf{Key findings.}
+The three variables most directly related to the prediction task---ALSFRS-R at baseline ($p\!=\!0.345$, $d\!=\!0.027$), age ($p\!=\!0.459$, $d\!=\!0.031$), and the target slope ($p\!=\!0.188$, $d\!=\!0.061$)---show \emph{no significant difference} between patients with and without FVC data.
+Similarly, lab values (creatinine $p\!=\!0.092$, ALT $p\!=\!0.097$) and sex ($p\!=\!0.408$) are not significantly associated with FVC availability.
+
+The variables that \emph{do} differ significantly are related to study design rather than disease severity: study arm ($V\!=\!0.357$, $p < 0.001$) and number of concomitant medications ($d\!=\!0.332$, $p < 0.001$) reflect the fact that certain trials systematically collected FVC while others did not.
+BMI also differs ($d\!=\!0.468$), which is expected because FVC testing often occurs in the same visit as vital sign measurement.
+
+Since the outcome (slope) and the most clinically relevant baselines (ALSFRS-R, age) are unrelated to FVC availability, the missingness mechanism is classified as \emph{Missing at Random} (MAR), driven by study-protocol factors rather than by the patient's disease trajectory.
+This supports the use of median imputation for FVC features without introducing outcome-dependent bias.
+
+
+% ============================================================
+\section{Data Quality: BMI Correction}
+\label{sec:results_bmi_fix}
+% ============================================================
+
+During exploratory analysis of the vital signs table, we identified a systematic data-quality issue affecting BMI computation.
+A total of 147 height records were labelled ``Centimeters'' in the source data but contained values below 120\,cm (range 55--72), strongly suggesting that the original measurements were recorded in inches with an incorrect unit label.
+When used directly in the BMI formula ($\text{BMI} = \text{weight} / \text{height}^2$), these mis-labelled heights produced physiologically impossible values up to 4{,}512.
+
+We corrected this by applying plausible adult bounds (Height $\in [120, 220]$\,cm; Weight $\in [30, 200]$\,kg), setting any value outside these ranges to \texttt{NaN} for subsequent imputation.
+This affected 132 height records and 31 weight records.
+After correction, BMI across the cohort ranges from 14.4 to 46.9, consistent with published BMI distributions for ALS patients in clinical trials~\cite{Anani2023}.
+All v2 datasets (used in tuning, ablation, and all subsequent analyses) were regenerated with the corrected vitals to ensure that no downstream result is affected by the erroneous values.
+
+
+% ============================================================
+\section{Unified Optuna Hyperparameter Tuning (6-Month Horizon)}
+\label{sec:results_optuna_v2}
+% ============================================================
+
+Seven model families were tuned with Optuna (60 trials per configuration, TPE sampler, seed~42) under the full leakage-free protocol: subject-wise GroupKFold ($K\!=\!5$), fold-wise binary label definition, and evaluation exclusively on the DEV partition ($n\!=\!1{,}113$).
+Each model was evaluated in both \textbf{unbalanced} and \textbf{balanced} modes---except KNN, which lacks native class-weight support, yielding 13 configurations in total.
+The objective metric was PR-AUC (average precision); ROC-AUC and threshold-dependent metrics ($F_1$, $F_2$ at threshold~0.5) were additionally recorded.
+The full tuning required approximately 35 minutes of wall-clock time on a single machine, with per-configuration times ranging from 8\,s (Logistic Regression) to 768\,s (SVM unbalanced).
+
+Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the results.
+
+\input{04_outputs/tables/step5v2_tuning_comparison.tex}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_prauc_barchart.png}
+  \caption{PR-AUC comparison of Optuna-tuned models (6-month, DEV). Blue bars: unbalanced mode; orange bars: balanced mode. Error bars show $\pm 1$ standard deviation across 5 folds.}
+  \label{fig:prauc_barchart}
+\end{figure}
+
+\noindent\textbf{Key observations.}
+\begin{enumerate}
+  \item \textbf{Top-ranked model.} XGBoost (unbalanced) achieves the highest PR-AUC ($0.434 \pm 0.049$), closely followed by Random Forest (unbalanced, $0.431 \pm 0.042$) and SVM (balanced, $0.425 \pm 0.049$).
+    The narrow spread ($\Delta\!<\!0.05$) among the top five models indicates that some of the discriminative ceiling is dictated by the available features rather than by model choice.
+  \item \textbf{Effect of class balancing on PR-AUC.} Balanced mode yields a small PR-AUC decrease for ensemble models (RF: $0.431 \to 0.425$; LGBM: $0.415 \to 0.418$; XGB: $0.434 \to 0.424$), suggesting that, for these models, cost-sensitive weighting provides no additional discriminative benefit at the ranking level.
+    For SVM, balanced mode \emph{improves} PR-AUC ($0.389 \to 0.425$), likely because the RBF kernel is more sensitive to class density.
+  \item \textbf{Threshold-dependent metrics.} $F_1$ and $F_2$ at the default threshold of 0.5 are near-zero for all unbalanced models, because the predicted-probability distribution is concentrated below~0.5 in the presence of 70\% negative examples.
+    Balanced mode shifts this distribution upward, yielding much higher $F_1$/$F_2$ (e.g.\ LR balanced: $F_2\!=\!0.527$ vs $0.028$ unbalanced).
+    This behaviour is expected and does \emph{not} indicate a difference in discriminative quality; it merely reflects the choice of decision threshold (see Section~\ref{sec:results_threshold_xgb}).
+  \item \textbf{Interpretable baselines.} Logistic Regression balanced ($\text{PR-AUC} = 0.407$) performs only $0.027$ below XGBoost unbalanced, making it a competitive interpretable alternative.
+    Its coefficients can be directly analysed to understand feature directionality.
+\end{enumerate}
+
+
+% ────────────────────────────────────────────────────────────
+\subsection{Balanced vs Unbalanced: Paired Comparison}
+\label{subsec:results_bal_vs_unbal}
+% ────────────────────────────────────────────────────────────
+
+Figure~\ref{fig:bal_vs_unbal} presents a paired (dumbbell) comparison of PR-AUC and ROC-AUC for each model family across the two class-weighting modes.
+The key insight is that the gap between modes is consistently small ($< 0.02$ PR-AUC) for all ensemble and boosted models, indicating that the 30/70 class imbalance is moderate enough to be addressed equally well by either class weighting or post-hoc threshold adjustment.
+
+The only model for which balanced mode provides a substantial ranking improvement is SVM ($\Delta\text{PR-AUC} = +0.036$), likely because the RBF kernel's decision boundary is more sensitive to class density in the feature space.
+For Decision Tree, balanced mode slightly improves PR-AUC ($0.388 \to 0.404$), consistent with the known tendency of single trees to over-fit to the majority class when unconstrained.
+
+This analysis supports the conclusion that the choice between balanced and unbalanced mode is less important than model selection and threshold optimisation for this level of class imbalance.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_balanced_vs_unbalanced.png}
+  \caption{Paired comparison of unbalanced ($\circ$) vs balanced ($\square$) modes for each model. Left panel: PR-AUC; right panel: ROC-AUC. Lines connect the same model across both modes.}
+  \label{fig:bal_vs_unbal}
+\end{figure}
+
+
+% ────────────────────────────────────────────────────────────
+\subsection{Metric Rank Correlation}
+\label{subsec:results_metric_correlation}
+% ────────────────────────────────────────────────────────────
+
+To justify the choice of PR-AUC as the primary ranking metric, we computed Spearman rank correlations between all pairs of cross-validated evaluation metrics across the 13 model $\times$ mode configurations.
+If two metrics produce highly correlated model rankings, they provide redundant information; if uncorrelated, they capture different aspects of model behaviour.
+
+The results reveal two distinct metric clusters:
+\begin{itemize}
+  \item \textbf{Threshold-free metrics:} PR-AUC and ROC-AUC are strongly correlated ($\rho\!=\!0.758$, $p\!=\!0.003$), confirming that models which rank probability predictions well under one curve also rank well under the other.
+    This is reassuring because it means our findings are not an artefact of a particular metric choice.
+  \item \textbf{Threshold-dependent metrics at fixed cutoff:} $F_1$ and $F_2$ at threshold~0.5 are almost perfectly correlated with each other ($\rho\!=\!0.984$, $p < 0.001$) but are \emph{uncorrelated} with PR-AUC ($\rho \approx 0$, $p > 0.8$).
+    This confirms that threshold-dependent metrics at a fixed cutoff do not reflect discriminative quality in an imbalanced setting---they primarily capture whether the model's predicted probabilities happen to be centred around 0.5, which depends on the class-weighting mode rather than on the model's ranking quality.
+\end{itemize}
+
+These findings validate PR-AUC as an appropriate primary metric for model selection in our imbalanced classification setting, while highlighting that $F_1$/$F_2$ should only be evaluated after threshold optimisation (Section~\ref{sec:results_threshold_xgb}).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.8\linewidth]{04_outputs/figures/step5v2_metric_heatmap.png}
+  \caption{Heatmap of cross-validation metric values for all 13 model $\times$ mode configurations (6-month, DEV set). Models sorted by PR-AUC in descending order. The disconnection between threshold-free (PR-AUC, ROC-AUC) and threshold-dependent ($F_1$, $F_2$ at 0.5) metrics is clearly visible.}
+  \label{fig:metric_heatmap}
+\end{figure}
+
+
+% ============================================================
+\section{Feature Block Ablation (v2 Features)}
+\label{sec:results_ablation_v2}
+% ============================================================
+
+To quantify the marginal contribution of each feature block, we conducted a cumulative ablation study using the Optuna-tuned hyperparameters from the full-feature (F) configuration applied to all subsets.
+This design isolates the effect of feature availability from the confound of hyperparameter re-tuning, providing a fair comparison of how much predictive signal each block adds.
+
+The four top-ranked models were evaluated across six cumulative feature configurations:
+\textbf{A}~(baseline demographics + ALSFRS-R items, $n\!=\!15$),
+\textbf{B}~(A + vitals, $n\!=\!27$),
+\textbf{C}~(A + FVC, $n\!=\!18$),
+\textbf{D}~(A + vitals + FVC, $n\!=\!30$),
+\textbf{E}~(D + treatment, $n\!=\!33$),
+\textbf{F}~(full v2 with labs, $n\!=\!35$).
+Blocks C and D are designed to disentangle the independent contribution of FVC (C) from the joint effect of FVC and vitals (D).
+
+\input{04_outputs/tables/step5v2_ablation.tex}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_ablation_prauc.png}
+  \caption{Cumulative feature block ablation (6-month, DEV). PR-AUC with Optuna-tuned hyperparameters. Each line represents one model; each point adds a feature block.}
+  \label{fig:ablation_v2}
+\end{figure}
+
+\noindent\textbf{Key findings.}
+\begin{enumerate}
+  \item \textbf{FVC provides the single largest marginal gain.}
+    Adding FVC alone to the baseline block (A~$\to$~C) increases PR-AUC by $+0.025$ for Random Forest and $+0.010$ for XGBoost, confirming the clinical importance of baseline respiratory function as a predictor of subsequent functional decline.
+    This is consistent with prior ALS literature identifying FVC as one of the strongest prognostic markers~\cite{Papaiz2022}.
+  \item \textbf{Vitals alone contribute little additional signal.}
+    Block B (baseline + vitals) shows $\Delta\text{PR-AUC} \approx 0$ relative to block A for most models.
+    However, vitals combined with FVC (block D) stabilise variance across folds, suggesting that some vital-sign features (e.g.\ BMI, blood pressure) play a supporting role in the presence of respiratory data.
+  \item \textbf{Treatment and labs add small incremental value.}
+    The transition from D~$\to$~E~$\to$~F adds $\leq 0.01$ PR-AUC for XGBoost and RF, consistent with these features capturing secondary disease-management signals (e.g.\ riluzole use, polypharmacy) rather than direct disease-severity indicators.
+  \item \textbf{LGBM balanced exhibits mild overfitting to additional features.}
+    Uniquely among the models tested, LightGBM balanced shows a \emph{decrease} in PR-AUC from A ($0.434$) to F ($0.418$), a drop of $-0.016$.
+    This suggests that, with the hyperparameters tuned on the full feature set, LGBM overfits to the additional categorical variables (treatment, labs) when applied to a richer feature space---a known behaviour of boosting methods with insufficient regularisation relative to the number of features.
+  \item \textbf{Logistic Regression shows the most stable ablation profile.}
+    LR balanced increases monotonically from A ($0.395$) to F ($0.407$), with no block causing a performance drop.
+    This is consistent with the lower capacity and implicit regularisation of a linear model.
+\end{enumerate}
+
+Overall, the ablation confirms that the baseline ALSFRS-R items and demographics carry the majority of the predictive signal, FVC provides structurally significant additional value, and the remaining blocks (vitals, treatment, labs) contribute marginal refinements.
+
+
+% ============================================================
+\section{3-Month Horizon: Tuning Results and Cross-Horizon Comparison}
+\label{sec:results_3m}
+% ============================================================
+
+To assess the generalisability of the pipeline across prediction horizons, we repeated the Optuna tuning procedure for the 3-month horizon ($H\!=\!90 \pm 7$\,d) using the four top-ranked model families from the 6-month analysis (XGBoost, Random Forest, LightGBM, and Logistic Regression), each in balanced and unbalanced modes (8 configurations, 60 trials each, DEV $n\!=\!1{,}925$).
+
+\subsection{3-Month Tuning Results}
+\label{subsec:results_3m_tuning}
+
+Table~\ref{tab:step5v2_tuning_3m} and Figure~\ref{fig:prauc_barchart_3m} present the 3-month results.
+
+\input{04_outputs/tables/step5v2_tuning_comparison_3m.tex}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_3m_prauc_barchart.png}
+  \caption{PR-AUC comparison of Optuna-tuned models (3-month, DEV, $n\!=\!1{,}925$). Blue: unbalanced; orange: balanced. Numerical annotations show mean PR-AUC.}
+  \label{fig:prauc_barchart_3m}
+\end{figure}
+
+\noindent\textbf{Key observations.}
+\begin{enumerate}
+  \item \textbf{XGBoost balanced} achieves the highest 3-month PR-AUC ($0.426 \pm 0.036$), followed by XGBoost unbalanced ($0.423$) and LightGBM unbalanced ($0.423$).
+    Unlike the 6-month horizon, where balanced mode slightly reduced PR-AUC for boosted models, at 3 months balanced XGBoost marginally \emph{outperforms} its unbalanced counterpart.
+  \item \textbf{ROC-AUC is higher at 3 months} than at 6 months across all models (e.g.\ XGB balanced: $0.634$ vs $0.604$; RF balanced: $0.628$ vs $0.615$).
+    This is expected because the larger 3-month cohort ($n\!=\!1{,}925$ vs $1{,}113$) provides more statistical power and because shorter-horizon slopes are more directly related to baseline status.
+  \item \textbf{Model ranking is remarkably stable across horizons.}
+    XGBoost and LightGBM dominate at both horizons; Random Forest and Logistic Regression occupy consistent mid-to-lower positions.
+    This consistency strengthens the conclusion that the relative model ordering is robust.
+\end{enumerate}
+
+
+\subsection{Cross-Horizon Comparison (3m vs 6m)}
+\label{subsec:results_3m_vs_6m}
+
+Table~\ref{tab:3m_vs_6m} and Figure~\ref{fig:3m_vs_6m_scatter} compare PR-AUC across the two horizons for matched model configurations.
+
+\input{04_outputs/tables/step5v2_3m_vs_6m_comparison.tex}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\linewidth]{04_outputs/figures/step5v2_3m_vs_6m_prauc.png}
+  \caption{Side-by-side PR-AUC comparison between 3-month and 6-month horizons for matched model $\times$ mode configurations. Annotations show exact PR-AUC values.}
+  \label{fig:3m_vs_6m_grouped}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.7\linewidth]{04_outputs/figures/step5v2_3m_vs_6m_scatter.png}
+  \caption{Scatter plot of 3-month vs 6-month PR-AUC for each model configuration. Points above the parity line perform better at 3 months; below, better at 6 months. Numerical $\Delta$ annotations quantify the difference.}
+  \label{fig:3m_vs_6m_scatter}
+\end{figure}
+
+\noindent\textbf{Key findings.}
+\begin{enumerate}
+  \item \textbf{PR-AUC differences between horizons are small} ($|\Delta| \leq 0.021$ for all configurations).
+    The largest drops are observed for RF unbalanced ($\Delta = -0.021$) and XGB unbalanced ($\Delta = -0.011$), while LightGBM unbalanced slightly \emph{improves} at 3 months ($\Delta = +0.008$).
+  \item \textbf{The 6-month horizon yields slightly higher PR-AUC overall.}
+    Five of eight matched configurations show higher PR-AUC at 6 months.
+    This may reflect the higher quality of 6-month slopes (99.8\% with $\geq\!3$ ALSFRS-R data points, median 7) compared to 3-month slopes (90.5\% with $\geq\!3$ points, median 4), which introduces more noise in the target labels.
+  \item \textbf{The 3-month horizon has higher ROC-AUC but lower PR-AUC.}
+    This apparent paradox is explained by the interaction between sample size and class prevalence: with $n\!=\!1{,}925$, the 3-month DEV set provides more stable ROC-AUC estimates, but the noisier slope targets reduce the precision of positive-class predictions, causing PR-AUC to decrease slightly.
+  \item \textbf{Both horizons support the same top-model conclusion.}
+    XGBoost is the top-performing model at both horizons (unbalanced at 6m, balanced at 3m), reinforcing its selection as the final model for explainability analysis.
+\end{enumerate}
+
+Based on these findings, we proceed with the \textbf{6-month horizon} as the primary analysis for several reasons:
+(i) higher PR-AUC and more stable slope estimates,
+(ii) a 6-month prediction window is more clinically actionable for treatment planning, and
+(iii) the 3-month results confirm that findings generalise across horizons, providing additional confidence in the pipeline.
+
+
+% ============================================================
+\section{Threshold Optimisation}
+\label{sec:results_threshold_xgb}
+% ============================================================
+
+In imbalanced classification, the default decision threshold of $t\!=\!0.50$ is typically sub-optimal because the predicted-probability distribution is skewed towards the majority class.
+Rather than accepting this default, we optimise the operating threshold using out-of-fold (OOF) predictions from 5-fold GroupKFold cross-validation on the DEV set.
+
+Three optimality criteria are evaluated:
+\begin{enumerate}
+  \item \textbf{$F_2$-optimal} ($t\!=\!0.05$): maximises $F_2$, which places quadruple weight on recall.  However, this threshold trivially classifies nearly all patients as \textit{rapid}, yielding recall $\approx 1.0$ but precision equal to the prevalence ($\sim$0.30)---clinically uninformative.
+  \item \textbf{$F_1$-optimal} ($t\!=\!0.21$): maximises the harmonic mean of precision and recall, producing $F_1\!=\!0.479$ on OOF predictions, with recall $\approx 0.86$ and precision $\approx 0.35$.
+  \item \textbf{Youden's~$J$} ($t\!=\!0.35$): maximises TPR~$-$~FPR, balancing sensitivity against specificity.
+\end{enumerate}
+
+The $F_1$-optimal threshold at $t\!=\!0.21$ is adopted as the primary operating point.
+It achieves the best balance between sensitivity and positive predictive value: the model captures 86\% of rapid progressors while maintaining precision above the baseline prevalence.
+Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sweep.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.82\linewidth]{images/step6_threshold_sweep.png}
+  \caption{Threshold sweep on DEV out-of-fold predictions for XGBoost (unbalanced, 6\,m).
+  The $F_1$-optimal threshold ($t\!=\!0.21$, blue dotted) and Youden's~$J$ operating point ($t\!=\!0.35$, purple dotted) are annotated.}
+  \label{fig:step6_threshold_sweep}
+\end{figure}
+
+
+% ============================================================
+\section{Held-Out Test Set Evaluation}
+\label{sec:results_test_eval}
+% ============================================================
+
+The seven best-per-family models are evaluated once on the held-out TEST partition ($n\!=\!279$, rapid prevalence $30.1$\%) to produce unbiased performance estimates.
+Labels are defined using the 30th-percentile slope cutoff computed on the DEV set ($-1.243$~points per 30 days), ensuring no information leaks from the test set into the labelling process.
+
+\subsection{Discrimination Metrics}
+
+Table~\ref{tab:step6_test_metrics} reports threshold-free metrics (PR-AUC, ROC-AUC) and threshold-dependent metrics at the default $t\!=\!0.50$.
+
+\begin{table}[ht]
+\centering
+\caption{Held-out TEST set metrics (6-month horizon, $n\!=\!279$). PR-AUC and ROC-AUC are threshold-free; $F_1$, $F_2$ evaluated at the default $t\!=\!0.50$; Brier score measures calibration (lower is better).}
+\label{tab:step6_test_metrics}
+\small
+\begin{tabular}{l c c c c c c}
+\toprule
+Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
+\midrule
+  RandomForest  & unbal. & \textbf{0.459} & 0.664 & 0.000 & 0.000 & 0.199 \\
+  XGBoost       & unbal. & 0.457 & 0.660 & 0.085 & 0.058 & \textbf{0.197} \\
+  SVM           & bal.   & 0.447 & \textbf{0.675} & 0.000 & 0.000 & 0.198 \\
+  LightGBM      & bal.   & 0.429 & 0.637 & 0.422 & 0.440 & 0.224 \\
+  LogisticReg.  & bal.   & 0.421 & 0.671 & \textbf{0.484} & \textbf{0.520} & 0.231 \\
+  KNeighbors    & unbal. & 0.393 & 0.583 & 0.046 & 0.029 & 0.206 \\
+  DecisionTree  & bal.   & 0.373 & 0.569 & 0.417 & 0.417 & 0.270 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Key observations:
+\begin{enumerate}
+  \item \textbf{PR-AUC generalises well.}
+    RandomForest (PR-AUC\,$=\!0.459$) and XGBoost ($0.457$) both exceed their cross-validated estimates ($0.431$ and $0.434$, respectively), indicating no overfitting.
+    The narrow gap between the two confirms that the performance ceiling is driven by features, not by the choice of model.
+  \item \textbf{SVM achieves the highest ROC-AUC} ($0.675$) among all models, suggesting strong discriminative power across all operating points.
+    However, its lower PR-AUC and inability to produce positive predictions at $t\!=\!0.50$ limits its practical utility without threshold adjustment.
+  \item \textbf{Default threshold is unsuitable for unbalanced models.}
+    XGBoost, RF, and KNN (all trained without class weighting) produce near-zero $F_1$ and $F_2$ at $t\!=\!0.50$, because their predicted probabilities concentrate below $0.50$ for the minority class.
+    This reinforces the need for threshold optimisation (Section~\ref{sec:results_threshold_xgb}).
+  \item \textbf{Balanced models have reasonable default-threshold performance.}
+    LogisticRegression balanced achieves $F_1\!=\!0.484$ and $F_2\!=\!0.520$ at $t\!=\!0.50$, making it the best model under the default operating point.
+\end{enumerate}
+
+Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC across all models.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.82\linewidth]{images/step6_test_prauc_bar.png}
+  \caption{PR-AUC on the held-out TEST set (6\,m) for the seven best-per-family models.
+  The dashed line indicates the baseline prevalence (0.30).}
+  \label{fig:step6_test_prauc_bar}
+\end{figure}
+
+\subsection{PR and ROC Curves}
+
+Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the precision--recall and ROC curves for all models on the TEST set.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.82\linewidth]{images/step6_pr_curves.png}
+  \caption{Precision--Recall curves on the held-out TEST set (6\,m). The dashed line indicates the baseline prevalence ($0.30$).}
+  \label{fig:step6_pr_curves}
+\end{figure}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.82\linewidth]{images/step6_roc_curves.png}
+  \caption{ROC curves on the held-out TEST set (6\,m). The dashed line indicates the random classifier.}
+  \label{fig:step6_roc_curves}
+\end{figure}
+
+
+\subsection{Threshold Validation on TEST}
+
+The $F_1$-optimal threshold $t\!=\!0.21$, selected on DEV OOF predictions (Section~\ref{sec:results_threshold_xgb}), is validated on the TEST set.
+Table~\ref{tab:step6_threshold_test} compares XGBoost performance at multiple thresholds.
+
+\begin{table}[ht]
+\centering
+\caption{XGBoost (unbalanced, 6\,m) performance on TEST at different decision thresholds.}
+\label{tab:step6_threshold_test}
+\small
+\begin{tabular}{c c c c c c c c c}
+\toprule
+$t$ & Precision & Recall & $F_1$ & $F_2$ & TP & FP & FN & TN \\
+\midrule
+0.21 & 0.351 & 0.857 & 0.498 & 0.665 & 72 & 133 & 12 & 62 \\
+0.30 & 0.458 & 0.524 & 0.489 & 0.509 & 44 & 52  & 40 & 143 \\
+0.35 & 0.500 & 0.405 & 0.447 & 0.421 & 34 & 34  & 50 & 161 \\
+0.50 & 0.400 & 0.048 & 0.085 & 0.058 & 4  & 6   & 80 & 189 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent At the chosen threshold $t\!=\!0.21$:
+\begin{itemize}
+  \item The model identifies 72 of 84 rapid progressors (\textbf{recall\,$=\!85.7$\%}), missing only 12.
+  \item Precision is $35.1$\%, producing 133 false alarms among 195 slow progressors.
+  \item $F_1\!=\!0.498$ and $F_2\!=\!0.665$ confirm that the threshold trade-off transfers from DEV to TEST.
+\end{itemize}
+
+\noindent The Youden threshold ($t\!=\!0.35$) provides a higher-precision alternative:
+precision rises to $50.0$\% but recall drops to $40.5$\%, missing over half of the rapid progressors.
+The choice between the two depends on the clinical cost model; for screening purposes, the $F_1$-optimal threshold ($t\!=\!0.21$) is preferred.
+
+
+\subsection{Calibration Analysis}
+
+The calibration of the final XGBoost model is assessed using a reliability diagram and the Brier score (Figure~\ref{fig:step6_calibration}).
+XGBoost achieves a Brier score of \textbf{0.197}, the lowest among all models, indicating good probabilistic calibration.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.65\linewidth]{images/step6_calibration.png}
+  \caption{Calibration reliability diagram for XGBoost (unbalanced) on the TEST set. The dashed line indicates perfect calibration.}
+  \label{fig:step6_calibration}
+\end{figure}
+
+
+\subsection{Confusion Matrix}
+
+Figure~\ref{fig:step6_cm} presents the confusion matrix at the $F_1$-optimal threshold ($t\!=\!0.21$).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.50\linewidth]{images/step6_confusion_matrix.png}
+  \caption{Confusion matrix for XGBoost (unbalanced) on the TEST set at $t\!=\!0.21$.}
+  \label{fig:step6_cm}
+\end{figure}
+
+
+% ============================================================
+\section{Explainability (SHAP) for the Final Model}
+\label{sec:results_shap}
+% ============================================================
+
+Explainability is a core requirement for clinical deployment.
+After selecting the final model, we will apply SHAP (SHapley Additive exPlanations) to provide both global and local explanations.
+
+\subsection{Global Explanations}
+\label{subsec:results_shap_global}
+Global SHAP analysis will produce:
+\begin{itemize}
+  \item A \textbf{mean absolute SHAP value bar plot}, ranking features by their average impact on model output across all subjects.
+  \item A \textbf{beeswarm (summary) plot}, showing the distribution of SHAP values per feature and revealing non-linear or interaction effects (e.g.\ whether low FVC increases the predicted risk of rapid decline).
+\end{itemize}
+
+\subsection{Local Explanations (Case Studies)}
+\label{subsec:results_shap_local}
+Local explanations will consist of SHAP waterfall plots for representative individual patients, selected from each quadrant of the confusion matrix (TP, FP, FN, TN).
+These case studies will illustrate:
+(i) which features drove the prediction for a correctly identified rapid progressor (TP),
+(ii) what caused a false alarm (FP),
+(iii) why a rapid progressor was missed (FN), and
+(iv) the typical profile of a correctly classified slow progressor (TN).
+
+Additionally, Logistic Regression coefficients will be analysed as a complementary, model-intrinsic form of explanation, providing direct insight into the sign and magnitude of each feature's linear association with rapid progression.
+
+\textit{Pending: Step~11 execution.}
+
+
+% ============================================================
+\section{Summary of Key Findings}
+\label{sec:results_summary}
+% ============================================================
+
+The results obtained so far establish the feasibility and performance baseline for the explainable ALS progression classification pipeline.
+The main findings are:
+
+\begin{enumerate}
+  \item \textbf{Cohort viability.} Leakage-free, subject-wise evaluation is feasible using PRO-ACT baseline features and future ALSFRS-R slopes.
+    The 6-month cohort ($N\!=\!1{,}392$) yields slope estimates of high quality (99.8\% based on $\geq 3$ data points).
+  \item \textbf{Data quality.} A systematic BMI data-quality issue (147 mis-labelled height records) was identified and corrected.
+    FVC missingness was confirmed as MAR (driven by study design, not by the outcome), supporting median imputation without outcome-dependent bias.
+  \item \textbf{Model selection.} Unified Optuna tuning of 7 model families across 13 configurations identifies XGBoost (unbalanced) as the top-ranked model by PR-AUC ($0.434 \pm 0.049$), followed by RF~unbalanced ($0.431$) and SVM~balanced ($0.425$).
+    The narrow performance spread ($\Delta\!<\!0.05$) among the top models suggests a feature-driven, rather than model-driven, performance ceiling.
+  \item \textbf{Class balancing.} Balanced vs unbalanced mode has minimal impact on the threshold-free PR-AUC but dramatically affects threshold-dependent metrics at $t\!=\!0.5$, confirming that threshold optimisation---not class weighting---is the appropriate strategy for this level of imbalance.
+  \item \textbf{Feature importance.} Feature block ablation confirms that baseline ALSFRS-R items carry the majority of predictive signal.
+    FVC provides the largest single-block marginal gain ($+0.025$ for RF, $+0.010$ for XGB), consistent with its established clinical role as a respiratory prognostic marker.
+    Treatment and lab features add small incremental value.
+  \item \textbf{Metric consistency.} PR-AUC and ROC-AUC produce strongly correlated model rankings ($\rho\!=\!0.758$), validating the use of PR-AUC as the primary metric.
+    Threshold-dependent metrics at a fixed cutoff are unreliable for model comparison in this imbalanced setting.
+  \item \textbf{Cross-horizon robustness.} The 3-month horizon ($N\!=\!2{,}407$) produces comparable results (top PR-AUC $0.426$, $\Delta \leq 0.021$ vs 6-month), with the same model ranking.
+    The 6-month horizon is retained as the primary analysis due to higher slope quality and greater clinical actionability.
+  \item \textbf{Held-out generalisation.}
+    Test-set PR-AUC (RF\,$=\!0.459$, XGB\,$=\!0.457$) slightly exceeds cross-validated estimates, confirming that the pipeline does not overfit.
+    The narrow gap between the two best models ($\Delta\!=\!0.002$) reaffirms the feature-driven performance ceiling.
+  \item \textbf{Threshold optimisation.}
+    The $F_1$-optimal threshold ($t\!=\!0.21$) achieves recall\,$=\!85.7$\% with 133 false alarms on the TEST set ($F_1\!=\!0.498$, $F_2\!=\!0.665$), offering a practical screening operating point.
+    XGBoost achieves the lowest Brier score ($0.197$) among all models, indicating good probabilistic calibration.
+\end{enumerate}
+
+\noindent\textbf{Remaining steps.} SHAP-based explainability and Logistic Regression coefficient analysis are pending and will complete the pipeline (Section~\ref{sec:results_shap}).
