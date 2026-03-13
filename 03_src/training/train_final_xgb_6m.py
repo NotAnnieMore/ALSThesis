@@ -2,14 +2,14 @@
 Train final XGBoost model (6-month horizon) using Optuna best parameters.
 
 This script:
-  1) loads the processed 6m dataset (one row per subject)
+  1) loads the processed 6m v2 dataset (one row per subject, 35 features)
   2) defines the binary target "rapid" as the worst 30% slopes (more negative)
   3) fits a preprocessing + tuned XGBoost pipeline
   4) saves the trained model (joblib) and a metadata JSON
 
 Inputs:
-  - 01_data/processed/dataset_6m_v1.csv
-  - 04_outputs/tables/optuna_xgb_6m_best_params.json
+  - 01_data/processed/dataset_6m_v2.csv
+  - 04_outputs/tables/step5_tuning/XGB_unbalanced_6m_best.json
 
 Outputs:
   - models/final_xgb_6m.joblib
@@ -39,9 +39,20 @@ from xgboost import XGBClassifier
 # ----------------------------
 # Config
 # ----------------------------
-DATASET_REL_PATH = os.path.join("01_data", "processed", "dataset_6m_v1.csv")
+DATASET_REL_PATH = os.path.join("01_data", "processed", "dataset_6m_v2.csv")
 BEST_PARAMS_REL_PATH = os.path.join(
-    "04_outputs", "tables", "step5_tuning", "optuna_xgb_6m_best_params.json")
+    "04_outputs", "tables", "step5_tuning", "XGB_unbalanced_6m_best.json")
+
+# Columns to exclude from features (aligned with tune_all.py / evaluate_holdout.py)
+DROP_COLS = {
+    "subject_id",
+    "t0_delta_days",
+    "vitals_delta_days",
+    "fvc_delta_days",
+    "slope_90d_per_30d",
+    "slope_180d_per_30d",
+    "ALSFRS_Responded_By",
+}
 
 ID_COL = "subject_id"
 SLOPE_COL = "slope_180d_per_30d"
@@ -114,11 +125,7 @@ def build_target(df: pd.DataFrame) -> Tuple[pd.Series, float]:
 
 
 def build_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
-    drop_cols = {ID_COL, SLOPE_COL}
-    if "slope_90d_per_30d" in df.columns:
-        drop_cols.add("slope_90d_per_30d")
-
-    feat_cols = [c for c in df.columns if c not in drop_cols]
+    feat_cols = [c for c in df.columns if c not in DROP_COLS]
     if not feat_cols:
         raise ValueError(
             "No feature columns available after dropping ID/target columns.")

@@ -163,7 +163,7 @@ Figure~\ref{fig:eda_arm_rapid} displays the rapid-progression rates with numeric
   \label{fig:eda_arm_dist}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.55\linewidth]{images/figures/eda_treat_arm_rapid_rate.png}
   \caption{Rapid-progression rate by study arm. The dashed line indicates the global prevalence (30\%).}
@@ -180,7 +180,7 @@ The 5-percentage-point gap in rapid rates is therefore likely attributable to th
 Riluzole---the only disease-modifying therapy approved for ALS at the time of the PRO-ACT trials---was used pre-baseline by 902 subjects (64.8\%).
 Patients with and without riluzole show nearly identical rapid-progression rates ($30.8$\% vs $28.6$\%), consistent with the established literature reporting a modest survival benefit but no significant impact on ALSFRS-R decline~\cite{Miller2012}.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_riluzole_slope_dist.png}
   \caption{Slope distribution (left) and rapid-progression rate (right) by riluzole use. Median slopes are annotated on each bar.}
@@ -195,9 +195,9 @@ A $\chi^2$ test confirms no significant association ($\chi^2 = 0.66$, $p = 0.416
 Crossing both treatment variables reveals a noteworthy pattern (Figure~\ref{fig:eda_interaction}): the Placebo + riluzole subgroup has the highest rapid-progression rate ($33.5$\%, $n\!=\!526$), while Active + riluzole has the lowest ($25.7$\%, $n\!=\!315$).
 In contrast, both ``no riluzole'' subgroups cluster near $27.5$\%.
 
-\begin{figure}[ht]
+\begin{figure}[hbt!]
   \centering
-  \includegraphics[width=0.65\linewidth]{images/figures/eda_treat_interaction.png}
+  \includegraphics[width=0.55\linewidth]{images/figures/eda_treat_interaction.png}
   \caption{Rapid-progression rate by study arm $\times$ riluzole subgroup. The dashed line indicates the global prevalence (30\%).}
   \label{fig:eda_interaction}
 \end{figure}
@@ -215,7 +215,7 @@ We further analysed the 15 most frequently prescribed pre-baseline medications b
 Riluzole is the most common (48.2\% of the cohort), followed by Vitamin~E (25.4\%) and Ascorbic Acid (22.1\%).
 Two supplements---Betacarotene ($25.4$\%) and Nutrasense Createam ($26.9$\%)---are associated with below-average rapid rates, while Colecalciferol ($37.3$\%) and Sertraline ($35.3$\%) show the highest rates, although subgroup sizes are small ($n < 80$) and no corrections for multiple testing are applied.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.85\linewidth]{images/figures/eda_treat_top_meds.png}
   \caption{Top 15 pre-baseline medications by cohort prevalence, coloured by whether their rapid-progression rate exceeds the global prevalence (30\%, red dashed line). Green bars fall below the global rate.}
@@ -305,14 +305,15 @@ The results reveal two distinct metric clusters:
 
 These findings validate PR-AUC as an appropriate primary metric for model selection in our imbalanced classification setting, while highlighting that $F_1$/$F_2$ should only be evaluated after threshold optimisation (Section~\ref{sec:results_threshold_xgb}).
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.8\linewidth]{images/figures/step5v2_metric_heatmap.png}
+  \includegraphics[width=1\linewidth]{images/figures/step5v2_metric_heatmap.png}
   \caption{Heatmap of cross-validation metric values for all 13 model $\times$ mode configurations (6-month, DEV set). Models sorted by PR-AUC in descending order. The disconnection between threshold-free (PR-AUC, ROC-AUC) and threshold-dependent ($F_1$, $F_2$ at 0.5) metrics is clearly visible.}
   \label{fig:metric_heatmap}
 \end{figure}
 
 
+\clearpage 
 % ============================================================
 \section{Feature Block Ablation (v2 Features)}
 \label{sec:results_ablation_v2}
@@ -332,9 +333,9 @@ Blocks C and D are designed to disentangle the independent contribution of FVC (
 
 \input{images/tables/step5v2_ablation.tex}
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.95\linewidth]{images/figures/step5v2_ablation_prauc.png}
+  \includegraphics[width=0.85\linewidth]{images/figures/step5v2_ablation_prauc.png}
   \caption{Cumulative feature block ablation (6-month, DEV). PR-AUC with Optuna-tuned hyperparameters. Each line represents one model; each point adds a feature block.}
   \label{fig:ablation_v2}
 \end{figure}
@@ -374,7 +375,7 @@ Table~\ref{tab:step5v2_tuning_3m} and Figure~\ref{fig:prauc_barchart_3m} present
 
 \input{images/tables/step5v2_tuning_comparison_3m.tex}
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step5v2_3m_prauc_barchart.png}
   \caption{PR-AUC comparison of Optuna-tuned models (3-month, DEV, $n\!=\!1{,}925$). Blue: unbalanced; orange: balanced. Numerical annotations show mean PR-AUC.}
@@ -407,13 +408,14 @@ Table~\ref{tab:3m_vs_6m} and Figure~\ref{fig:3m_vs_6m_scatter} compare PR-AUC ac
   \label{fig:3m_vs_6m_grouped}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.7\linewidth]{images/figures/step5v2_3m_vs_6m_scatter.png}
+  \includegraphics[width=0.65\linewidth]{images/figures/step5v2_3m_vs_6m_scatter.png}
   \caption{Scatter plot of 3-month vs 6-month PR-AUC for each model configuration. Points above the parity line perform better at 3 months; below, better at 6 months. Numerical $\Delta$ annotations quantify the difference.}
   \label{fig:3m_vs_6m_scatter}
 \end{figure}
 
+\break
 \noindent\textbf{Key findings.}
 \begin{enumerate}
   \item \textbf{PR-AUC differences between horizons are small} ($|\Delta| \leq 0.021$ for all configurations).
@@ -471,7 +473,7 @@ As expected given the Friedman outcome, no pair achieves statistical significanc
 \end{figure}
 
 \input{images/tables/step7_pairwise_wilcoxon.tex}
-
+\break
 \subsection{Interpretation}
 
 The lack of significant differences among the seven models is consistent with the literature on clinical ALS prediction, where modest sample sizes and high outcome variability limit the statistical power of cross-validated comparisons~\cite{kueffner2019}.
@@ -532,7 +534,7 @@ Table~\ref{tab:step6_test_metrics} reports threshold-free metrics (PR-AUC, ROC-A
 Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
 \midrule
   RandomForest  & unbal. & \textbf{0.459} & 0.664 & 0.000 & 0.000 & 0.199 \\
-  XGBoost       & unbal. & 0.457 & 0.660 & 0.085 & 0.058 & \textbf{0.197} \\
+  XGBoost       & unbal. & 0.456 & 0.660 & 0.085 & 0.058 & \textbf{0.197} \\
   SVM           & bal.   & 0.447 & \textbf{0.675} & 0.000 & 0.000 & 0.198 \\
   LightGBM      & bal.   & 0.429 & 0.637 & 0.422 & 0.440 & 0.224 \\
   LogisticReg.  & bal.   & 0.421 & 0.671 & \textbf{0.484} & \textbf{0.520} & 0.231 \\
@@ -545,7 +547,7 @@ Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
 \noindent Key observations:
 \begin{enumerate}
   \item \textbf{PR-AUC generalises well.}
-    RandomForest (PR-AUC\,$=\!0.459$) and XGBoost ($0.457$) both exceed their cross-validated estimates ($0.431$ and $0.434$, respectively), indicating no overfitting.
+    RandomForest (PR-AUC\,$=\!0.459$) and XGBoost ($0.456$) both exceed their cross-validated estimates ($0.431$ and $0.434$, respectively), indicating no overfitting.
     The narrow gap between the two confirms that the performance ceiling is driven by features, not by the choice of model.
   \item \textbf{SVM achieves the highest ROC-AUC} ($0.675$) among all models, suggesting strong discriminative power across all operating points.
     However, its lower PR-AUC and inability to produce positive predictions at $t\!=\!0.50$ limits its practical utility without threshold adjustment.
@@ -570,14 +572,14 @@ Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC acr
 
 Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the precision--recall and ROC curves for all models on the TEST set.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.82\linewidth]{images/figures/step6_pr_curves.png}
   \caption{Precision--Recall curves on the held-out TEST set (6\,m). The dashed line indicates the baseline prevalence ($0.30$).}
   \label{fig:step6_pr_curves}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.82\linewidth]{images/figures/step6_roc_curves.png}
   \caption{ROC curves on the held-out TEST set (6\,m). The dashed line indicates the random classifier.}
@@ -626,23 +628,21 @@ XGBoost achieves a Brier score of \textbf{0.197}, the lowest among all models, i
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=0.65\linewidth]{images/figures/step6_calibration.png}
+  \includegraphics[width=0.55\linewidth]{images/figures/step6_calibration.png}
   \caption{Calibration reliability diagram for XGBoost (unbalanced) on the TEST set. The dashed line indicates perfect calibration.}
   \label{fig:step6_calibration}
 \end{figure}
-
 
 \subsection{Confusion Matrix}
 
 Figure~\ref{fig:step6_cm} presents the confusion matrix at the $F_1$-optimal threshold ($t\!=\!0.21$).
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.50\linewidth]{images/figures/step6_confusion_matrix.png}
   \caption{Confusion matrix for XGBoost (unbalanced) on the TEST set at $t\!=\!0.21$.}
   \label{fig:step6_cm}
 \end{figure}
-
 
 % ============================================================
 \section{Explainability (SHAP) for the Final Model}
@@ -702,7 +702,7 @@ The main findings are:
   \item \textbf{Cross-horizon robustness.} The 3-month horizon ($N\!=\!2{,}407$) produces comparable results (top PR-AUC $0.426$, $\Delta \leq 0.021$ vs 6-month), with the same model ranking.
     The 6-month horizon is retained as the primary analysis due to higher slope quality and greater clinical actionability.
   \item \textbf{Held-out generalisation.}
-    Test-set PR-AUC (RF\,$=\!0.459$, XGB\,$=\!0.457$) slightly exceeds cross-validated estimates, confirming that the pipeline does not overfit.
+    Test-set PR-AUC (RF\,$=\!0.459$, XGB\,$=\!0.456$) slightly exceeds cross-validated estimates, confirming that the pipeline does not overfit.
     The narrow gap between the two best models ($\Delta\!=\!0.002$) reaffirms the feature-driven performance ceiling.
   \item \textbf{Threshold optimisation.}
     The $F_1$-optimal threshold ($t\!=\!0.21$) achieves recall\,$=\!85.7$\% with 133 false alarms on the TEST set ($F_1\!=\!0.498$, $F_2\!=\!0.665$), offering a practical screening operating point.

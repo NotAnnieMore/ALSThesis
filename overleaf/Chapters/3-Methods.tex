@@ -8,15 +8,146 @@ The pipeline follows a strict leakage-free design:
 (ii) construct predictors using only information available up to $t_0$,
 (iii) define targets using outcomes observed after $t_0$ for fixed horizons,
 and (iv) evaluate models using subject-wise splits to avoid overlap between training and test subjects.
-Figure~\ref{fig:pipeline_placeholder} can be used to summarize the stages: baseline definition, target construction, feature extraction, model training/evaluation, ablation analysis, hyperparameter optimization, and explainability (XAI).
+Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipeline, which proceeds through eight stages: data collection, study setup, target construction and feature engineering, holdout partitioning, hyperparameter tuning, model evaluation and selection, held-out test evaluation, and explainability.
 
-\begin{figure}[ht]
+
+\begin{figure}[p]
   \centering
-  \fbox{\parbox{0.9\linewidth}{\centering Placeholder: pipeline overview diagram}}
-  \caption{End-to-end pipeline (baseline $\rightarrow$ targets $\rightarrow$ features $\rightarrow$ training/evaluation $\rightarrow$ ablation $\rightarrow$ Optuna tuning $\rightarrow$ threshold sanity check $\rightarrow$ SHAP/XAI).}
-  \label{fig:pipeline_placeholder}
+  \begin{tikzpicture}[
+    % Wide box (parameterised by colour)
+    sbox/.style={
+      rectangle, rounded corners=3pt, draw=#1!50!black, fill=#1!6,
+      minimum width=13.5cm, minimum height=0.85cm,
+      text centered, font=\small, text width=13cm, inner sep=5pt,
+      line width=0.5pt
+    },
+    sbox/.default={blue},
+    % Half-width box (for parallel steps)
+    hbox/.style={
+      rectangle, rounded corners=3pt, draw=blue!50!black, fill=blue!6,
+      minimum width=6.2cm, minimum height=0.85cm,
+      text centered, font=\small, text width=5.7cm, inner sep=5pt,
+      line width=0.5pt
+    },
+    % Arrow with head
+    arr/.style={-{Stealth[length=2.5mm, width=2mm]}, draw=black!40, line width=0.7pt},
+    % Connector without head
+    conn/.style={draw=black!40, line width=0.7pt},
+    % Phase annotation label
+    plbl/.style={font=\scriptsize\sffamily\bfseries, text=#1!50!black},
+    plbl/.default={teal},
+    node distance=0.45cm
+  ]
+
+  % === Stage 1: Data Source ===
+  \node[sbox] (s1) {
+    \textbf{1.\enspace PRO-ACT Database}\\[-2pt]
+    {\scriptsize 16 clinical tables \enspace$\cdot$\enspace $N\!=\!5{,}436$ subjects with ALSFRS-R records}
+  };
+
+  % === Stage 2: Study Setup ===
+  \node[sbox, below=of s1] (s2) {
+    \textbf{2.\enspace Study Setup}\\[-2pt]
+    {\scriptsize Baseline definition ($t_0$\,=\,first ALSFRS-R)
+    \enspace$\cdot$\enspace Eligibility filtering
+    \enspace$\cdot$\enspace Data quality checks (BMI correction, FVC MAR analysis)}
+  };
+
+  % === Stage 3a / 3b: Target + Features (parallel) ===
+  \node[hbox, below=0.8cm of s2, xshift=-3.65cm] (s3a) {
+    \textbf{3a.\enspace Target Construction}\\[-2pt]
+    {\scriptsize ALSFRS-R slopes $\to$ Rapid vs\\Slow (fold-wise $P_{30}$ threshold)}
+  };
+  \node[hbox, below=0.8cm of s2, xshift=3.65cm] (s3b) {
+    \textbf{3b.\enspace Feature Engineering}\\[-2pt]
+    {\scriptsize 5 clinical blocks, 35 predictors\\(data available $\leq t_0$ only)}
+  };
+
+  % === Stage 4: Holdout Split ===
+  \node[sbox=red, below=0.8cm of s3a, xshift=3.65cm] (s4) {
+    \textbf{4.\enspace Stratified Holdout Split}\\[-2pt]
+    {\scriptsize DEV set (80\%)\enspace/\enspace TEST set (20\%)
+    --- subject-wise, stratified by target}
+  };
+
+  % === Stage 5: Optuna Tuning ===
+  \node[sbox=teal, below=of s4] (s5) {
+    \textbf{5.\enspace Hyperparameter Tuning (Optuna)}\\[-2pt]
+    {\scriptsize 7 models $\times$ 2 class-weight modes = 13 configs
+    \enspace$\cdot$\enspace 60 TPE trials
+    \enspace$\cdot$\enspace PR-AUC objective}
+  };
+
+  % === Stage 6: Model Evaluation & Selection ===
+  \node[sbox=teal, below=of s5] (s6) {
+    \textbf{6.\enspace Model Evaluation \& Selection}\\[-2pt]
+    {\scriptsize Feature-block ablation (A$\to$F)
+    \enspace$\cdot$\enspace Cross-horizon validation (3\,m vs 6\,m)
+    \enspace$\cdot$\enspace Statistical tests
+    \enspace$\cdot$\enspace Threshold optimization}
+  };
+
+  % === Stage 7: Held-Out Test Evaluation ===
+  \node[sbox=orange, below=of s6] (s7) {
+    \textbf{7.\enspace Held-Out Test Evaluation}\\[-2pt]
+    {\scriptsize Single unbiased pass on the reserved TEST set
+    \enspace$\cdot$\enspace Calibration analysis}
+  };
+
+  % === Stage 8: Explainability ===
+  \node[sbox=violet, below=of s7] (s8) {
+    \textbf{8.\enspace Explainability (SHAP)}\\[-2pt]
+    {\scriptsize Global: feature importance \& beeswarm
+    \enspace$\cdot$\enspace Local: waterfall plots (TP / FP / FN / TN)}
+  };
+
+  % ====== ARROWS ======
+  % s1 -> s2
+  \draw[arr] (s1) -- (s2);
+
+  % s2 -> split -> s3a, s3b
+  \draw[conn] (s2.south) -- ++(0,-0.25) coordinate (splitPt);
+  \draw[arr] (splitPt) -| (s3a.north);
+  \draw[arr] (splitPt) -| (s3b.north);
+
+  % s3a, s3b -> merge -> s4
+  \draw[conn] (s3a.south) -- ++(0,-0.2) coordinate (mL);
+  \draw[conn] (s3b.south) -- ++(0,-0.2) coordinate (mR);
+  \draw[conn] (mL) -- (mR);
+  \coordinate (mergePt) at ($(mL)!0.5!(mR)$);
+  \draw[arr] (mergePt) -- (s4.north);
+
+  % Sequential arrows
+  \draw[arr] (s4) -- (s5);
+  \draw[arr] (s5) -- (s6);
+  \draw[arr] (s6) -- (s7);
+  \draw[arr] (s7) -- (s8);
+
+  % ====== DEV / TEST ANNOTATIONS ======
+  % Dashed boundary around DEV stages (5--6)
+  \draw[teal!40!black, dashed, rounded corners=5pt, line width=0.5pt]
+    ([shift={(-0.3cm,0.25cm)}]s5.north west) rectangle
+    ([shift={(0.3cm,-0.25cm)}]s6.south east);
+  \node[plbl=teal, rotate=90, anchor=south]
+    at ([xshift=-0.6cm]$(s5.north west)!0.5!(s6.south west)$)
+    {DEV};
+
+  % TEST annotation beside stage 7
+  \node[plbl=orange, rotate=90, anchor=south]
+    at ([xshift=-0.6cm]s7.west)
+    {TEST};
+
+  \end{tikzpicture}
+  \caption{End-to-end pipeline for explainable ALS progression classification.
+  Stages~1--4 prepare and partition the data under a leakage-free protocol;
+  stages~5--6 perform model development exclusively on the DEV set
+  (5-fold subject-wise GroupKFold);
+  stage~7 provides a single unbiased evaluation on the held-out TEST set;
+  stage~8 adds post-hoc explainability via SHAP.}
+  \label{fig:pipeline_overview}
 \end{figure}
 
+\clearpage
 \section{Dataset}
 \label{sec:methods_dataset}
 \subsection{PRO-ACT Data Sources}
@@ -43,6 +174,116 @@ From the full PRO-ACT database ($N\!=\!5{,}436$ subjects with at least one ALSFR
 (iii) a computable functional slope that meets the quality threshold (Section~\ref{sec:methods_slope}).
 These criteria yield horizon-specific cohorts: $N\!=\!2{,}407$ for 3 months and $N\!=\!1{,}392$ for 6 months, with 720 subjects eligible at both horizons.
 The reduction from 5{,}436 to 1{,}392 (6-month) is primarily driven by the requirement for follow-up measurements near the 180-day mark.
+Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
+
+\begin{figure}[ht!]
+  \centering
+  \begin{tikzpicture}[
+    box/.style={
+      rectangle, rounded corners=3pt, draw=#1!60!black, fill=#1!8,
+      minimum width=9cm, minimum height=0.9cm,
+      text centered, font=\small, text width=8.5cm, inner sep=5pt,
+      line width=0.5pt
+    },
+    box/.default={blue},
+    splitbox/.style={
+      rectangle, rounded corners=3pt, draw=#1!60!black, fill=#1!8,
+      minimum width=4cm, minimum height=0.9cm,
+      text centered, font=\small, text width=3.8cm, inner sep=5pt,
+      line width=0.5pt
+    },
+    splitbox/.default={blue},
+    excl/.style={
+      rectangle, rounded corners=2pt, draw=red!50!black, fill=red!6,
+      minimum width=5.5cm, minimum height=0.7cm,
+      text centered, font=\scriptsize, text width=5.2cm, inner sep=4pt,
+      line width=0.4pt
+    },
+    arr/.style={-{Stealth[length=2.5mm, width=2mm]}, draw=black!50, line width=0.6pt},
+    earr/.style={-{Stealth[length=2mm, width=1.5mm]}, draw=red!40!black, line width=0.5pt},
+    node distance=0.6cm
+  ]
+
+  % Top: Full database
+  \node[box] (top) {
+    \textbf{PRO-ACT Database}\\[-2pt]
+    {\scriptsize $N = 10{,}723$ total subjects}
+  };
+
+  % Filter 1
+  \node[box, below=of top] (f1) {
+    \textbf{Subjects with $\geq 1$ ALSFRS-R record}\\[-2pt]
+    {\scriptsize $N = 5{,}436$}
+  };
+  \node[excl, right=1.2cm of f1] (e1) {
+    Excluded: $5{,}287$ subjects\\without ALSFRS-R data
+  };
+
+  % Filter 2
+  \node[box, below=of f1] (f2) {
+    \textbf{Valid baseline ALSFRS-R at $t_0$}\\[-2pt]
+    {\scriptsize $N = 5{,}169$}
+  };
+  \node[excl, right=1.2cm of f2] (e2) {
+    Excluded: $267$ with missing\\or invalid baseline score
+  };
+
+  % Split into horizons
+  \node[splitbox=teal, below=1cm of f2, xshift=-3cm] (h3) {
+    \textbf{3-month cohort}\\[-2pt]
+    {\scriptsize $N = 2{,}407$ (44.3\%)}
+  };
+  \node[splitbox=orange, below=1cm of f2, xshift=3cm] (h6) {
+    \textbf{6-month cohort}\\[-2pt]
+    {\scriptsize $N = 1{,}392$ (25.6\%)}
+  };
+  \node[excl, right=1.2cm of h6] (e3) {
+    Excluded per horizon:\\no follow-up in $[H \pm 7\text{d}]$
+  };
+
+  % Overlap annotation
+  \node[font=\scriptsize, text=black!60, below=0.15cm of f2]
+    (overlap) {720 subjects eligible at both horizons};
+
+  % DEV / TEST split — 3m
+  \node[splitbox=teal!90, below=0.8cm of h3, xshift=-1.2cm] (dev3) {
+    \textbf{DEV}\\[-2pt]{\scriptsize $n = 1{,}925$ (80\%)}
+  };
+  \node[splitbox=teal!90, below=0.8cm of h3, xshift=1.2cm] (test3) {
+    \textbf{TEST}\\[-2pt]{\scriptsize $n = 482$ (20\%)}
+  };
+
+  % DEV / TEST split — 6m
+  \node[splitbox=orange!85, below=0.8cm of h6, xshift=-1.2cm] (dev6) {
+    \textbf{DEV}\\[-2pt]{\scriptsize $n = 1{,}113$ (80\%)}
+  };
+  \node[splitbox=orange!85, below=0.8cm of h6, xshift=1.2cm] (test6) {
+    \textbf{TEST}\\[-2pt]{\scriptsize $n = 279$ (20\%)}
+  };
+
+  % ====== ARROWS ======
+  \draw[arr] (top) -- (f1);
+  \draw[earr] (f1.east) -- (e1.west);
+  \draw[arr] (f1) -- (f2);
+  \draw[earr] (f2.east) -- (e2.west);
+
+  % Split to horizons
+  \draw[arr] (f2.south) -- ++(0,-0.35) coordinate (sp1) -| (h3.north);
+  \draw[arr] (sp1) -| (h6.north);
+  \draw[earr] (h6.east) -- (e3.west);
+
+  % DEV/TEST splits
+  \draw[arr] (h3.south) -- ++(0,-0.2) coordinate (sp3) -| (dev3.north);
+  \draw[arr] (sp3) -| (test3.north);
+  \draw[arr] (h6.south) -- ++(0,-0.2) coordinate (sp6) -| (dev6.north);
+  \draw[arr] (sp6) -| (test6.north);
+
+  \end{tikzpicture}
+  \caption{CONSORT-style flowchart of cohort derivation.
+  Starting from the full PRO-ACT database, successive eligibility filters reduce the sample to horizon-specific cohorts, each split into development (DEV, 80\%) and held-out test (TEST, 20\%) partitions.
+  Red boxes indicate exclusion criteria applied at each stage.}
+  \label{fig:consort_flowchart}
+\end{figure}
 
 \subsection{Held-Out Data Partitioning}
 \label{sec:methods_holdout}
@@ -65,6 +306,171 @@ The baseline timepoint is critical to ensure temporal validity and prevent infor
 All predictors (features) must be constructed using data available \emph{up to and including} $t_0$, while all targets must be derived exclusively from measurements \emph{after} $t_0$.
 This strict temporal separation mirrors the intended clinical use case: a clinician wishes to assess, at a patient's first structured evaluation, whether the patient is likely to experience rapid functional decline over the following months.
 Violating this separation---for example, by including post-baseline lab values as predictors---would produce optimistically biased models that cannot be replicated at the point of clinical decision-making.
+Figure~\ref{fig:temporal_separation} illustrates this temporal separation for both prediction horizons.
+
+\begin{figure}[ht!]
+  \centering
+  \begin{tikzpicture}[
+    >=Stealth,
+    tlabel/.style={font=\scriptsize, text=black!70},
+    blabel/.style={font=\scriptsize\bfseries},
+  ]
+
+  % ── Dimensions ──
+  \def\tlength{14}   % total timeline length in cm
+  \def\tzero{3.5}    % position of t0
+  \def\yrow{0}       % y for 6-month row
+  \def\yrowB{-2.8}   % y for 3-month row
+
+  % ======================================================================
+  %  6-MONTH HORIZON
+  % ======================================================================
+  \node[blabel, anchor=east] at (-0.3, \yrow) {6-month};
+
+  % Main timeline axis
+  \draw[->, black!40, line width=0.6pt]
+    (0,\yrow) -- (\tlength,\yrow)
+    node[right, tlabel] {time (days)};
+
+  % ── Feature zone: data ≤ t0 ──
+  \fill[blue!12] (0,\yrow-0.35) rectangle (\tzero,\yrow+0.35);
+  \draw[blue!50!black, line width=0.4pt]
+    (0,\yrow-0.35) rectangle (\tzero,\yrow+0.35);
+  \node[font=\scriptsize, text=blue!60!black] at (\tzero/2, \yrow)
+    {Features (data $\leq t_0$)};
+
+  % ── t0 marker ──
+  \draw[black, line width=1pt] (\tzero,\yrow-0.55) -- (\tzero,\yrow+0.55);
+  \node[font=\small\bfseries, above] at (\tzero,\yrow+0.55) {$t_0$};
+
+  % ── Target zone: 6m ──
+  % H = 180d → position at tzero + 7.0cm ; tolerance ±7d → ±0.28cm
+  \def\sixmEnd{10.5}       % t0 + 180d
+  \def\tolW{0.28}          % ±7d tolerance half-width
+
+  \fill[orange!12]
+    (\tzero,\yrow-0.35) rectangle (\sixmEnd+\tolW,\yrow+0.35);
+  \draw[orange!50!black, line width=0.4pt]
+    (\tzero,\yrow-0.35) rectangle (\sixmEnd+\tolW,\yrow+0.35);
+  \node[font=\scriptsize, text=orange!60!black]
+    at ({(\tzero+\sixmEnd+\tolW)/2}, \yrow)
+    {Target window (ALSFRS-R slope)};
+
+  % Tolerance band shading
+  \fill[red!10] (\sixmEnd-\tolW,\yrow-0.35) rectangle (\sixmEnd+\tolW,\yrow+0.35);
+  \draw[red!40, dashed, line width=0.4pt]
+    (\sixmEnd-\tolW,\yrow-0.35) -- (\sixmEnd-\tolW,\yrow+0.35);
+  \draw[red!40, dashed, line width=0.4pt]
+    (\sixmEnd+\tolW,\yrow-0.35) -- (\sixmEnd+\tolW,\yrow+0.35);
+
+  % 180d label
+  \draw[black!50, line width=0.5pt] (\sixmEnd,\yrow-0.55) -- (\sixmEnd,\yrow+0.55);
+  \node[font=\scriptsize, above] at (\sixmEnd, \yrow+0.55) {$t_0\!+\!180$d};
+
+  % Tolerance annotation
+  \draw[<->, red!50!black, line width=0.4pt]
+    (\sixmEnd-\tolW, \yrow-0.55) -- (\sixmEnd+\tolW, \yrow-0.55)
+    node[midway, below, font=\tiny, text=red!50!black] {$\pm 7$d};
+
+  % ── Forbidden zone label ──
+  \node[font=\tiny, text=red!50!black, rotate=90, anchor=south]
+    at (\tzero+0.15, \yrow) {};
+
+  % ── Leakage barrier ──
+  \draw[red!70!black, line width=1.2pt, densely dashed]
+    (\tzero, \yrow-0.7) -- (\tzero, \yrow+0.85);
+  \node[font=\tiny\bfseries, text=red!60!black, above right]
+    at (\tzero+0.05, \yrow+0.6) {leakage barrier};
+
+  % Example data points (features)
+  \foreach \x in {0.6, 1.3, 2.1, 2.8, 3.3} {
+    \fill[blue!60!black] (\x, \yrow+0.15) circle (1.5pt);
+  }
+  % Example data points (target)
+  \foreach \x in {4.5, 5.8, 7.0, 8.2, 9.5, 10.3} {
+    \fill[orange!70!black] (\x, \yrow+0.15) circle (1.5pt);
+  }
+
+  % ======================================================================
+  %  3-MONTH HORIZON
+  % ======================================================================
+  \node[blabel, anchor=east] at (-0.3, \yrowB) {3-month};
+
+  % Main timeline axis
+  \draw[->, black!40, line width=0.6pt]
+    (0,\yrowB) -- (\tlength,\yrowB)
+    node[right, tlabel] {time (days)};
+
+  % ── Feature zone ──
+  \fill[blue!12] (0,\yrowB-0.35) rectangle (\tzero,\yrowB+0.35);
+  \draw[blue!50!black, line width=0.4pt]
+    (0,\yrowB-0.35) rectangle (\tzero,\yrowB+0.35);
+  \node[font=\scriptsize, text=blue!60!black] at (\tzero/2, \yrowB)
+    {Features (data $\leq t_0$)};
+
+  % ── t0 marker ──
+  \draw[black, line width=1pt] (\tzero,\yrowB-0.55) -- (\tzero,\yrowB+0.55);
+  \node[font=\small\bfseries, above] at (\tzero,\yrowB+0.55) {$t_0$};
+
+  % ── Target zone: 3m ──
+  \def\threemEnd{7.0}    % t0 + 90d
+
+  \fill[teal!12]
+    (\tzero,\yrowB-0.35) rectangle (\threemEnd+\tolW,\yrowB+0.35);
+  \draw[teal!50!black, line width=0.4pt]
+    (\tzero,\yrowB-0.35) rectangle (\threemEnd+\tolW,\yrowB+0.35);
+  \node[font=\scriptsize, text=teal!60!black]
+    at ({(\tzero+\threemEnd+\tolW)/2}, \yrowB)
+    {Target window};
+
+  % Tolerance band
+  \fill[red!10] (\threemEnd-\tolW,\yrowB-0.35) rectangle (\threemEnd+\tolW,\yrowB+0.35);
+  \draw[red!40, dashed, line width=0.4pt]
+    (\threemEnd-\tolW,\yrowB-0.35) -- (\threemEnd-\tolW,\yrowB+0.35);
+  \draw[red!40, dashed, line width=0.4pt]
+    (\threemEnd+\tolW,\yrowB-0.35) -- (\threemEnd+\tolW,\yrowB+0.35);
+
+  % 90d label
+  \draw[black!50, line width=0.5pt] (\threemEnd,\yrowB-0.55) -- (\threemEnd,\yrowB+0.55);
+  \node[font=\scriptsize, above] at (\threemEnd, \yrowB+0.55) {$t_0\!+\!90$d};
+
+  % Tolerance annotation
+  \draw[<->, red!50!black, line width=0.4pt]
+    (\threemEnd-\tolW, \yrowB-0.55) -- (\threemEnd+\tolW, \yrowB-0.55)
+    node[midway, below, font=\tiny, text=red!50!black] {$\pm 7$d};
+
+  % ── Leakage barrier ──
+  \draw[red!70!black, line width=1.2pt, densely dashed]
+    (\tzero, \yrowB-0.7) -- (\tzero, \yrowB+0.85);
+
+  % Example data points (features)
+  \foreach \x in {0.6, 1.3, 2.1, 2.8, 3.3} {
+    \fill[blue!60!black] (\x, \yrowB+0.15) circle (1.5pt);
+  }
+  % Example data points (target)
+  \foreach \x in {4.2, 5.2, 6.1, 6.8} {
+    \fill[teal!70!black] (\x, \yrowB+0.15) circle (1.5pt);
+  }
+
+  % ======================================================================
+  %  LEGEND
+  % ======================================================================
+  \node[font=\scriptsize, anchor=west] at (0, \yrowB-1.2) {
+    \tikz{\fill[blue!60!black] (0,0) circle (1.5pt);}\ Clinical measurement (feature)
+    \quad
+    \tikz{\fill[orange!70!black] (0,0) circle (1.5pt);}\ ALSFRS-R measurement (target)
+    \quad
+    \tikz{\draw[red!70!black, line width=1pt, densely dashed] (0,0) -- (0.5,0);}\ Leakage barrier
+  };
+
+  \end{tikzpicture}
+  \caption{Temporal separation between feature extraction and target construction.
+  For each subject, features are derived exclusively from data available up to the baseline timepoint~$t_0$ (blue zone), while the target slope is computed from ALSFRS-R measurements after~$t_0$ within the horizon window (orange/teal zone).
+  The dashed red line marks the leakage barrier; no information may cross from right to left.
+  The $\pm 7$-day tolerance band (red shading) accommodates real-world visit variability.
+  Blue and coloured dots represent example clinical measurements for a hypothetical patient.}
+  \label{fig:temporal_separation}
+\end{figure}
 
 \section{Target Construction: ALSFRS-R Slopes}
 \label{sec:methods_targets}

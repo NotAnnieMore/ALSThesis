@@ -2,15 +2,18 @@
 Train final Logistic Regression model (6-month horizon) for ALS progression.
 
 This script:
-  1) loads the processed 6m dataset (one row per subject)
+  1) loads the processed 6m v2 dataset (one row per subject, 35 features)
   2) defines the binary target "rapid" as the worst 30% slopes (more negative)
-  3) fits a preprocessing + Logistic Regression pipeline
+  3) fits a preprocessing + Logistic Regression pipeline (Optuna best params)
   4) saves the trained model (joblib) and a small metadata JSON
 
-Assumptions:
-  - dataset path: 01_data/processed/dataset_6m_v1.csv
-  - slope column: slope_180d_per_30d
-  - subject id column: subject_id
+Inputs:
+  - 01_data/processed/dataset_6m_v2.csv
+  - 04_outputs/tables/step5_tuning/LR_balanced_6m_best.json
+
+Outputs:
+  - models/final_lr_6m.joblib
+  - models/final_lr_6m_metadata.json
 """
 
 from __future__ import annotations
@@ -34,7 +37,9 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 # ----------------------------
 # Configuration (edit here if needed)
 # ----------------------------
-DATASET_REL_PATH = os.path.join("01_data", "processed", "dataset_6m_v1.csv")
+DATASET_REL_PATH = os.path.join("01_data", "processed", "dataset_6m_v2.csv")
+BEST_PARAMS_REL_PATH = os.path.join(
+    "04_outputs", "tables", "step5_tuning", "LR_balanced_6m_best.json")
 
 ID_COL = "subject_id"
 SLOPE_COL = "slope_180d_per_30d"
@@ -42,7 +47,18 @@ SLOPE_COL = "slope_180d_per_30d"
 # "rapid" = worst 30% slopes (more negative)
 RAPID_FRAC = 0.30
 
-# Final decision threshold (chosen from CV mean threshold in Step 5)
+# Columns to exclude from features (aligned with tune_all.py / evaluate_holdout.py)
+DROP_COLS = {
+    "subject_id",
+    "t0_delta_days",
+    "vitals_delta_days",
+    "fvc_delta_days",
+    "slope_90d_per_30d",
+    "slope_180d_per_30d",
+    "ALSFRS_Responded_By",
+}
+
+# Final decision threshold (chosen from threshold sweep in Step 6)
 FINAL_THRESHOLD = 0.30
 
 # Output artefacts
@@ -58,6 +74,7 @@ class TrainMeta:
     created_utc: str
 
     dataset_path: str
+    best_params_path: str
     n_samples: int
     rapid_prevalence: float
 
@@ -107,13 +124,7 @@ def build_target(df: pd.DataFrame) -> Tuple[pd.Series, float]:
 
 def build_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, List[str]]:
     """Return X and list of feature columns."""
-    drop_cols = {ID_COL, SLOPE_COL}
-
-    # If the dataset contains 3m slope too, drop it (avoid leakage/target contamination)
-    if "slope_90d_per_30d" in df.columns:
-        drop_cols.add("slope_90d_per_30d")
-
-    feat_cols = [c for c in df.columns if c not in drop_cols]
+    feat_cols = [c for c in df.columns if c not in DROP_COLS]
     if not feat_cols:
         raise ValueError("No feature columns left after dropping ID/target columns.")
 
@@ -128,8 +139,9 @@ def split_types(X: pd.DataFrame) -> Tuple[List[str], List[str]]:
     return num_cols, cat_cols
 
 
-def build_pipeline(num_cols: List[str], cat_cols: List[str]) -> Pipeline:
-    """Preprocessing + Logistic Regression."""
+def build_pipeline(num_cols: List[str], cat_cols: List[str],
+                   best_params: dict) -> Pipeline:
+    """Preprocessing + Logistic Regression with Optuna best params."""
     num_pipe = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="median")),
@@ -153,9 +165,12 @@ def build_pipeline(num_cols: List[str], cat_cols: List[str]) -> Pipeline:
     )
 
     clf = LogisticRegression(
-        max_iter=2000,
-        solver="liblinear",
+        C=best_params["C"],
+        penalty=best_params["penalty"],
+        solver=best_params.get("solver", "liblinear"),
+        max_iter=best_params.get("max_iter", 3000),
         class_weight="balanced",
+        random_state=best_params.get("random_state", 42),
     )
 
     return Pipeline(steps=[("prep", preproc), ("clf", clf)])
@@ -178,12 +193,20 @@ def save_artifacts(model: Pipeline, meta: TrainMeta) -> Tuple[str, str]:
 def main() -> None:
     root = project_root()
     dataset_path = os.path.join(root, DATASET_REL_PATH)
+    best_path = os.path.join(root, BEST_PARAMS_REL_PATH)
 
     print(f"[INFO] Project root: {root}")
     print(f"[INFO] Loading dataset: {dataset_path}")
+    print(f"[INFO] Loading Optuna best params: {best_path}")
 
     df = load_dataset(dataset_path)
     print(f"[INFO] Loaded rows: {len(df)}")
+
+    # Load best params from Optuna JSON
+    with open(best_path, "r", encoding="utf-8") as f:
+        best_payload = json.load(f)
+    best_params = best_payload.get("full_params", best_payload["best_params"])
+    print(f"[INFO] LR best params: {best_params}")
 
     y, slope_cutoff = build_target(df)
     X, feat_cols = build_features(df)
@@ -193,7 +216,7 @@ def main() -> None:
     print(f"[INFO] slope cutoff (30%): {slope_cutoff:.4f}")
     print(f"[INFO] features: {len(feat_cols)} (num={len(num_cols)}, cat={len(cat_cols)})")
 
-    pipe = build_pipeline(num_cols, cat_cols)
+    pipe = build_pipeline(num_cols, cat_cols, best_params)
     pipe.fit(X, y)
 
     # Sanity check
@@ -203,10 +226,11 @@ def main() -> None:
     print(f"[INFO] positives @ threshold {FINAL_THRESHOLD:.2f}: {preds.sum()} / {len(preds)}")
 
     meta = TrainMeta(
-        model_name="LogisticRegression(class_weight=balanced)",
+        model_name="LogisticRegression(class_weight=balanced, Optuna tuned)",
         horizon="6m",
         created_utc=datetime.utcnow().isoformat(timespec="seconds") + "Z",
         dataset_path=DATASET_REL_PATH,
+        best_params_path=BEST_PARAMS_REL_PATH,
         n_samples=int(len(df)),
         rapid_prevalence=float(y.mean()),
         slope_col=SLOPE_COL,
