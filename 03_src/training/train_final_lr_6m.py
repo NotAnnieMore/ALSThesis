@@ -35,7 +35,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 # ----------------------------
-# Configuration (edit here if needed)
+# Configuration
 # ----------------------------
 DATASET_REL_PATH = os.path.join("01_data", "processed", "dataset_6m_v2.csv")
 BEST_PARAMS_REL_PATH = os.path.join(
