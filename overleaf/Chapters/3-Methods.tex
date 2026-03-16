@@ -670,11 +670,99 @@ This produces a single reproducible artifact for downstream explainability analy
 
 \section{Explainability Plan (XAI)}
 \label{sec:methods_xai_plan}
-Explainability is treated as a core requirement.
-For the final tuned XGBoost model, we use SHAP to provide:
+Explainability is treated as a core requirement for clinical acceptability.
+We employ three complementary techniques---SHAP, LIME, and Logistic Regression coefficient analysis---to explain the final XGBoost model's predictions at both the global and individual levels.
+
+\subsection{SHAP (SHapley Additive exPlanations)}
+\label{subsec:methods_shap}
+SHAP~\cite{lundberg2017shap} assigns each feature a Shapley value quantifying its contribution to a specific prediction, grounded in cooperative game theory.
+For XGBoost, we use \textit{TreeSHAP}~\cite{lundberg2020treeshap}, a polynomial-time exact algorithm that exploits the tree structure to compute Shapley values without the exponential cost of the na\"ive formulation.
+
+Two levels of analysis are performed:
 \begin{itemize}
-  \item \textbf{Global explanations:} feature importance based on mean absolute SHAP values and summary (beeswarm) plots to characterize the overall contribution of each feature,
-  \item \textbf{Local explanations:} per-subject SHAP decompositions (e.g., waterfall plots) for representative TP/FP/FN/TN cases, enabling clinically actionable interpretation of individual predictions.
+  \item \textbf{Global explanations:} mean absolute SHAP values across all TEST-set subjects yield a feature importance ranking, visualised as a bar plot.
+    A beeswarm (summary) plot additionally shows the distribution and direction of each feature's impact, revealing non-linear or interaction effects.
+  \item \textbf{Local explanations:} per-subject SHAP waterfall plots decompose individual predictions into additive feature contributions relative to the base value $E[f(x)]$.
+    Four representative cases are selected---one from each confusion-matrix quadrant (TP, FP, FN, TN)---by choosing the subject closest to the median predicted probability within each quadrant.
+    This avoids cherry-picking extreme examples.
 \end{itemize}
-Logistic Regression is retained as an interpretable baseline; its coefficients may be analyzed as a complementary, model-intrinsic explanation of directionality in feature effects.
+
+\subsection{LIME (Local Interpretable Model-agnostic Explanations)}
+\label{subsec:methods_lime}
+LIME~\cite{ribeiro2016lime} provides an independent local explanation method for cross-validation against SHAP.
+For each of the same four case-study subjects, LIME generates 2{,}000 perturbed neighbours of the input, queries the classifier for predicted probabilities, and fits a sparse linear model in the neighbourhood of the original instance.
+The resulting feature weights indicate which variables drive the local decision boundary.
+
+Because the production pipeline includes a one-hot encoder and standard scaler, LIME is applied to the \textit{preprocessed} (fully numeric) feature matrix rather than the raw data, wrapping only the final classifier as a black-box predictor.
+This avoids type-conversion errors and ensures that the perturbation distribution matches the feature space seen by the model.
+
+\subsection{SHAP--LIME Concordance}
+\label{subsec:methods_concordance}
+To assess robustness, we compare the top-10 most influential features identified by SHAP and LIME for each case study and count the number of overlapping features.
+High concordance between the two independent explanation methods increases confidence that the identified drivers are genuine rather than artefacts of a single attribution technique.
+
+\subsection{Logistic Regression Coefficients}
+\label{subsec:methods_lr_coefs}
+The balanced Logistic Regression model (trained with \texttt{class\_weight=balanced}) provides a model-intrinsic form of explainability:
+each standardised coefficient directly quantifies the direction and magnitude of a feature's linear association with the log-odds of rapid progression.
+Comparing the LR coefficient ranking with SHAP importance serves as a further triangulation of feature relevance across fundamentally different model families (linear vs.\ ensemble).
+
+\section{Supplementary Analyses}
+\label{sec:methods_supplementary}
+
+\subsection{Error Profiling}
+\label{subsec:methods_error_profile}
+To understand \textit{which} patients the model misclassifies, we profile all TEST-set subjects by confusion-matrix quadrant (TP, FP, FN, TN) and stratify by four clinical variables:
+\begin{itemize}
+  \item \textbf{Age group} (quartile-based: $\leq$49, 50--57, 58--65, $>$65),
+  \item \textbf{Sex} (Male, Female),
+  \item \textbf{ALSFRS-R severity} ($\leq$35 severe, 36--39, 40--42, $>$42 mild),
+  \item \textbf{FVC \% of normal} (quartile-based: $\leq$77\%, 78--87\%, 88--98\%, $>$98\%).
+\end{itemize}
+For each group we report absolute counts and proportions per quadrant, with particular attention to false negatives---the clinically most dangerous error in a screening context.
+
+\subsection{Subgroup Performance Analysis}
+\label{subsec:methods_subgroup}
+To assess whether the model's performance is equitable across clinical subgroups, we compute PR-AUC, recall, precision, and $F_1$ separately for each stratum of the four variables above.
+Subgroups with fewer than 10 subjects or fewer than 3 rapid progressors are excluded to avoid unreliable metric estimates.
+This analysis reveals whether the model exhibits differential performance (e.g., higher recall for severe patients but lower recall for mild-function patients).
+
+\subsection{Decision Curve Analysis}
+\label{subsec:methods_dca}
+Decision Curve Analysis (DCA)~\cite{vickers2006dca} evaluates the clinical utility of a predictive model by computing the \textit{net benefit} across a range of threshold probabilities.
+The net benefit at threshold $t$ is defined as:
+\begin{equation}
+  \text{NB}(t) = \frac{\text{TP}}{N} - \frac{\text{FP}}{N} \cdot \frac{t}{1-t}
+  \label{eq:net_benefit}
+\end{equation}
+where the ratio $t/(1-t)$ represents the relative cost of a false positive versus a missed case.
+The model's net-benefit curve is compared against two reference strategies: \textit{treat all} (classify every patient as rapid) and \textit{treat none} (classify no patient as rapid).
+A model is clinically useful at thresholds where its net benefit exceeds both references.
+
+\subsection{Learning Curves}
+\label{subsec:methods_learning_curves}
+To assess whether additional training data would improve performance, we construct learning curves by training the final XGBoost model on progressively larger random subsets of the DEV set (20\%, 30\%, \ldots, 100\%) and evaluating each on the fixed TEST set.
+Subsampling is performed at the subject level (not row level) to preserve the GroupKFold rationale.
+Each fraction below 100\% is repeated five times with different random seeds to estimate variance.
+A plateau in PR-AUC at high fractions indicates a feature-driven, rather than data-driven, performance ceiling.
+
+\subsection{Bootstrap Confidence Intervals}
+\label{subsec:methods_bootstrap}
+To quantify the statistical uncertainty of the TEST-set performance estimates, we compute 95\% confidence intervals via the non-parametric bootstrap~\cite{efron1993bootstrap}.
+For each of $B\!=\!2{,}000$ iterations, we draw a sample of size $N_{\text{test}}$ with replacement from the TEST set and re-compute six metrics: PR-AUC, ROC-AUC, recall, precision, $F_1$, and Brier score.
+The 2.5th and 97.5th percentiles of the bootstrap distribution define the 95\% confidence interval for each metric.
+Degenerate bootstrap samples (single-class) are discarded.
+This approach makes no distributional assumptions and accounts for the sampling variability inherent in a fixed-size held-out set.
+
+\subsection{Partial Dependence Plots}
+\label{subsec:methods_pdp}
+Partial Dependence Plots (PDPs)~\cite{friedman2001pdp} visualise the marginal effect of a single feature on the predicted probability of rapid progression, averaged over all other features.
+For a feature $x_j$, the partial dependence function is:
+\begin{equation}
+  \hat{f}_j(x_j) = \frac{1}{N} \sum_{i=1}^{N} \hat{f}(x_j,\, \mathbf{x}_{i,\setminus j})
+  \label{eq:pdp}
+\end{equation}
+where $\mathbf{x}_{i,\setminus j}$ denotes the values of all features except $x_j$ for subject $i$.
+We compute PDPs for the three features with the highest global SHAP importance (ALSFRS-R total, FVC in litres, respiratory rate). The grid spans the 5th to 95th percentile of each feature's distribution to avoid extrapolation artefacts.
+A rug plot of observed values is overlaid to indicate data density.
 

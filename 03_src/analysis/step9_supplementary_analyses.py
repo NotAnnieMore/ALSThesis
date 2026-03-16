@@ -1,0 +1,814 @@
+"""
+Step 9 — Supplementary Analyses: Error profiling, Subgroup evaluation,
+         Decision Curve Analysis, Learning Curves, Bootstrap CIs, and PDPs.
+
+Protocol
+--------
+1. Load final XGBoost model + TEST set (holdout_split_6m)
+2. Error analysis:  systematic profiling of FP vs FN vs TP vs TN by clinical
+   variables (age, sex, ALSFRS-R severity, FVC status)
+3. Subgroup analysis: PR-AUC, recall, precision stratified by age group, sex,
+   ALSFRS-R severity tertile, FVC tertile
+4. Decision Curve Analysis: net-benefit curves (model vs treat-all vs treat-none)
+5. Learning Curves: PR-AUC on TEST as a function of DEV training-set size
+6. Bootstrap confidence intervals for TEST-set metrics (PR-AUC, ROC-AUC, recall,
+   precision, F1, Brier)
+7. Partial Dependence Plots for top-3 SHAP features
+
+Usage
+-----
+  cd g:\\TESE\\CodigoMain
+  python 03_src/analysis/step9_supplementary_analyses.py
+
+Outputs
+-------
+  04_outputs/figures/step9_supplementary/error_profile_age.pdf / .png
+  04_outputs/figures/step9_supplementary/error_profile_alsfrs.pdf / .png
+  04_outputs/figures/step9_supplementary/error_profile_sex.pdf / .png
+  04_outputs/figures/step9_supplementary/error_profile_fvc.pdf / .png
+  04_outputs/figures/step9_supplementary/subgroup_pr_auc.pdf / .png
+  04_outputs/figures/step9_supplementary/subgroup_recall.pdf / .png
+  04_outputs/figures/step9_supplementary/decision_curve.pdf / .png
+  04_outputs/figures/step9_supplementary/learning_curve.pdf / .png
+  04_outputs/figures/step9_supplementary/bootstrap_ci.pdf / .png
+  04_outputs/figures/step9_supplementary/pdp_top3.pdf / .png
+  04_outputs/tables/step9_supplementary/error_profile_summary.csv
+  04_outputs/tables/step9_supplementary/subgroup_metrics.csv
+  04_outputs/tables/step9_supplementary/decision_curve_data.csv
+  04_outputs/tables/step9_supplementary/learning_curve_data.csv
+  04_outputs/tables/step9_supplementary/bootstrap_ci.csv
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import time
+import warnings
+
+import joblib
+import numpy as np
+import pandas as pd
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import (
+    average_precision_score,
+    brier_score_loss,
+    f1_score,
+    fbeta_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+from sklearn.model_selection import GroupKFold
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+from xgboost import XGBClassifier
+
+
+# ─────────────────────────────────────────────────────────────
+# Config
+# ─────────────────────────────────────────────────────────────
+PROCESSED    = os.path.join("01_data", "processed")
+TUNING_DIR   = os.path.join("04_outputs", "tables", "step5_tuning")
+OUT_FIG      = os.path.join("04_outputs", "figures", "step9_supplementary")
+OUT_TAB      = os.path.join("04_outputs", "tables", "step9_supplementary")
+OVERLEAF_FIG = os.path.join("overleaf", "images", "figures")
+
+HORIZON    = "6m"
+SEED       = 42
+RAPID_FRAC = 0.30
+THRESHOLD  = 0.21          # F1-optimal threshold from Step 6
+N_SPLITS   = 5
+
+DROP_COLS = {
+    "subject_id",
+    "t0_delta_days",
+    "vitals_delta_days",
+    "fvc_delta_days",
+    "slope_90d_per_30d",
+    "slope_180d_per_30d",
+    "ALSFRS_Responded_By",
+}
+
+# Learning-curve training fractions
+LC_FRACTIONS = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+# Bootstrap
+N_BOOTSTRAP = 2000
+CI_ALPHA     = 0.05     # 95% CI
+
+# PDP top features (from SHAP global analysis)
+PDP_FEATURES = ["ALSFRS_R_t0", "FVC_Liters_best_t0", "Respiratory_Rate"]
+
+# Readable feature names for plots
+FEATURE_LABELS = {
+    "ALSFRS_R_t0":                     "ALSFRS-R total (baseline)",
+    "Age":                             "Age",
+    "FVC_Liters_best_t0":              "FVC (litres)",
+    "FVC_pctNormal_best_t0":           "FVC (% normal)",
+    "Respiratory_Rate":                "Respiratory Rate",
+    "Pulse":                           "Pulse",
+    "alt_t0":                          "ALT (baseline)",
+    "Temperature":                     "Temperature",
+    "Weight_kg_t0":                    "Weight (kg)",
+    "BMI_t0":                          "BMI",
+    "creatinine_t0":                   "Creatinine (baseline)",
+    "n_conmeds_pre_t0":                "Concomitant medications (n)",
+    "Height_cm_t0":                    "Height (cm)",
+}
+
+
+# ─────────────────────────────────────────────────────────────
+# Helpers
+# ─────────────────────────────────────────────────────────────
+def ensure_dirs():
+    for d in (OUT_FIG, OUT_TAB, OVERLEAF_FIG):
+        os.makedirs(d, exist_ok=True)
+
+
+def save_fig(fig, name):
+    """Save figure to outputs + overleaf, both PDF and PNG."""
+    for d in (OUT_FIG, OVERLEAF_FIG):
+        fig.savefig(os.path.join(d, f"{name}.pdf"), dpi=200, bbox_inches="tight")
+        fig.savefig(os.path.join(d, f"{name}.png"), dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  [OK] {name}")
+
+
+def load_data():
+    """Load DEV + TEST partitions with features and labels."""
+    ds_path = os.path.join(PROCESSED, f"dataset_{HORIZON}_v2.csv")
+    hs_path = os.path.join(PROCESSED, f"holdout_split_{HORIZON}.csv")
+
+    df = pd.read_csv(ds_path)
+    hs = pd.read_csv(hs_path)
+
+    slope_col = "slope_180d_per_30d"
+    df[slope_col] = pd.to_numeric(df[slope_col], errors="coerce")
+    df = df.dropna(subset=[slope_col])
+
+    dev_ids  = set(hs.loc[hs["partition"] == "dev",  "subject_id"])
+    test_ids = set(hs.loc[hs["partition"] == "test", "subject_id"])
+
+    df_dev  = df[df["subject_id"].isin(dev_ids)].copy()
+    df_test = df[df["subject_id"].isin(test_ids)].copy()
+
+    cutoff = float(df_dev[slope_col].quantile(RAPID_FRAC))
+
+    feat_cols = [c for c in df.columns if c not in DROP_COLS]
+
+    X_dev  = df_dev[feat_cols].reset_index(drop=True)
+    X_test = df_test[feat_cols].reset_index(drop=True)
+    y_dev  = (df_dev[slope_col] <= cutoff).astype(int).reset_index(drop=True)
+    y_test = (df_test[slope_col] <= cutoff).astype(int).reset_index(drop=True)
+    groups_dev = df_dev["subject_id"].reset_index(drop=True)
+
+    # Keep raw clinical values for stratification (before pipeline transforms)
+    raw_test = df_test[["subject_id", "Age", "Sex",
+                        "ALSFRS_R_t0", "FVC_pctNormal_best_t0"]].reset_index(drop=True)
+
+    print(f"  DEV n={len(X_dev)},  TEST n={len(X_test)}")
+    print(f"  Slope cutoff (DEV P30): {cutoff:.4f}")
+    print(f"  Rapid prevalence — DEV: {y_dev.mean():.3f}  TEST: {y_test.mean():.3f}")
+    return X_dev, y_dev, groups_dev, X_test, y_test, feat_cols, cutoff, raw_test
+
+
+def build_preprocessor(X: pd.DataFrame, scale: bool) -> ColumnTransformer:
+    num_cols = X.select_dtypes(include=[np.number, "bool"]).columns.tolist()
+    cat_cols = [c for c in X.columns if c not in num_cols]
+
+    if scale:
+        num_pipe = Pipeline([
+            ("imp", SimpleImputer(strategy="median")),
+            ("sc",  StandardScaler()),
+        ])
+    else:
+        num_pipe = Pipeline([
+            ("imp", SimpleImputer(strategy="median")),
+        ])
+
+    cat_pipe = Pipeline([
+        ("imp", SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+    ])
+
+    return ColumnTransformer(
+        transformers=[
+            ("num", num_pipe, num_cols),
+            ("cat", cat_pipe, cat_cols),
+        ],
+        remainder="drop",
+    )
+
+
+def load_xgb_params():
+    """Load best Optuna hyperparameters for XGBoost unbalanced."""
+    path = os.path.join(TUNING_DIR, f"XGB_unbalanced_{HORIZON}_best.json")
+    with open(path, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    return payload["full_params"]
+
+
+def train_xgb_pipeline(X_train, y_train, params):
+    """Train XGBoost pipeline on given data and return fitted pipeline."""
+    preproc = build_preprocessor(X_train, scale=False)
+    p = dict(params)
+    p.setdefault("random_state", SEED)
+    p["use_label_encoder"] = False
+    p["eval_metric"] = "logloss"
+    clf = XGBClassifier(**p)
+    pipe = Pipeline([("pre", preproc), ("clf", clf)])
+    pipe.fit(X_train, y_train)
+    return pipe
+
+
+# ─────────────────────────────────────────────────────────────
+# 1. Error Analysis
+# ─────────────────────────────────────────────────────────────
+def run_error_analysis(pipe, X_test, y_test, raw_test):
+    """Profile TP/FP/FN/TN by clinical subgroups."""
+    print("\n── Error Analysis ──")
+
+    proba = pipe.predict_proba(X_test)[:, 1]
+    y_pred = (proba >= THRESHOLD).astype(int)
+
+    # Assign quadrant
+    quads = pd.Series("TN", index=y_test.index)
+    quads[(y_test == 1) & (y_pred == 1)] = "TP"
+    quads[(y_test == 0) & (y_pred == 1)] = "FP"
+    quads[(y_test == 1) & (y_pred == 0)] = "FN"
+
+    prof = raw_test.copy()
+    prof["quadrant"] = quads.values
+    prof["proba_rapid"] = proba
+
+    # Age groups
+    prof["Age_group"] = pd.cut(prof["Age"],
+                               bins=[0, 49, 57, 65, 100],
+                               labels=["≤49", "50-57", "58-65", ">65"])
+
+    # ALSFRS-R severity
+    prof["ALSFRS_severity"] = pd.cut(prof["ALSFRS_R_t0"],
+                                      bins=[0, 35, 39, 42, 50],
+                                      labels=["≤35 (severe)", "36-39", "40-42", ">42 (mild)"])
+
+    # FVC status
+    prof["FVC_group"] = pd.cut(prof["FVC_pctNormal_best_t0"],
+                                bins=[0, 77, 87, 98, 200],
+                                labels=["≤77%", "78-87%", "88-98%", ">98%"])
+
+    # Save full profile table
+    prof.to_csv(os.path.join(OUT_TAB, "error_profile_summary.csv"), index=False)
+
+    # --- Plot 1: Error distribution by Age ---
+    _plot_error_bars(prof, "Age_group", "error_profile_age",
+                     "Distribution of Prediction Outcomes by Age Group")
+
+    # --- Plot 2: Error distribution by ALSFRS-R severity ---
+    _plot_error_bars(prof, "ALSFRS_severity", "error_profile_alsfrs",
+                     "Distribution of Prediction Outcomes by ALSFRS-R Severity")
+
+    # --- Plot 3: Error distribution by Sex ---
+    _plot_error_bars(prof, "Sex", "error_profile_sex",
+                     "Distribution of Prediction Outcomes by Sex")
+
+    # --- Plot 4: Error distribution by FVC ---
+    valid = prof.dropna(subset=["FVC_group"])
+    _plot_error_bars(valid, "FVC_group", "error_profile_fvc",
+                     "Distribution of Prediction Outcomes by FVC (% normal)")
+
+    print(f"  Quadrant counts: {quads.value_counts().to_dict()}")
+    return prof
+
+
+def _plot_error_bars(df, group_col, fname, title):
+    """Stacked bar chart: quadrant proportions per group."""
+    ct = pd.crosstab(df[group_col], df["quadrant"])
+    # Ensure column order
+    for q in ["TP", "FP", "FN", "TN"]:
+        if q not in ct.columns:
+            ct[q] = 0
+    ct = ct[["TP", "FP", "FN", "TN"]]
+
+    ct_pct = ct.div(ct.sum(axis=1), axis=0) * 100
+
+    colors = {"TP": "#2ecc71", "FP": "#e74c3c", "FN": "#f39c12", "TN": "#3498db"}
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
+
+    # Left: absolute counts
+    ct.plot(kind="bar", stacked=True, ax=axes[0],
+            color=[colors[c] for c in ct.columns], edgecolor="white", linewidth=0.5)
+    axes[0].set_title("Absolute counts", fontsize=11)
+    axes[0].set_ylabel("Subjects")
+    axes[0].set_xlabel("")
+    axes[0].tick_params(axis="x", rotation=0)
+    axes[0].legend(loc="upper right", fontsize=8)
+    # Annotate totals
+    for i, total in enumerate(ct.sum(axis=1)):
+        axes[0].text(i, total + 0.5, f"n={total}", ha="center", va="bottom", fontsize=8)
+
+    # Right: percentage
+    ct_pct.plot(kind="bar", stacked=True, ax=axes[1],
+                color=[colors[c] for c in ct_pct.columns], edgecolor="white", linewidth=0.5)
+    axes[1].set_title("Proportion (%)", fontsize=11)
+    axes[1].set_ylabel("Percentage")
+    axes[1].set_xlabel("")
+    axes[1].tick_params(axis="x", rotation=0)
+    axes[1].set_ylim(0, 105)
+    axes[1].legend(loc="upper right", fontsize=8)
+    # Annotate FN% (most clinically relevant)
+    for i, (idx, row) in enumerate(ct_pct.iterrows()):
+        fn_pct = row["FN"]
+        if fn_pct > 0:
+            # Position at the bottom of the FN segment
+            bottom = row["TP"] + row["FP"]
+            axes[1].text(i, bottom + fn_pct / 2, f"{fn_pct:.0f}%",
+                         ha="center", va="center", fontsize=8, fontweight="bold")
+
+    fig.suptitle(title, fontsize=12, fontweight="bold", y=1.02)
+    fig.tight_layout()
+    save_fig(fig, fname)
+
+
+# ─────────────────────────────────────────────────────────────
+# 2. Subgroup Analysis
+# ─────────────────────────────────────────────────────────────
+def run_subgroup_analysis(pipe, X_test, y_test, raw_test):
+    """Compute PR-AUC, recall, precision per clinical subgroup."""
+    print("\n── Subgroup Analysis ──")
+
+    proba = pipe.predict_proba(X_test)[:, 1]
+    y_pred = (proba >= THRESHOLD).astype(int)
+
+    prof = raw_test.copy()
+    prof["y_true"] = y_test.values
+    prof["y_pred"] = y_pred
+    prof["proba"] = proba
+
+    # Define subgroups
+    prof["Age_group"] = pd.cut(prof["Age"],
+                               bins=[0, 49, 57, 65, 100],
+                               labels=["≤49", "50-57", "58-65", ">65"])
+    prof["ALSFRS_severity"] = pd.cut(prof["ALSFRS_R_t0"],
+                                      bins=[0, 35, 39, 42, 50],
+                                      labels=["≤35", "36-39", "40-42", ">42"])
+    prof["FVC_group"] = pd.cut(prof["FVC_pctNormal_best_t0"],
+                                bins=[0, 77, 87, 98, 200],
+                                labels=["≤77%", "78-87%", "88-98%", ">98%"])
+
+    stratification_vars = [
+        ("Age_group", "Age Group"),
+        ("Sex", "Sex"),
+        ("ALSFRS_severity", "ALSFRS-R Severity"),
+        ("FVC_group", "FVC (% normal)"),
+    ]
+
+    rows = []
+    for col, label in stratification_vars:
+        for group_val, grp in prof.dropna(subset=[col]).groupby(col):
+            n = len(grp)
+            n_rapid = int(grp["y_true"].sum())
+            if n_rapid < 3 or n < 10:
+                continue
+            metrics = {
+                "Stratification": label,
+                "Group": str(group_val),
+                "N": n,
+                "N_rapid": n_rapid,
+                "Prevalence": n_rapid / n,
+            }
+            try:
+                metrics["PR_AUC"] = average_precision_score(grp["y_true"], grp["proba"])
+            except ValueError:
+                metrics["PR_AUC"] = np.nan
+            metrics["Recall"] = recall_score(grp["y_true"], grp["y_pred"], zero_division=0)
+            metrics["Precision"] = precision_score(grp["y_true"], grp["y_pred"], zero_division=0)
+            metrics["F1"] = f1_score(grp["y_true"], grp["y_pred"], zero_division=0)
+            rows.append(metrics)
+
+    sub_df = pd.DataFrame(rows)
+    sub_df.to_csv(os.path.join(OUT_TAB, "subgroup_metrics.csv"), index=False)
+    print(sub_df.to_string(index=False))
+
+    # --- Plot: PR-AUC by subgroup ---
+    _plot_subgroup_metric(sub_df, "PR_AUC", "subgroup_pr_auc",
+                          "PR-AUC by Clinical Subgroup (TEST set, t=0.21)")
+
+    # --- Plot: Recall by subgroup ---
+    _plot_subgroup_metric(sub_df, "Recall", "subgroup_recall",
+                          "Recall by Clinical Subgroup (TEST set, t=0.21)")
+
+    return sub_df
+
+
+def _plot_subgroup_metric(df, metric, fname, title):
+    """Grouped bar chart of a metric across stratification variables."""
+    strats = df["Stratification"].unique()
+    fig, axes = plt.subplots(1, len(strats), figsize=(3.5 * len(strats), 4.5),
+                             sharey=True)
+    if len(strats) == 1:
+        axes = [axes]
+
+    palette = plt.cm.Set2(np.linspace(0, 1, 8))
+
+    for ax, strat in zip(axes, strats):
+        sub = df[df["Stratification"] == strat].copy()
+        x = np.arange(len(sub))
+        bars = ax.bar(x, sub[metric], color=palette[:len(sub)],
+                      edgecolor="grey", linewidth=0.5, width=0.65)
+
+        # Annotate values + N
+        for i, (val, n) in enumerate(zip(sub[metric], sub["N"])):
+            ax.text(i, val + 0.01, f"{val:.3f}", ha="center", va="bottom", fontsize=8)
+            ax.text(i, -0.04, f"n={n}", ha="center", va="top", fontsize=7, color="grey")
+
+        ax.set_xticks(x)
+        ax.set_xticklabels(sub["Group"], fontsize=9)
+        ax.set_title(strat, fontsize=10, fontweight="bold")
+        ax.set_ylim(-0.08, min(1.15, sub[metric].max() + 0.15))
+        ax.axhline(y=df[metric].mean(), color="red", linestyle="--",
+                   linewidth=0.8, alpha=0.6)
+
+    axes[0].set_ylabel(metric, fontsize=10)
+    fig.suptitle(title, fontsize=12, fontweight="bold", y=1.02)
+    fig.tight_layout()
+    save_fig(fig, fname)
+
+
+# ─────────────────────────────────────────────────────────────
+# 3. Decision Curve Analysis
+# ─────────────────────────────────────────────────────────────
+def run_decision_curve(pipe, X_test, y_test):
+    """Net-benefit curves: model vs treat-all vs treat-none."""
+    print("\n── Decision Curve Analysis ──")
+
+    proba = pipe.predict_proba(X_test)[:, 1]
+    n = len(y_test)
+    prevalence = y_test.mean()
+
+    thresholds = np.arange(0.01, 0.80, 0.01)
+    rows = []
+
+    for t in thresholds:
+        y_pred = (proba >= t).astype(int)
+        tp = int(((y_pred == 1) & (y_test == 1)).sum())
+        fp = int(((y_pred == 1) & (y_test == 0)).sum())
+
+        # Net benefit of the model
+        nb_model = (tp / n) - (fp / n) * (t / (1 - t))
+
+        # Net benefit of treat-all
+        nb_all = prevalence - (1 - prevalence) * (t / (1 - t))
+
+        rows.append({
+            "threshold": t,
+            "nb_model": nb_model,
+            "nb_treat_all": nb_all,
+            "nb_treat_none": 0.0,
+        })
+
+    dc_df = pd.DataFrame(rows)
+    dc_df.to_csv(os.path.join(OUT_TAB, "decision_curve_data.csv"), index=False)
+
+    # --- Plot ---
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(dc_df["threshold"], dc_df["nb_model"],
+            color="#2980b9", linewidth=2, label="XGBoost model")
+    ax.plot(dc_df["threshold"], dc_df["nb_treat_all"],
+            color="#e74c3c", linewidth=1.5, linestyle="--", label="Treat all")
+    ax.axhline(y=0, color="grey", linewidth=1, linestyle=":", label="Treat none")
+
+    # Mark the operating threshold
+    t_row = dc_df.iloc[(dc_df["threshold"] - THRESHOLD).abs().argsort()[:1]]
+    ax.scatter(THRESHOLD, t_row["nb_model"].values[0],
+               color="#2980b9", s=80, zorder=5, edgecolors="black")
+    ax.annotate(f"t = {THRESHOLD}",
+                xy=(THRESHOLD, t_row["nb_model"].values[0]),
+                xytext=(THRESHOLD + 0.06, t_row["nb_model"].values[0] + 0.03),
+                fontsize=9, arrowprops=dict(arrowstyle="->", color="black"))
+
+    ax.set_xlabel("Threshold Probability", fontsize=11)
+    ax.set_ylabel("Net Benefit", fontsize=11)
+    ax.set_title("Decision Curve Analysis — XGBoost (TEST set)", fontsize=12,
+                 fontweight="bold")
+    ax.legend(loc="upper right", fontsize=9)
+    ax.set_xlim(0, 0.80)
+    ax.set_ylim(-0.05, max(dc_df["nb_model"].max(), prevalence) + 0.05)
+    ax.grid(alpha=0.3)
+    fig.tight_layout()
+    save_fig(fig, "decision_curve")
+
+    # Print key insight
+    useful_range = dc_df[dc_df["nb_model"] > dc_df[["nb_treat_all", "nb_treat_none"]].max(axis=1)]
+    if len(useful_range) > 0:
+        print(f"  Model provides net benefit over treat-all/treat-none "
+              f"for thresholds {useful_range['threshold'].min():.2f} – "
+              f"{useful_range['threshold'].max():.2f}")
+    return dc_df
+
+
+# ─────────────────────────────────────────────────────────────
+# 4. Learning Curves
+# ─────────────────────────────────────────────────────────────
+def run_learning_curves(X_dev, y_dev, groups_dev, X_test, y_test, params):
+    """PR-AUC on TEST as a function of DEV training-set size."""
+    print("\n── Learning Curves ──")
+
+    rows = []
+    rng = np.random.RandomState(SEED)
+
+    for frac in LC_FRACTIONS:
+        n_sub = max(int(len(X_dev) * frac), 50)
+        pr_aucs, roc_aucs = [], []
+
+        # Repeat 5 times for stability (except frac=1.0)
+        n_repeats = 1 if frac == 1.0 else 5
+        for rep in range(n_repeats):
+            if frac < 1.0:
+                # Sample subjects, not rows (respect grouping)
+                unique_groups = groups_dev.unique()
+                n_groups = max(int(len(unique_groups) * frac), 10)
+                chosen = rng.choice(unique_groups, size=n_groups, replace=False)
+                mask = groups_dev.isin(chosen)
+                X_sub = X_dev[mask].reset_index(drop=True)
+                y_sub = y_dev[mask].reset_index(drop=True)
+            else:
+                X_sub = X_dev
+                y_sub = y_dev
+
+            pipe = train_xgb_pipeline(X_sub, y_sub, params)
+            proba = pipe.predict_proba(X_test)[:, 1]
+            pr_aucs.append(average_precision_score(y_test, proba))
+            roc_aucs.append(roc_auc_score(y_test, proba))
+
+        rows.append({
+            "fraction": frac,
+            "n_subjects": n_sub,
+            "pr_auc_mean": np.mean(pr_aucs),
+            "pr_auc_std": np.std(pr_aucs),
+            "roc_auc_mean": np.mean(roc_aucs),
+            "roc_auc_std": np.std(roc_aucs),
+        })
+        print(f"  frac={frac:.1f}  n≈{n_sub}  PR-AUC={np.mean(pr_aucs):.3f} ± {np.std(pr_aucs):.3f}")
+
+    lc_df = pd.DataFrame(rows)
+    lc_df.to_csv(os.path.join(OUT_TAB, "learning_curve_data.csv"), index=False)
+
+    # --- Plot ---
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    ax.errorbar(lc_df["n_subjects"], lc_df["pr_auc_mean"],
+                yerr=lc_df["pr_auc_std"], fmt="o-", color="#2980b9",
+                linewidth=2, capsize=4, markersize=6, label="PR-AUC (TEST)")
+    ax.errorbar(lc_df["n_subjects"], lc_df["roc_auc_mean"],
+                yerr=lc_df["roc_auc_std"], fmt="s--", color="#27ae60",
+                linewidth=2, capsize=4, markersize=6, label="ROC-AUC (TEST)")
+
+    # Annotate each point
+    for _, r in lc_df.iterrows():
+        ax.annotate(f"{r['pr_auc_mean']:.3f}",
+                    xy=(r["n_subjects"], r["pr_auc_mean"]),
+                    xytext=(0, 10), textcoords="offset points",
+                    ha="center", fontsize=8, color="#2980b9")
+
+    ax.set_xlabel("Training Set Size (subjects)", fontsize=11)
+    ax.set_ylabel("AUC (on TEST set)", fontsize=11)
+    ax.set_title("Learning Curves — XGBoost (TEST set evaluation)",
+                 fontsize=12, fontweight="bold")
+    ax.legend(loc="lower right", fontsize=9)
+    ax.grid(alpha=0.3)
+    ax.set_ylim(0.30, 0.80)
+    fig.tight_layout()
+    save_fig(fig, "learning_curve")
+
+    return lc_df
+
+
+# ─────────────────────────────────────────────────────────────
+# 5. Bootstrap Confidence Intervals
+# ─────────────────────────────────────────────────────────────
+def run_bootstrap_ci(pipe, X_test, y_test):
+    """Bootstrap 95% CIs for key TEST-set metrics."""
+    print("\n── Bootstrap Confidence Intervals ──")
+
+    proba = pipe.predict_proba(X_test)[:, 1]
+    y_pred = (proba >= THRESHOLD).astype(int)
+    n = len(y_test)
+    rng = np.random.RandomState(SEED)
+
+    # Point estimates
+    point = {
+        "PR-AUC":    average_precision_score(y_test, proba),
+        "ROC-AUC":   roc_auc_score(y_test, proba),
+        "Recall":    recall_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred, zero_division=0),
+        "F1":        f1_score(y_test, y_pred, zero_division=0),
+        "Brier":     brier_score_loss(y_test, proba),
+    }
+
+    # Bootstrap resampling
+    boot = {k: [] for k in point}
+    for _ in range(N_BOOTSTRAP):
+        idx = rng.randint(0, n, size=n)
+        yb = y_test.values[idx]
+        pb = proba[idx]
+        yp = y_pred[idx]
+
+        # Skip degenerate samples (single class)
+        if yb.sum() == 0 or yb.sum() == n:
+            continue
+
+        boot["PR-AUC"].append(average_precision_score(yb, pb))
+        boot["ROC-AUC"].append(roc_auc_score(yb, pb))
+        boot["Recall"].append(recall_score(yb, yp, zero_division=0))
+        boot["Precision"].append(precision_score(yb, yp, zero_division=0))
+        boot["F1"].append(f1_score(yb, yp, zero_division=0))
+        boot["Brier"].append(brier_score_loss(yb, pb))
+
+    rows = []
+    for metric in point:
+        vals = np.array(boot[metric])
+        lo = np.percentile(vals, 100 * CI_ALPHA / 2)
+        hi = np.percentile(vals, 100 * (1 - CI_ALPHA / 2))
+        rows.append({
+            "Metric": metric,
+            "Point": point[metric],
+            "CI_lower": lo,
+            "CI_upper": hi,
+            "CI_width": hi - lo,
+        })
+        print(f"  {metric:12s}  {point[metric]:.3f}  [{lo:.3f}, {hi:.3f}]")
+
+    ci_df = pd.DataFrame(rows)
+    ci_df.to_csv(os.path.join(OUT_TAB, "bootstrap_ci.csv"), index=False)
+
+    # --- Plot: forest plot of CIs ---
+    fig, ax = plt.subplots(figsize=(7, 4))
+    y_pos = np.arange(len(ci_df))
+    colors = ["#2980b9", "#27ae60", "#e67e22", "#8e44ad", "#e74c3c", "#1abc9c"]
+
+    for i, (_, r) in enumerate(ci_df.iterrows()):
+        ax.errorbar(r["Point"], i,
+                    xerr=[[r["Point"] - r["CI_lower"]], [r["CI_upper"] - r["Point"]]],
+                    fmt="o", color=colors[i % len(colors)],
+                    markersize=8, capsize=5, linewidth=2, capthick=1.5)
+        ax.text(r["CI_upper"] + 0.008, i,
+                f"{r['Point']:.3f} [{r['CI_lower']:.3f}, {r['CI_upper']:.3f}]",
+                va="center", fontsize=9)
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(ci_df["Metric"], fontsize=10)
+    ax.invert_yaxis()
+    ax.set_xlabel("Value", fontsize=11)
+    ax.set_title("Bootstrap 95% Confidence Intervals (TEST set, B=2000)",
+                 fontsize=12, fontweight="bold")
+    ax.grid(axis="x", alpha=0.3)
+    ax.set_xlim(0, 1.05)
+    fig.tight_layout()
+    save_fig(fig, "bootstrap_ci")
+
+    return ci_df
+
+
+# ─────────────────────────────────────────────────────────────
+# 6. Partial Dependence Plots
+# ─────────────────────────────────────────────────────────────
+def run_pdp(pipe, X_test):
+    """Partial Dependence Plots for top-3 SHAP features."""
+    print("\n── Partial Dependence Plots ──")
+
+    # Get preprocessed feature names from the fitted pipeline
+    preproc = pipe.named_steps["pre"]
+    clf = pipe.named_steps["clf"]
+
+    # Transform test data
+    X_transformed = preproc.transform(X_test)
+
+    # Build feature name list from preprocessor
+    num_features = preproc.transformers_[0][2]  # num column names
+    cat_transformer = preproc.transformers_[1][1]
+    ohe_step_name = "onehot" if "onehot" in dict(cat_transformer.steps) else "oh"
+    cat_features = list(cat_transformer.named_steps[ohe_step_name].get_feature_names_out(
+        preproc.transformers_[1][2]
+    ))
+    all_features_transformed = list(num_features) + cat_features
+
+    # Find indices of PDP features in the transformed space
+    pdp_indices = []
+    pdp_labels = []
+    for feat in PDP_FEATURES:
+        if feat in all_features_transformed:
+            pdp_indices.append(all_features_transformed.index(feat))
+            pdp_labels.append(FEATURE_LABELS.get(feat, feat))
+        else:
+            print(f"  [WARN] Feature '{feat}' not found in transformed space, skipping.")
+
+    if not pdp_indices:
+        print("  [SKIP] No PDP features found.")
+        return
+
+    # Compute PDP manually for each feature
+    fig, axes = plt.subplots(1, len(pdp_indices), figsize=(5 * len(pdp_indices), 4.5))
+    if len(pdp_indices) == 1:
+        axes = [axes]
+
+    X_arr = np.array(X_transformed) if not isinstance(X_transformed, np.ndarray) else X_transformed
+
+    for ax, feat_idx, label in zip(axes, pdp_indices, pdp_labels):
+        # Create grid of values for this feature
+        feat_vals = X_arr[:, feat_idx]
+        grid = np.linspace(np.percentile(feat_vals, 5),
+                           np.percentile(feat_vals, 95), 50)
+
+        # Compute partial dependence
+        pd_values = []
+        for val in grid:
+            X_temp = X_arr.copy()
+            X_temp[:, feat_idx] = val
+            preds = clf.predict_proba(X_temp)[:, 1]
+            pd_values.append(preds.mean())
+
+        pd_values = np.array(pd_values)
+
+        # Map grid back to original scale (undo standardisation if applicable)
+        # Since XGBoost doesn't use scaling, grid is in original scale
+        ax.plot(grid, pd_values, color="#2980b9", linewidth=2)
+        ax.fill_between(grid, pd_values, alpha=0.15, color="#2980b9")
+
+        # Add rug plot of actual data
+        ax.plot(feat_vals, np.full_like(feat_vals, pd_values.min() - 0.005),
+                "|", color="grey", alpha=0.3, markersize=6)
+
+        ax.set_xlabel(label, fontsize=11)
+        ax.set_ylabel("Avg. P(rapid)", fontsize=10)
+        ax.set_title(label, fontsize=11, fontweight="bold")
+        ax.grid(alpha=0.3)
+
+        # Annotate the range
+        ax.annotate(f"Δ = {pd_values.max() - pd_values.min():.3f}",
+                    xy=(0.95, 0.95), xycoords="axes fraction",
+                    ha="right", va="top", fontsize=9,
+                    bbox=dict(boxstyle="round,pad=0.3", fc="lightyellow", alpha=0.8))
+
+    fig.suptitle("Partial Dependence Plots — XGBoost (TEST set)",
+                 fontsize=12, fontweight="bold", y=1.02)
+    fig.tight_layout()
+    save_fig(fig, "pdp_top3")
+    print(f"  [OK] PDP for {len(pdp_indices)} features")
+
+
+# ─────────────────────────────────────────────────────────────
+# Main
+# ─────────────────────────────────────────────────────────────
+def main():
+    t0 = time.time()
+    warnings.filterwarnings("ignore", category=FutureWarning)
+
+    ensure_dirs()
+
+    # --- Load data ---
+    print("Loading data …")
+    X_dev, y_dev, groups_dev, X_test, y_test, feat_cols, cutoff, raw_test = load_data()
+
+    # --- Load XGBoost params & train on full DEV ---
+    print("Training XGBoost on full DEV …")
+    params = load_xgb_params()
+    pipe = train_xgb_pipeline(X_dev, y_dev, params)
+
+    # --- 1. Error Analysis ---
+    error_prof = run_error_analysis(pipe, X_test, y_test, raw_test)
+
+    # --- 2. Subgroup Analysis ---
+    sub_df = run_subgroup_analysis(pipe, X_test, y_test, raw_test)
+
+    # --- 3. Decision Curve Analysis ---
+    dc_df = run_decision_curve(pipe, X_test, y_test)
+
+    # --- 4. Learning Curves ---
+    lc_df = run_learning_curves(X_dev, y_dev, groups_dev, X_test, y_test, params)
+
+    # --- 5. Bootstrap CIs ---
+    ci_df = run_bootstrap_ci(pipe, X_test, y_test)
+
+    # --- 6. Partial Dependence Plots ---
+    run_pdp(pipe, X_test)
+
+    elapsed = time.time() - t0
+    print(f"\n{'='*60}")
+    print(f"Step 9 complete in {elapsed:.1f}s")
+    print(f"  Figures → {OUT_FIG}")
+    print(f"  Tables  → {OUT_TAB}")
+    print(f"{'='*60}")
+
+
+if __name__ == "__main__":
+    main()

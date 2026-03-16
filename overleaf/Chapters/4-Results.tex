@@ -645,34 +645,435 @@ Figure~\ref{fig:step6_cm} presents the confusion matrix at the $F_1$-optimal thr
 \end{figure}
 
 % ============================================================
-\section{Explainability (SHAP) for the Final Model}
+\section{Explainability Analysis}
 \label{sec:results_shap}
 % ============================================================
 
-Explainability is a core requirement for clinical deployment.
-After selecting the final model, we will apply SHAP (SHapley Additive exPlanations) to provide both global and local explanations.
+This section presents the explainability analysis of the final XGBoost model using three complementary techniques: SHAP (global and local), LIME (local), and Logistic Regression coefficient analysis.
+All explanations are computed on the held-out TEST set ($N\!=\!279$).
 
-\subsection{Global Explanations}
+% ------------------------------------------------------------
+\subsection{SHAP --- Global Explanations}
 \label{subsec:results_shap_global}
-Global SHAP analysis will produce:
+% ------------------------------------------------------------
+
+Figure~\ref{fig:shap_bar_global} ranks features by mean absolute SHAP value across all TEST-set subjects.
+The baseline ALSFRS-R total score dominates with a mean $|\text{SHAP}|$ of \textbf{0.325}, more than twice the second-ranked feature.
+FVC in litres (0.131) and respiratory rate (0.100) form a second tier, followed by age (0.067), FVC as percentage of normal (0.067), and pulse (0.065).
+All five feature blocks contribute at least one variable to the top~15, confirming the value of the multi-block design from the ablation study (Section~\ref{sec:methods_ablation}).
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.70\linewidth]{images/figures/shap_bar_global.png}
+  \caption{Mean absolute SHAP values (top~15 features) for the final XGBoost model on the TEST set. Baseline ALSFRS-R total score is the dominant predictor, followed by FVC and respiratory rate.}
+  \label{fig:shap_bar_global}
+\end{figure}
+
+The beeswarm plot (Figure~\ref{fig:shap_beeswarm}) reveals the direction of these effects.
+Low ALSFRS-R scores (red dots on the positive SHAP side) push the prediction towards rapid progression, consistent with the clinical understanding that lower functional scores indicate more severe impairment.
+Similarly, low FVC values increase the predicted risk, reflecting compromised respiratory function.
+Higher respiratory rate and higher age also contribute positively to the rapid-progression probability.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/shap_beeswarm.png}
+  \caption{SHAP beeswarm plot for the final XGBoost model. Each dot represents one subject; colour indicates feature value (red\,=\,high, blue\,=\,low). Low ALSFRS-R and low FVC increase the predicted risk of rapid progression.}
+  \label{fig:shap_beeswarm}
+\end{figure}
+
+\clearpage
+% ------------------------------------------------------------
+\subsection{SHAP --- Local Explanations (Case Studies)}
+\label{subsec:results_shap_local}
+% ------------------------------------------------------------
+
+To illustrate how the model reasons about individual patients, we select one representative subject from each confusion-matrix quadrant, choosing the patient closest to the median predicted probability within that quadrant.
+Table~\ref{tab:case_study_profiles} summarises the clinical profiles of the four selected patients.
+
+\begin{table}[ht!]
+\centering
+\caption{Clinical profiles of the four case-study subjects selected from each confusion-matrix quadrant.}
+\label{tab:case_study_profiles}
+\small
+\begin{tabular}{l c c c c}
+\toprule
+ & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} \\
+\midrule
+Subject ID      & 941957 & 220808 & 251602 & 271583 \\
+$P(\text{rapid})$ & 0.393 & 0.268 & 0.186 & 0.173 \\
+ALSFRS-R (t0)   & 31     & 41     & 43     & 42     \\
+Age              & 74     & 53     & 64     & 36     \\
+FVC (\% normal)  & 73     & 77     & 83     & 100    \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{True Positive (Subject~941957).}
+Figure~\ref{fig:shap_wf_tp} shows the SHAP waterfall for this correctly identified rapid progressor.
+The low ALSFRS-R score (31) is the dominant driver towards the rapid class, with advanced age (74) and moderate FVC (73\%) providing additional positive contributions.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/shap_waterfall_TP.png}
+  \caption{SHAP waterfall plot for the TP case study (Subject~941957). Low ALSFRS-R and advanced age drive the prediction towards rapid progression.}
+  \label{fig:shap_wf_tp}
+\end{figure}
+
+\noindent\textbf{False Positive (Subject~220808).}
+Despite a moderate ALSFRS-R score (41), this patient was classified as rapid (Figure~\ref{fig:shap_wf_fp}).
+The false alarm is driven by vital-sign features (respiratory rate, pulse) and laboratory values (ALT) that push the prediction above the threshold, illustrating how secondary features can override the dominant predictor when their combined effect is sufficiently strong.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/shap_waterfall_FP.png}
+  \caption{SHAP waterfall plot for the FP case study (Subject~220808). Vital-sign and laboratory features drive a false alarm despite a moderate ALSFRS-R score.}
+  \label{fig:shap_wf_fp}
+\end{figure}
+
+\noindent\textbf{False Negative (Subject~251602).}
+This rapid progressor was missed by the model (Figure~\ref{fig:shap_wf_fn}).
+The relatively high ALSFRS-R (43) and preserved FVC (83\%) push the prediction towards the slow class, masking the underlying rapid trajectory.
+This case highlights a limitation of baseline-only models: subjects with high initial function but steep subsequent decline are inherently difficult to detect without longitudinal follow-up data.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/shap_waterfall_FN.png}
+  \caption{SHAP waterfall plot for the FN case study (Subject~251602). High baseline function masks the rapid decline trajectory.}
+  \label{fig:shap_wf_fn}
+\end{figure}
+
+\noindent\textbf{True Negative (Subject~271583).}
+The correctly classified slow progressor (Figure~\ref{fig:shap_wf_tn}) shows a high ALSFRS-R (42), young age (36), and fully preserved FVC (100\%), all of which push the prediction firmly towards the slow class.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/shap_waterfall_TN.png}
+  \caption{SHAP waterfall plot for the TN case study (Subject~271583). High baseline function, young age, and preserved FVC confirm slow progression.}
+  \label{fig:shap_wf_tn}
+\end{figure}
+
+\clearpage
+% ------------------------------------------------------------
+\subsection{LIME --- Local Explanations}
+\label{subsec:results_lime}
+% ------------------------------------------------------------
+
+As an independent validation of the SHAP local explanations, LIME is applied to the same four case-study subjects.
+LIME generates 2{,}000 perturbed samples around each instance and fits a local sparse linear model to approximate the classifier's decision boundary.
+Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} present the LIME explanations for each quadrant.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/lime_local_TP.png}
+  \caption{LIME explanation for the TP case study (Subject~941957). ALSFRS-R, respiratory rate, and pulse are the top local drivers, consistent with the SHAP waterfall.}
+  \label{fig:lime_tp}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FP.png}
+  \caption{LIME explanation for the FP case study (Subject~220808). Secondary features (respiratory rate, weight, ALT) dominate the local explanation.}
+  \label{fig:lime_fp}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FN.png}
+  \caption{LIME explanation for the FN case study (Subject~251602). Preserved respiratory function and ALSFRS-R drive the prediction towards the slow class.}
+  \label{fig:lime_fn}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/lime_local_TN.png}
+  \caption{LIME explanation for the TN case study (Subject~271583). Young age, high FVC, and high ALSFRS-R confirm slow progression.}
+  \label{fig:lime_tn}
+\end{figure}
+
+\clearpage
+% ------------------------------------------------------------
+\subsection{SHAP--LIME Concordance}
+\label{subsec:results_concordance}
+% ------------------------------------------------------------
+
+Table~\ref{tab:concordance} compares the top-10 features identified by SHAP and LIME for each case study.
+Across all four quadrants, 4--5 features overlap between the two methods, with \textbf{ALSFRS-R}, \textbf{FVC (\% normal)}, and \textbf{respiratory rate} appearing consistently in both rankings.
+
+\begin{table}[ht!]
+\centering
+\caption{Number of overlapping features in the top-10 SHAP vs.\ LIME rankings for each case-study subject.}
+\label{tab:concordance}
+\small
+\begin{tabular}{l c l}
+\toprule
+\textbf{Case} & \textbf{Overlap} & \textbf{Shared features} \\
+\midrule
+TP & 4 & ALSFRS-R, FVC (\% normal), Pulse, Resp.\ Rate \\
+FP & 4 & ALT, FVC (\% normal), Resp.\ Rate, Weight \\
+FN & 4 & ALSFRS-R, FVC (\% normal), FVC (litres), Resp.\ Rate \\
+TN & 5 & Age, FVC (\% normal), FVC (litres), Pulse, Resp.\ Rate \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The moderate concordance (40--50\% overlap) is expected: SHAP provides exact, model-faithful attributions via TreeSHAP, whereas LIME approximates the local decision boundary through a perturbation-based surrogate.
+Despite their fundamentally different computation strategies, both methods consistently identify the same core clinical predictors---baseline functional status, respiratory capacity, and vital signs---reinforcing confidence in their clinical validity.
+
+% ------------------------------------------------------------
+\subsection{Logistic Regression Coefficients}
+\label{subsec:results_lr_coefs}
+% ------------------------------------------------------------
+
+As a complementary, model-intrinsic explanation, we analyse the standardised coefficients of the balanced Logistic Regression model (Figure~\ref{fig:lr_coefs}).
+Because features are standardised prior to fitting, coefficients are directly comparable in magnitude.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.70\linewidth]{images/figures/lr_coefficients.png}
+  \caption{Standardised coefficients of the balanced Logistic Regression model (top~15 by absolute value). Negative coefficients (blue) reduce the log-odds of rapid progression; positive coefficients (red) increase it.}
+  \label{fig:lr_coefs}
+\end{figure}
+
+\noindent The top three LR coefficients by absolute value are:
+\begin{enumerate}
+  \item \textbf{ALSFRS-R\_t0} ($\beta = -0.339$): higher baseline function decreases the log-odds of rapid progression.
+  \item \textbf{FVC\_Liters} ($\beta = -0.122$): higher forced vital capacity is protective.
+  \item \textbf{Respiratory\_Rate} ($\beta = +0.100$): elevated respiratory rate increases the risk.
+\end{enumerate}
+
+\noindent The sign and ranking of these coefficients align closely with the SHAP feature importance (Section~\ref{subsec:results_shap_global}), providing cross-model triangulation: both a non-linear ensemble (XGBoost) and a linear model (LR) identify the same clinical drivers.
+Pulse ($\beta = +0.082$) and study-arm assignment ($\beta = -0.078$) also appear in both top-10 lists.
+
+\subsection{Summary of Explainability Findings}
+\label{subsec:results_xai_summary}
+
+The three explainability methods converge on a consistent clinical narrative:
 \begin{itemize}
-  \item A \textbf{mean absolute SHAP value bar plot}, ranking features by their average impact on model output across all subjects.
-  \item A \textbf{beeswarm (summary) plot}, showing the distribution of SHAP values per feature and revealing non-linear or interaction effects (e.g.\ whether low FVC increases the predicted risk of rapid decline).
+  \item \textbf{Baseline ALSFRS-R total score} is the single most important predictor of rapid progression across all three methods.
+  \item \textbf{Respiratory markers} (FVC, respiratory rate) form the second tier of predictive importance, consistent with the established role of respiratory function as a prognostic indicator in ALS.
+  \item \textbf{Age} and \textbf{vital signs} (pulse, temperature) contribute secondary predictive signals.
+  \item False negatives tend to have high baseline function, highlighting the inherent difficulty of identifying patients with initially preserved function who subsequently decline rapidly.
+  \item The 40--50\% concordance between SHAP and LIME across case studies, combined with the alignment of LR coefficients, confirms that the identified feature drivers are robust and not artefacts of any single attribution method.
 \end{itemize}
 
-\subsection{Local Explanations (Case Studies)}
-\label{subsec:results_shap_local}
-Local explanations will consist of SHAP waterfall plots for representative individual patients, selected from each quadrant of the confusion matrix (TP, FP, FN, TN).
-These case studies will illustrate:
-(i) which features drove the prediction for a correctly identified rapid progressor (TP),
-(ii) what caused a false alarm (FP),
-(iii) why a rapid progressor was missed (FN), and
-(iv) the typical profile of a correctly classified slow progressor (TN).
 
-Additionally, Logistic Regression coefficients will be analysed as a complementary, model-intrinsic form of explanation, providing direct insight into the sign and magnitude of each feature's linear association with rapid progression.
+% ============================================================
+\section{Supplementary Analyses}
+\label{sec:results_supplementary}
+% ============================================================
 
-\textit{Pending: Step~11 execution.}
+This section presents four supplementary analyses that deepen the characterisation of the final XGBoost model: error profiling, subgroup performance, decision curve analysis, and learning curves.
+All analyses use the held-out TEST set ($N\!=\!279$) at the $F_1$-optimal threshold $t\!=\!0.21$.
 
+% ------------------------------------------------------------
+\subsection{Error Profiling}
+\label{subsec:results_error_profile}
+% ------------------------------------------------------------
+
+Figure~\ref{fig:error_age} through Figure~\ref{fig:error_fvc} break down the confusion-matrix outcomes by age group, ALSFRS-R severity, sex, and FVC status.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/error_profile_age.png}
+  \caption{Distribution of prediction outcomes (TP, FP, FN, TN) by age group. False negatives are distributed across all age groups with no strong concentration.}
+  \label{fig:error_age}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/error_profile_alsfrs.png}
+  \caption{Distribution of prediction outcomes by ALSFRS-R severity. False negatives concentrate in the mild-function groups ($\geq$40), where high baseline function masks rapid decline.}
+  \label{fig:error_alsfrs}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/error_profile_sex.png}
+  \caption{Distribution of prediction outcomes by sex. Error patterns are consistent across Male and Female subgroups.}
+  \label{fig:error_sex}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/error_profile_fvc.png}
+  \caption{Distribution of prediction outcomes by FVC (\% of normal). Subjects with higher FVC ($>$88\%) show a larger proportion of false negatives.}
+  \label{fig:error_fvc}
+\end{figure}
+
+\noindent Key findings from the error analysis:
+\begin{itemize}
+  \item Of the 12 false negatives, the majority have ALSFRS-R $\geq 40$ and FVC $>$ 80\%, confirming the pattern identified in the SHAP case studies (Section~\ref{subsec:results_shap_local}): patients with well-preserved baseline function are the hardest to identify as rapid progressors.
+  \item False positives (133) are distributed across all subgroups, reflecting the model's aggressive screening posture at $t\!=\!0.21$.
+  \item Error rates are balanced between sexes, with no evidence of sex-based differential misclassification.
+\end{itemize}
+
+\clearpage
+% ------------------------------------------------------------
+\subsection{Subgroup Performance}
+\label{subsec:results_subgroup}
+% ------------------------------------------------------------
+
+Table~\ref{tab:subgroup_metrics} and Figures~\ref{fig:subgroup_prauc}--\ref{fig:subgroup_recall} present PR-AUC and recall stratified by clinical subgroups.
+
+\begin{table}[ht!]
+\centering
+\caption{Performance metrics by clinical subgroup on the TEST set ($t\!=\!0.21$).}
+\label{tab:subgroup_metrics}
+\small
+\begin{tabular}{l l r r c c c c}
+\toprule
+\textbf{Stratification} & \textbf{Group} & \textbf{N} & \textbf{N\textsubscript{rapid}} & \textbf{PR-AUC} & \textbf{Recall} & \textbf{Prec.} & \textbf{$F_1$} \\
+\midrule
+Age & $\leq$49      & 65  & 22 & 0.437 & 0.727 & 0.421 & 0.533 \\
+    & 50--57        & 68  & 22 & 0.567 & 0.955 & 0.382 & 0.545 \\
+    & 58--65        & 59  & 14 & 0.375 & 0.786 & 0.244 & 0.373 \\
+    & $>$65         & 54  & 15 & 0.365 & 0.867 & 0.310 & 0.456 \\
+\midrule
+Sex & Female        & 106 & 32 & 0.450 & 0.844 & 0.310 & 0.454 \\
+    & Male          & 173 & 52 & 0.473 & 0.865 & 0.381 & 0.529 \\
+\midrule
+ALSFRS-R & $\leq$35 & 72  & 36 & 0.558 & 0.972 & 0.522 & 0.680 \\
+         & 36--39    & 73  & 24 & 0.418 & 0.833 & 0.333 & 0.476 \\
+         & 40--42    & 60  & 13 & 0.380 & 0.846 & 0.244 & 0.379 \\
+         & $>$42     & 74  & 11 & 0.206 & 0.545 & 0.182 & 0.273 \\
+\midrule
+FVC (\%) & $\leq$77\% & 40  & 16 & 0.590 & 0.938 & 0.417 & 0.577 \\
+         & 78--87\%   & 34  & 15 & 0.678 & 0.800 & 0.462 & 0.585 \\
+         & 88--98\%   & 37  & 7  & 0.306 & 0.857 & 0.250 & 0.387 \\
+         & $>$98\%    & 45  & 9  & 0.317 & 0.778 & 0.304 & 0.438 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/subgroup_pr_auc.png}
+  \caption{PR-AUC by clinical subgroup on the TEST set. The model performs best for severe patients (ALSFRS-R $\leq$35) and those with compromised FVC ($\leq$87\%).}
+  \label{fig:subgroup_prauc}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/subgroup_recall.png}
+  \caption{Recall by clinical subgroup on the TEST set ($t\!=\!0.21$). Recall exceeds 0.77 in all subgroups except patients with mild baseline function (ALSFRS-R $>$42: recall$\,=\,$0.55).}
+  \label{fig:subgroup_recall}
+\end{figure}
+
+\noindent Key observations:
+\begin{itemize}
+  \item \textbf{ALSFRS-R severity is the strongest moderator}: PR-AUC ranges from 0.558 (severe, $\leq$35) to 0.206 (mild, $>$42).
+    Recall drops from 97.2\% to 54.5\% for the mildest group, confirming that patients with high baseline function are the most difficult to screen.
+  \item \textbf{FVC status}: patients with lower FVC ($\leq$87\%) show higher PR-AUC (0.59--0.68), consistent with the role of respiratory compromise as a strong risk signal.
+  \item \textbf{Sex}: performance is comparable across sexes (PR-AUC 0.45 vs 0.47), with no evidence of sex bias.
+  \item \textbf{Age}: the 50--57 group achieves the highest PR-AUC (0.567) and recall (95.5\%), while older patients ($>$65) show lower PR-AUC (0.365) but maintain high recall (86.7\%).
+\end{itemize}
+
+\clearpage
+% ------------------------------------------------------------
+\subsection{Decision Curve Analysis}
+\label{subsec:results_dca}
+% ------------------------------------------------------------
+
+Figure~\ref{fig:decision_curve} presents the decision curve analysis for the final XGBoost model.
+The net-benefit curve shows the range of threshold probabilities for which the model provides clinical utility relative to the default strategies of treating all or no patients.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/decision_curve.png}
+  \caption{Decision Curve Analysis for XGBoost on the TEST set. The model provides positive net benefit over the treat-all and treat-none strategies for thresholds between 0.13 and 0.57.}
+  \label{fig:decision_curve}
+\end{figure}
+
+\noindent The model provides a positive net benefit over both reference strategies for thresholds in the range $t \in [0.13,\, 0.57]$.
+At the operating point $t\!=\!0.21$, the model's net benefit is substantially higher than the treat-all strategy, confirming that the screening approach adds clinical value---it identifies rapid progressors while avoiding the cost of universal intervention.
+The wide useful range (spanning $\Delta t = 0.44$) indicates that the model is robust to varying clinical cost preferences:
+clinicians who weigh false negatives more heavily (low $t$) and those who are more conservative (high $t$) both benefit from the model.
+
+% ------------------------------------------------------------
+\subsection{Learning Curves}
+\label{subsec:results_learning_curves}
+% ------------------------------------------------------------
+
+Figure~\ref{fig:learning_curve} shows PR-AUC and ROC-AUC on the TEST set as a function of training-set size.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/learning_curve.png}
+  \caption{Learning curves for XGBoost evaluated on the TEST set. PR-AUC plateaus around 60\% of the training data ($n \approx 667$), suggesting a feature-driven performance ceiling.}
+  \label{fig:learning_curve}
+\end{figure}
+
+\noindent PR-AUC rises steeply from 0.387 (20\% of DEV, $n \approx 222$) to 0.431 (40\%, $n \approx 445$) and then plateaus, reaching 0.456 with the full training set.
+The marginal gain from the last 40\% of data is only $+0.025$, with decreasing variance (std $\leq 0.008$).
+This plateau behaviour confirms the finding from the ablation study: performance is primarily \textit{feature-driven} rather than data-driven.
+Collecting additional subjects with the same baseline feature set is unlikely to materially improve discrimination; instead, gains would require richer features (e.g., longitudinal follow-up, genetic markers, or imaging biomarkers).
+
+\clearpage
+% ------------------------------------------------------------
+\subsection{Bootstrap Confidence Intervals}
+\label{subsec:results_bootstrap}
+% ------------------------------------------------------------
+
+Table~\ref{tab:bootstrap_ci} and Figure~\ref{fig:bootstrap_ci} present 95\% bootstrap confidence intervals ($B\!=\!2{,}000$) for the key TEST-set metrics.
+
+\begin{table}[ht!]
+\centering
+\caption{Bootstrap 95\% confidence intervals for TEST-set metrics ($B\!=\!2{,}000$, $t\!=\!0.21$).}
+\label{tab:bootstrap_ci}
+\small
+\begin{tabular}{l c c c}
+\toprule
+\textbf{Metric} & \textbf{Point estimate} & \textbf{95\% CI} & \textbf{CI width} \\
+\midrule
+PR-AUC    & 0.456 & [0.364,~0.568] & 0.204 \\
+ROC-AUC   & 0.660 & [0.586,~0.730] & 0.144 \\
+Recall    & 0.857 & [0.781,~0.929] & 0.148 \\
+Precision & 0.351 & [0.283,~0.419] & 0.136 \\
+$F_1$     & 0.498 & [0.423,~0.568] & 0.145 \\
+Brier     & 0.197 & [0.174,~0.221] & 0.047 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.78\linewidth]{images/figures/bootstrap_ci.png}
+  \caption{Forest plot of bootstrap 95\% confidence intervals for TEST-set metrics ($B\!=\!2{,}000$). CI widths of $\leq 0.20$ confirm that point estimates are reasonably stable given the sample size.}
+  \label{fig:bootstrap_ci}
+\end{figure}
+
+\noindent Key observations:
+\begin{itemize}
+  \item All confidence intervals are relatively narrow (CI width $\leq 0.204$), confirming that the TEST set ($N\!=\!279$) provides reasonably stable performance estimates.
+  \item The Brier score has the tightest CI (width $= 0.047$), reflecting its use of continuous probabilities rather than binary predictions.
+  \item PR-AUC shows the widest relative uncertainty (CI width $= 0.204$), which is expected given the class imbalance and the sensitivity of precision-based metrics to the number of positive cases.
+  \item Recall is bounded within $[0.781,\, 0.929]$, confirming that the screening sensitivity of 85.7\% is robust and unlikely to fall below 78\% due to sampling variability alone.
+\end{itemize}
+
+% ------------------------------------------------------------
+\subsection{Partial Dependence Plots}
+\label{subsec:results_pdp}
+% ------------------------------------------------------------
+
+Figure~\ref{fig:pdp_top3} shows partial dependence plots for the three features with the highest global SHAP importance.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/pdp_top3.png}
+  \caption{Partial Dependence Plots for the top-3 SHAP features. ALSFRS-R total shows a strong monotonically decreasing relationship with predicted rapid-progression probability. FVC (litres) and respiratory rate show more nuanced, non-linear effects.}
+  \label{fig:pdp_top3}
+\end{figure}
+
+\noindent The PDPs reveal the shape of each feature's marginal influence on predicted rapid-progression probability:
+\begin{itemize}
+  \item \textbf{ALSFRS-R total (baseline):} The strongest and most clearly monotonic effect. Predicted probability decreases sharply as baseline function increases, consistent with the clinical intuition that patients with lower baseline scores are at higher risk. The $\Delta$ annotation quantifies the total range of the PDP curve.
+  \item \textbf{FVC (litres):} Shows a non-linear pattern: predicted probability is highest for low FVC values and drops as respiratory capacity improves, with the relationship flattening at higher FVC levels. This is consistent with FVC's role as a respiratory prognostic marker.
+  \item \textbf{Respiratory rate:} Shows a more complex, non-monotonic pattern, with the predicted probability varying across the observed range. This suggests interaction effects with other features that are averaged out in the marginal PDP.
+\end{itemize}
+
+\noindent These plots complement the SHAP analysis by revealing the \textit{functional form} of each feature's influence, rather than just its importance magnitude.
+The strong monotonic relationship of ALSFRS-R total confirms that this feature carries the majority of the predictive signal in a clinically interpretable direction:
+lower baseline function predicts higher risk of rapid progression.
 
 % ============================================================
 \section{Summary of Key Findings}
@@ -707,6 +1108,23 @@ The main findings are:
   \item \textbf{Threshold optimisation.}
     The $F_1$-optimal threshold ($t\!=\!0.21$) achieves recall\,$=\!85.7$\% with 133 false alarms on the TEST set ($F_1\!=\!0.498$, $F_2\!=\!0.665$), offering a practical screening operating point.
     XGBoost achieves the lowest Brier score ($0.197$) among all models, indicating good probabilistic calibration.
+  \item \textbf{Explainability.}
+    SHAP, LIME, and LR coefficient analysis converge on the same clinical drivers: baseline ALSFRS-R total score is the dominant predictor, followed by respiratory markers (FVC, respiratory rate) and vital signs.
+    SHAP--LIME concordance of 40--50\% across case studies, combined with LR coefficient alignment, confirms that the identified features are robust across fundamentally different attribution methods.
+    Local explanations reveal that false negatives typically present with high baseline function, highlighting a structural limitation of baseline-only models in detecting rapid decliners with initially preserved function.
+  \item \textbf{Error profiling and subgroup equity.}
+    Systematic error analysis confirms that false negatives concentrate in patients with mild baseline function (ALSFRS-R $>$42, recall$\,=\,$54.5\%), while the model maintains recall $>$77\% across all other subgroups.
+    Performance is balanced between sexes (PR-AUC 0.45 vs 0.47).
+    ALSFRS-R severity is the strongest moderator of model performance, with PR-AUC ranging from 0.558 (severe) to 0.206 (mild).
+  \item \textbf{Clinical utility.}
+    Decision Curve Analysis confirms that the model provides positive net benefit over treat-all and treat-none strategies for thresholds $t \in [0.13,\, 0.57]$, a wide range spanning diverse clinical cost preferences.
+  \item \textbf{Data sufficiency.}
+    Learning curves show that PR-AUC plateaus at approximately 60\% of the training data, confirming a feature-driven performance ceiling.
+    Additional baseline data alone is unlikely to materially improve discrimination.
+  \item \textbf{Statistical stability.}
+    Bootstrap confidence intervals ($B\!=\!2{,}000$) confirm that all TEST-set metrics have narrow 95\% CIs (width $\leq 0.204$).
+    Recall is bounded within $[0.781,\, 0.929]$, and Brier score within $[0.174,\, 0.221]$, indicating that performance estimates are stable given the sample size.
+  \item \textbf{Feature effect shapes.}
+    Partial Dependence Plots reveal a strong monotonically decreasing relationship between ALSFRS-R total and predicted rapid-progression probability, confirming that the model captures the expected clinical direction.
+    FVC shows a non-linear protective effect, while respiratory rate exhibits a more complex pattern suggesting interaction effects.
 \end{enumerate}
-
-\noindent\textbf{Remaining steps.} SHAP-based explainability and Logistic Regression coefficient analysis are pending and will complete the pipeline (Section~\ref{sec:results_shap}).
