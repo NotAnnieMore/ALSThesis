@@ -1076,6 +1076,96 @@ The strong monotonic relationship of ALSFRS-R total confirms that this feature c
 lower baseline function predicts higher risk of rapid progression.
 
 % ============================================================
+\section{Patient Risk Report}
+\label{sec:results_patient_report}
+% ============================================================
+
+As a proof-of-concept for clinical deployment, the patient risk report generator (Section~\ref{sec:methods_patient_report}) was applied to both real TEST-set patients and synthetic patients generated from calibrated distributions.
+
+\subsection{Real Patient Reports}
+\label{subsec:results_real_reports}
+
+Twelve reports were generated for randomly selected TEST-set patients.
+Table~\ref{tab:real_patient_reports} summarises the key results.
+
+\begin{table}[ht!]
+\centering
+\caption{Summary of patient risk reports for 12 real TEST-set patients. P(rapid) denotes the predicted probability; Pred and True indicate the predicted and actual class at $t = 0.21$; Tier indicates the risk tier (L = LOW, M = MODERATE).}
+\label{tab:real_patient_reports}
+\small
+\begin{tabular}{lccccl}
+\toprule
+Patient ID & P(rapid) & Pred & True & Tier & Top SHAP Feature \\
+\midrule
+666     & 45.3\% & Rapid & Rapid & M & ALSFRS-R (33) \\
+524242  & 27.5\% & Rapid & Rapid & M & ALSFRS-R (39) \\
+1125    & 29.3\% & Rapid & Slow  & M & ALSFRS-R \\
+476981  & 36.1\% & Rapid & Slow  & M & ALSFRS-R \\
+48027   & 26.9\% & Rapid & Slow  & M & ALSFRS-R \\
+326632  & 22.2\% & Rapid & Slow  & M & ALSFRS-R \\
+582861  & 24.6\% & Rapid & Slow  & M & ALSFRS-R \\
+714820  & 20.8\% & Slow  & Slow  & L & ALSFRS-R (45) \\
+113562  & 15.3\% & Slow  & Slow  & L & ALSFRS-R (44) \\
+524909  & 15.4\% & Slow  & Slow  & L & ALSFRS-R \\
+505201  & 18.3\% & Slow  & Slow  & L & ALSFRS-R \\
+405398  & 17.9\% & Slow  & Slow  & L & ALSFRS-R \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Key observations:
+\begin{itemize}
+  \item Both true rapid progressors were correctly identified (2/2 TP, 0 FN in this sample), consistent with the high recall of the $F_1$-optimal threshold.
+  \item Five false positives appear among the 12 patients (42\%), consistent with the model's operating point (precision $\approx 35$\% at $t = 0.21$).
+  \item ALSFRS-R total at baseline is the dominant SHAP contributor in all 12~reports, reinforcing the global explainability findings.
+  \item Monitoring suggestions are triggered in 8 of the 12 reports, most commonly for low ALSFRS-R ($<$35) and elevated ALT ($>$45~U/L).
+\end{itemize}
+
+\subsection{Synthetic Patient Reports}
+\label{subsec:results_synthetic_reports}
+
+Ten synthetic patients were generated using the calibrated random patient generator (Section~\ref{subsec:methods_random_patient}) and processed through the report pipeline.
+Table~\ref{tab:synthetic_patient_reports} summarises the results.
+
+\begin{table}[ht!]
+\centering
+\caption{Summary of patient risk reports for 10 synthetic patients. All features were sampled from truncated normal distributions calibrated on the PRO-ACT dataset.}
+\label{tab:synthetic_patient_reports}
+\small
+\begin{tabular}{lcccl}
+\toprule
+Patient & P(rapid) & Pred & Tier & Top SHAP Feature \\
+\midrule
+Random 001 & 30.7\% & Rapid & M & ALSFRS-R (29) \\
+Random 002 & 23.1\% & Rapid & M & ALSFRS-R (41) \\
+Random 003 & 38.7\% & Rapid & M & ALSFRS-R (34) \\
+Random 004 & 54.3\% & Rapid & H & ALSFRS-R (33) \\
+Random 005 & 47.2\% & Rapid & M & ALSFRS-R (28) \\
+Random 006 & 18.3\% & Slow  & L & Age (36) \\
+Random 007 & 30.5\% & Rapid & M & ALSFRS-R (42) \\
+Random 008 & 24.8\% & Rapid & M & ALSFRS-R (40) \\
+Random 009 & 23.9\% & Rapid & M & ALSFRS-R (37) \\
+Random 010 & 33.4\% & Rapid & M & ALSFRS-R (40) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The synthetic reports exhibit realistic behaviour:
+\begin{itemize}
+  \item The predicted probability range (18--54\%) is comparable to the real TEST-set distribution (P10 = 16.5\%, P90 = 47.4\%).
+  \item 9 out of 10 synthetic patients are classified as rapid progressors, consistent with the real TEST-set rate of 72.8\% at $t = 0.21$.
+  The slightly higher rate (90\% vs 73\%) is attributable to feature independence in the generator---real patients exhibit correlations (e.g., high ALSFRS-R co-occurs with high FVC) that the generator does not fully capture.
+  \item ALSFRS-R total remains the top SHAP contributor in 9 of 10 reports, with the only exception (Random~006) being a young patient (age~36) for whom age is the strongest protective factor.
+  \item Monitoring suggestions are clinically appropriate: low ALSFRS-R triggers monthly reassessment, low FVC triggers spirometry follow-up, and elevated ALT triggers liver function monitoring.
+\end{itemize}
+
+\subsection{Summary}
+The patient risk report generator successfully translates the trained model's output into an actionable, interpretable format.
+The reports provide transparent risk stratification, feature-level attribution, and rule-based monitoring suggestions.
+Both real and synthetic patients produce clinically plausible outputs, validating the tool as a proof-of-concept for integration into clinical decision-support workflows.
+
+\clearpage
+% ============================================================
 \section{Summary of Key Findings}
 \label{sec:results_summary}
 % ============================================================
@@ -1127,4 +1217,7 @@ The main findings are:
   \item \textbf{Feature effect shapes.}
     Partial Dependence Plots reveal a strong monotonically decreasing relationship between ALSFRS-R total and predicted rapid-progression probability, confirming that the model captures the expected clinical direction.
     FVC shows a non-linear protective effect, while respiratory rate exhibits a more complex pattern suggesting interaction effects.
+  \item \textbf{Patient risk report.}
+    A proof-of-concept report generator translates model predictions into structured, actionable clinical summaries comprising risk tier, SHAP-based feature attribution, and rule-based monitoring suggestions.
+    Reports for 12~real and 10~synthetic patients produce clinically plausible outputs, with ALSFRS-R total consistently emerging as the dominant predictor.
 \end{enumerate}

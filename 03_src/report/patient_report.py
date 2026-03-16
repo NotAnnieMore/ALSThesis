@@ -14,6 +14,7 @@ Usage
   python 03_src/report/patient_report.py                       # demo patient
   python 03_src/report/patient_report.py --patient-id 12345    # from TEST set
   python 03_src/report/patient_report.py --json patient.json   # from JSON file
+  python 03_src/report/patient_report.py --save                # also save to 04_outputs/reports/
 
 Outputs
 -------
@@ -399,17 +400,11 @@ def format_report(patient_id, proba, shap_series, base_value, X,
 # Demo patient (default)
 # ─────────────────────────────────────────────────────────────
 def get_demo_patient_id():
-    """Pick a patient from the TEST set for demonstration."""
+    """Pick a random patient from the TEST set for demonstration."""
+    rng = np.random.default_rng()
     hs = pd.read_csv(SPLIT_PATH)
     test_ids = hs.loc[hs["partition"] == "test", "subject_id"].tolist()
-    df = pd.read_csv(DATA_PATH)
-    df_test = df[df["subject_id"].isin(test_ids)]
-    slope_col = "slope_180d_per_30d"
-    cutoff = -1.2475
-    rapids = df_test[df_test[slope_col] <= cutoff]
-    if not rapids.empty:
-        return int(rapids.iloc[0]["subject_id"])
-    return int(test_ids[0])
+    return int(rng.choice(test_ids))
 
 
 # ─────────────────────────────────────────────────────────────
@@ -433,7 +428,9 @@ def main():
     # Build patient vector
     if args.json:
         X, slope_val = patient_from_json(args.json, feat_cols)
-        patient_id = "JSON_input"
+        # Use JSON filename (without extension) as patient ID
+        json_name = os.path.splitext(os.path.basename(args.json))[0]
+        patient_id = f"JSON_{json_name}"
     elif args.patient_id:
         X, slope_val = patient_from_dataset(args.patient_id, feat_cols)
         patient_id = args.patient_id

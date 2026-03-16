@@ -153,6 +153,7 @@ Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipelin
 \subsection{PRO-ACT Data Sources}
 \label{sec:methods_proact_sources}
 We use the Pooled Resource Open-Access ALS Clinical Trials (PRO-ACT) database, the largest publicly available repository of ALS clinical trial data, aggregating records from multiple completed trials.
+PRO-ACT is selected because no comparable public ALS dataset approaches its scale ($>$10{,}000 subjects) or breadth of longitudinal clinical variables; smaller alternatives (e.g.\ single-centre registries) lack the statistical power required for robust model development and cross-validation.
 The raw database comprises 16 tables with longitudinal clinical, demographic, and laboratory measurements.
 In this work, we employ the following source tables:
 \begin{itemize}
@@ -288,6 +289,7 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
 \subsection{Held-Out Data Partitioning}
 \label{sec:methods_holdout}
 Before any modelling, each horizon-specific cohort is partitioned into a \textbf{development (DEV)} set (80\%) and a \textbf{held-out test (TEST)} set (20\%) using a stratified random split (stratified by the binary target to preserve class proportions).
+The 80/20 ratio follows standard ML practice for moderate-sized datasets: 80\% provides sufficient data for 5-fold cross-validation within the DEV set, while 20\% yields a TEST set large enough ($N\!=\!279$ for 6 months) for stable bootstrap confidence intervals.
 For the 6-month horizon this yields DEV $n\!=\!1{,}113$ and TEST $n\!=\!279$; for 3 months, DEV $n\!=\!1{,}925$ and TEST $n\!=\!482$.
 All hyperparameter tuning, cross-validation, ablation, and model selection are performed exclusively on the DEV set.
 The TEST set is reserved for a single, unbiased evaluation of the final selected model (Section~\ref{sec:results_test_eval}), preventing any form of selection bias or inadvertent data snooping.
@@ -482,10 +484,12 @@ We define two prediction horizons:
   \item \textbf{6 months:} $H=180$ days with tolerance $\pm 7$ days.
 \end{itemize}
 Tolerance accounts for real-world visit variability while preserving temporal specificity.
+Both horizons are explored; the 6-month window is ultimately preferred because it yields more data points per subject for slope estimation (median $n_{\text{points}} = 7$), produces more reliable progression labels, and aligns with the clinical follow-up cadence recommended for ALS patients~\cite{Pancotti2022}.
 
 \subsection{Slope Estimation}
 \label{sec:methods_slope}
 Functional progression is quantified via the ALSFRS-R slope from baseline to the horizon.
+We use the total ALSFRS-R score rather than individual sub-items or survival endpoints because it captures overall functional decline in a single continuous measure, is the most widely adopted outcome in ALS clinical trials, and permits direct comparison with prior prognostic studies~\cite{Pancotti2022, Anani2023}.
 For each subject and horizon, we collect all ALSFRS-R measurements within the window $[t_0,\; t_0 + H \pm 7\text{d}]$ and estimate the rate of functional change by ordinary least squares regression of the ALSFRS-R total score against time (in days).
 The resulting coefficient is normalised to \emph{points per 30\,days} to provide a clinically intuitive unit.
 A negative slope indicates functional decline; the more negative the slope, the faster the patient is deteriorating.
@@ -565,6 +569,7 @@ We evaluate a diverse set of seven supervised learning algorithms spanning diffe
   \item \textbf{XGBoost (XGB):} gradient-boosted trees with regularisation; widely adopted in clinical ML and compatible with SHAP-based post-hoc explainability.
 \end{itemize}
 This selection covers instance-based, linear, kernel-based, bagging, and boosting paradigms, allowing a principled comparison of model families rather than relying on a single architecture.
+Deep learning architectures (e.g.\ DNNs, CNNs) are excluded because the cohort size ($N\!=\!1{,}392$ for 6 months) is insufficient to train deep models without severe overfitting, and because black-box neural networks conflict with the explainability requirement that is central to this work.
 Following hyperparameter optimisation (Section~\ref{subsec:methods_optuna}), the final explainable model is selected based on the best cross-validated PR-AUC, with interpretability provided via SHAP (Section~\ref{sec:methods_xai_plan}) and, for Logistic Regression, via direct coefficient analysis.
 
 \subsection{Preprocessing Pipeline}
@@ -574,6 +579,8 @@ To ensure reproducibility and consistent handling of missing and categorical dat
   \item Numeric variables: median imputation; standardization for models sensitive to scaling (LR and SVM),
   \item Categorical variables: most-frequent imputation; one-hot encoding with unseen-category handling.
 \end{itemize}
+Median imputation is chosen over more complex alternatives (e.g.\ MICE, KNN imputation) because (i)~the missingness pattern is confirmed to be Missing at Random (MAR) via the analysis in Section~\ref{sec:results_fvc_missingness}, making single-value imputation adequate, (ii)~the median preserves the marginal distribution without introducing artificial inter-feature correlations, and (iii)~it avoids the risk of data leakage inherent in iterative methods when combined with cross-validation.
+One-hot encoding is preferred for categorical variables because all categoricals in the feature set have low cardinality ($\leq 6$ levels), making one-hot encoding both efficient and compatible with all model families; ordinal or target encoding would introduce unjustified assumptions about category ordering.
 Tree-based models (Decision Tree, Random Forest, LightGBM, XGBoost) do not require scaling, but use consistent imputation and encoding.
 
 \section{Handling Class Imbalance}
@@ -589,6 +596,7 @@ We address this through three complementary strategies:
   \item \textbf{Operating-point selection.} Decision thresholds are not fixed at $t\!=\!0.5$.
     Instead, within each cross-validation fold, the threshold that maximises the $F_2$ score on the training data is selected and applied to the fold's test partition.
     $F_2$ weights recall twice as heavily as precision, reflecting the clinical priority of identifying patients at risk of rapid decline (where missing a high-risk patient is worse than a false alarm).
+    We prefer $F_2$ over Youden's $J$ index ($J = \text{Sensitivity} + \text{Specificity} - 1$) because $J$ treats sensitivity and specificity symmetrically, whereas our screening scenario demands explicitly higher weight on recall (sensitivity).
   \item \textbf{Systematic balanced vs.\ unbalanced comparison.} Every model family (except KNN, which has no native class-weighting support) is tuned in two modes:
     \begin{itemize}
       \item \textit{Unbalanced}: the classifier treats both classes equally, with no cost adjustment.
@@ -765,4 +773,35 @@ For a feature $x_j$, the partial dependence function is:
 where $\mathbf{x}_{i,\setminus j}$ denotes the values of all features except $x_j$ for subject $i$.
 We compute PDPs for the three features with the highest global SHAP importance (ALSFRS-R total, FVC in litres, respiratory rate). The grid spans the 5th to 95th percentile of each feature's distribution to avoid extrapolation artefacts.
 A rug plot of observed values is overlaid to indicate data density.
+
+\section{Patient Risk Report Generator}
+\label{sec:methods_patient_report}
+
+To demonstrate how the trained pipeline could be used in a clinical decision-support context, we develop a \textit{patient risk report generator} that produces a structured textual report for a single patient.
+The tool loads the persisted XGBoost pipeline and its associated metadata (feature list, slope cutoff, decision threshold) and accepts patient data from three sources:
+\begin{enumerate}
+  \item \textbf{Dataset lookup:} a subject ID from the held-out TEST set;
+  \item \textbf{JSON file:} a key--value file with baseline feature values, allowing external or synthetic patients;
+  \item \textbf{Demo mode:} a randomly selected TEST-set patient for quick demonstration.
+\end{enumerate}
+
+Each report comprises three sections:
+\begin{itemize}
+  \item \textbf{Risk Assessment.} The predicted probability of rapid progression $P(\text{rapid})$ is displayed alongside a three-tier risk classification (LOW: $P < 0.21$; MODERATE: $0.21 \leq P < 0.50$; HIGH: $P \geq 0.50$).
+  Binary classifications at both the $F_1$-optimal and $F_2$-optimal thresholds ($t = 0.21$) are provided.
+  When the true label is available (dataset patients), it is shown for verification.
+  \item \textbf{Top-5 Contributing Features (SHAP).} A local TreeSHAP explanation lists the five features with the largest absolute Shapley values, together with the feature value, SHAP magnitude, and direction of influence.
+  Transformed features (one-hot encoded) are aggregated back to their original variable names for clinical readability.
+  \item \textbf{Monitoring Suggestions.}  Rule-based clinical alerts are triggered when a top contributing feature falls outside population-normal bounds.
+  Thirteen features have predefined rules comparing the patient's value against population percentiles (25th or 75th) computed from the DEV set ($N = 1{,}113$).
+  For example, an ALSFRS-R total below the 25th percentile (35~points) triggers a recommendation for monthly functional reassessment.
+\end{itemize}
+
+\subsection{Synthetic Patient Generator}
+\label{subsec:methods_random_patient}
+To enable demonstration with fictitious patients, a companion script generates random patient profiles with all 35~baseline features.
+Each continuous variable is sampled from a truncated normal distribution calibrated on the full PRO-ACT dataset ($N = 1{,}392$), matching the observed mean, standard deviation, and range.
+Categorical variables (sex, ethnicity, race, riluzole use) are sampled with the observed population frequencies.
+Logical correlations are preserved: FVC in litres is conditioned on sex (males $\mu = 3.9$~L, females $\mu = 2.8$~L), and BMI is derived from the sampled weight and height rather than drawn independently.
+This design ensures that generated patients are statistically plausible without replicating any real individual from the dataset.
 
