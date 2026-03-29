@@ -19,7 +19,7 @@ and (ii)~ALS patients who deteriorated rapidly may have dropped out, been transf
 Consequently, the 6-month cohort is likely enriched for slower-progressing subjects relative to the full PRO-ACT population, a caveat that should be borne in mind when interpreting the results.
 Nevertheless, the 6-month horizon yields more temporally stable slope estimates (99.8\% based on $\geq 3$ data points, median 7) and a prediction window that is more clinically actionable for treatment planning.
 
-\begin{table}[ht]
+\begin{table}[ht!]
 \centering
 \caption{Cohort size and data partition by prediction horizon.}
 \label{tab:eligibility}
@@ -61,7 +61,7 @@ At block level, 60.7\% of subjects ($n\!=\!845$) have at least one non-missing F
 Treatment features have high coverage (riluzole: 100\%, study arm: 91.1\%, concomitant medication count: 100\%).
 Labs are moderately available (creatinine: 64.7\%, ALT: 69.0\%).
 
-\begin{table}[ht]
+\begin{table}[ht!]
 \centering
 \caption{Feature coverage for the 6-month cohort ($N\!=\!1{,}392$). Block-level coverage indicates the fraction of subjects with at least one non-missing feature in the block.}
 \label{tab:feature_coverage}
@@ -153,7 +153,7 @@ Of the 1{,}392 subjects in the 6-month cohort, 506 belong to the Active arm, 762
 The Active group shows a lower rapid-progression rate ($26.5$\%) compared to Placebo ($31.6$\%), with the NaN group at $34.7$\% (Table~\ref{tab:eda_treat_arm}).
 Median slopes are similar: $-0.791$ (Active) vs $-0.819$ (Placebo) points/30\,d.
 
-\begin{table}[ht]
+\begin{table}[ht!]
 \centering
 \caption{Descriptive statistics by study arm (6-month cohort).}
 \label{tab:eda_treat_arm}
@@ -172,7 +172,7 @@ NaN      & 124 & 34.7 & $-1.022$ & $-0.689$ \\
 Figure~\ref{fig:eda_arm_dist} shows the slope distributions and boxplots by arm, revealing largely overlapping distributions.
 Figure~\ref{fig:eda_arm_rapid} displays the rapid-progression rates with numeric annotations.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_arm_slope_dist.png}
   \caption{ALSFRS-R slope distribution by study arm: histogram (left) and boxplot (right). The dashed red line marks the 30th-percentile threshold ($P_{30} = -1.25$).}
@@ -267,7 +267,7 @@ Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the
 
 \input{images/tables/step5v2_tuning_comparison.tex}
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step5v2_prauc_barchart.png}
   \caption{PR-AUC comparison of Optuna-tuned models (6-month, DEV). Blue bars: unbalanced mode; orange bars: balanced mode. Error bars show $\pm 1$ standard deviation across 5 folds.}
@@ -301,7 +301,7 @@ For Decision Tree, balanced mode slightly improves PR-AUC ($0.388 \to 0.404$), c
 
 This analysis supports the conclusion that the choice between balanced and unbalanced mode is less important than model selection and threshold optimisation for this level of class imbalance.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step5v2_balanced_vs_unbalanced.png}
   \caption{Paired comparison of unbalanced ($\circ$) vs balanced ($\square$) modes for each model. Left panel: PR-AUC; right panel: ROC-AUC. Lines connect the same model across both modes.}
@@ -424,7 +424,7 @@ Table~\ref{tab:3m_vs_6m} and Figure~\ref{fig:3m_vs_6m_scatter} compare PR-AUC ac
 
 \input{images/tables/step5v2_3m_vs_6m_comparison.tex}
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step5v2_3m_vs_6m_prauc.png}
   \caption{Side-by-side PR-AUC comparison between 3-month and 6-month horizons for matched model $\times$ mode configurations. Annotations show exact PR-AUC values.}
@@ -470,7 +470,7 @@ To assess whether the performance differences observed among the seven best-per-
 Figure~\ref{fig:step7_fold_boxplot} shows the per-fold PR-AUC distribution for each model.
 All seven models exhibit substantial fold-to-fold variance (standard deviations between 0.036 and 0.055), driven by both the small number of folds and the fold-wise label definition protocol, where the 30th-percentile cutoff is recalculated on each training fold.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.88\linewidth]{images/figures/step7_fold_prauc_boxplot.pdf}
   \caption{Per-fold PR-AUC for the seven best-per-family models across 5-fold GroupKFold on the DEV set (6-month horizon).
@@ -487,7 +487,7 @@ The test yields $\chi^2 = 12.43$ with $p = 0.053$, marginally non-significant at
 Despite the non-significant Friedman result, we present the full pairwise Wilcoxon signed-rank analysis with Bonferroni correction (21 comparisons) for completeness.
 As expected given the Friedman outcome, no pair achieves statistical significance after correction (Table~\ref{tab:step7_pairwise} and Figure~\ref{fig:step7_heatmap}).
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.75\linewidth]{images/figures/step7_pairwise_heatmap.pdf}
   \caption{Heatmap of Bonferroni-corrected $p$-values from pairwise Wilcoxon signed-rank tests.
@@ -532,7 +532,7 @@ The $F_1$-optimal threshold at $t\!=\!0.21$ is adopted as the primary operating 
 It achieves the best balance between sensitivity and positive predictive value: the model captures 86\% of rapid progressors while maintaining precision above the baseline prevalence.
 Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sweep.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.82\linewidth]{images/figures/step6_threshold_sweep.png}
   \caption{Threshold sweep on DEV out-of-fold predictions for XGBoost (unbalanced, 6\,m).
@@ -553,7 +553,7 @@ Labels are defined using the 30th-percentile slope cutoff computed on the DEV se
 
 Table~\ref{tab:step6_test_metrics} reports threshold-free metrics (PR-AUC, ROC-AUC) and threshold-dependent metrics at the default $t\!=\!0.50$.
 
-\begin{table}[ht]
+\begin{table}[ht!]
 \centering
 \caption{Held-out TEST set metrics (6-month horizon, $n\!=\!279$). PR-AUC and ROC-AUC are threshold-free; $F_1$, $F_2$ evaluated at the default $t\!=\!0.50$; Brier score measures calibration (lower is better).}
 \label{tab:step6_test_metrics}
@@ -597,7 +597,7 @@ and (iv)~tree-based gradient boosting is natively supported by TreeSHAP, enablin
 
 Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC across all models.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.82\linewidth]{images/figures/step6_test_prauc_bar.png}
   \caption{PR-AUC on the held-out TEST set (6\,m) for the seven best-per-family models.
@@ -629,7 +629,7 @@ Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the pre
 The $F_1$-optimal threshold $t\!=\!0.21$, selected on DEV OOF predictions (Section~\ref{sec:results_threshold_xgb}), is validated on the TEST set.
 Table~\ref{tab:step6_threshold_test} compares XGBoost performance at multiple thresholds.
 
-\begin{table}[ht]
+\begin{table}[ht!]
 \centering
 \caption{XGBoost (unbalanced, 6\,m) performance on TEST at different decision thresholds.}
 \label{tab:step6_threshold_test}
@@ -665,7 +665,7 @@ The 133~false alarms at $t\!=\!0.21$ represent a manageable caseload (48\% of th
 The calibration of the final XGBoost model is assessed using a reliability diagram and the Brier score (Figure~\ref{fig:step6_calibration}).
 XGBoost achieves a Brier score of \textbf{0.197}, the lowest among all models, indicating good probabilistic calibration.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.55\linewidth]{images/figures/step6_calibration.png}
   \caption{Calibration reliability diagram for XGBoost (unbalanced) on the TEST set. The dashed line indicates perfect calibration.}
