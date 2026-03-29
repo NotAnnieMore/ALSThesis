@@ -179,6 +179,7 @@ Figure~\ref{fig:eda_arm_rapid} displays the rapid-progression rates with numeric
   \label{fig:eda_arm_dist}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.55\linewidth]{images/figures/eda_treat_arm_rapid_rate.png}
@@ -435,6 +436,7 @@ Table~\ref{tab:3m_vs_6m} and Figure~\ref{fig:3m_vs_6m_scatter} compare PR-AUC ac
   \label{fig:3m_vs_6m_grouped}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.65\linewidth]{images/figures/step5v2_3m_vs_6m_scatter.png}
@@ -442,7 +444,7 @@ Table~\ref{tab:3m_vs_6m} and Figure~\ref{fig:3m_vs_6m_scatter} compare PR-AUC ac
   \label{fig:3m_vs_6m_scatter}
 \end{figure}
 
-\break
+\clearpage
 \noindent\textbf{Key findings.}
 \begin{enumerate}
   \item \textbf{PR-AUC differences between horizons are small} ($|\Delta| \leq 0.021$ for all configurations).
@@ -611,6 +613,7 @@ Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC acr
   \label{fig:step6_test_prauc_bar}
 \end{figure}
 
+\clearpage
 \subsection{PR and ROC Curves}
 
 Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the precision--recall and ROC curves for all models on the TEST set.
@@ -622,6 +625,7 @@ Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the pre
   \label{fig:step6_pr_curves}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.82\linewidth]{images/figures/step6_roc_curves.png}
@@ -629,7 +633,7 @@ Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the pre
   \label{fig:step6_roc_curves}
 \end{figure}
 
-
+\clearpage
 \subsection{Threshold Validation on TEST}
 
 The $F_1$-optimal threshold $t\!=\!0.21$, selected on DEV OOF predictions (Section~\ref{sec:results_threshold_xgb}), is validated on the TEST set.
@@ -678,6 +682,7 @@ XGBoost achieves a Brier score of \textbf{0.197}, the lowest among all models, i
   \label{fig:step6_calibration}
 \end{figure}
 
+\clearpage
 \subsection{Confusion Matrix}
 
 Figure~\ref{fig:step6_cm} presents the confusion matrix at the $F_1$-optimal threshold ($t\!=\!0.21$).
@@ -814,6 +819,7 @@ Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} present the LIME explanations for e
   \label{fig:lime_tp}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FP.png}
@@ -821,6 +827,7 @@ Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} present the LIME explanations for e
   \label{fig:lime_fp}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FN.png}
@@ -828,6 +835,7 @@ Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} present the LIME explanations for e
   \label{fig:lime_fn}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_TN.png}
@@ -924,6 +932,7 @@ Figure~\ref{fig:error_age} through Figure~\ref{fig:error_fvc} break down the con
   \label{fig:error_age}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/error_profile_alsfrs.png}
@@ -931,6 +940,7 @@ Figure~\ref{fig:error_age} through Figure~\ref{fig:error_fvc} break down the con
   \label{fig:error_alsfrs}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/error_profile_sex.png}
@@ -938,6 +948,7 @@ Figure~\ref{fig:error_age} through Figure~\ref{fig:error_fvc} break down the con
   \label{fig:error_sex}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/error_profile_fvc.png}
@@ -990,6 +1001,7 @@ FVC (\%) & $\leq$77\% & 40  & 16 & 0.590 & 0.938 & 0.417 & 0.577 \\
 \end{tabular}
 \end{table}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/subgroup_pr_auc.png}
@@ -997,6 +1009,7 @@ FVC (\%) & $\leq$77\% & 40  & 16 & 0.590 & 0.938 & 0.417 & 0.577 \\
   \label{fig:subgroup_prauc}
 \end{figure}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/subgroup_recall.png}
@@ -1004,6 +1017,7 @@ FVC (\%) & $\leq$77\% & 40  & 16 & 0.590 & 0.938 & 0.417 & 0.577 \\
   \label{fig:subgroup_recall}
 \end{figure}
 
+\clearpage
 \noindent Key observations:
 \begin{itemize}
   \item \textbf{ALSFRS-R severity is the strongest moderator}: PR-AUC ranges from 0.558 (severe, $\leq$35) to 0.206 (mild, $>$42).
@@ -1080,6 +1094,7 @@ Brier     & 0.197 & [0.174,~0.221] & 0.047 \\
 \end{tabular}
 \end{table}
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.78\linewidth]{images/figures/bootstrap_ci.png}
