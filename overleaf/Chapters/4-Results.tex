@@ -563,7 +563,7 @@ Although RandomForest achieves the highest TEST PR-AUC ($0.459$ vs $0.456$ for X
 (i)~the difference is negligible ($\Delta\!=\!0.003$, well within bootstrap confidence intervals);
 (ii)~XGBoost consistently ranks first in both Optuna tuning (PR-AUC $0.434$) and cross-validation re-evaluation, whereas RF only overtakes on the single TEST evaluation;
 (iii)~XGBoost achieves the lowest Brier score ($0.197$), indicating superior probabilistic calibration;
-and (iv)~tree-based gradient boosting is natively supported by TreeSHAP, enabling exact and efficient Shapley-value computation for the explainability analysis in Section~\ref{sec:results_xai}.
+and (iv)~tree-based gradient boosting is natively supported by TreeSHAP, enabling exact and efficient Shapley-value computation for the explainability analysis in Section~\ref{sec:results_shap}.
 
 Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC across all models.
 
