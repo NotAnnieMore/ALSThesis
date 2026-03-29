@@ -99,14 +99,19 @@ We compared the two groups across 11 variables using Mann--Whitney~U tests for c
 \input{images/tables/step5v2_fvc_missingness.tex}
 
 \noindent\textbf{Key findings.}
-The three variables most directly related to the prediction task---ALSFRS-R at baseline ($p\!=\!0.345$, $d\!=\!0.027$), age ($p\!=\!0.459$, $d\!=\!0.031$), and the target slope ($p\!=\!0.188$, $d\!=\!0.061$)---show \emph{no significant difference} between patients with and without FVC data.
-Similarly, lab values (creatinine $p\!=\!0.092$, ALT $p\!=\!0.097$) and sex ($p\!=\!0.408$) are not significantly associated with FVC availability.
+Of the 11 tests performed, we first note that the three variables most directly related to the prediction task show no significant association with FVC availability:
+ALSFRS-R at baseline ($p\!=\!0.345$, $d\!=\!0.027$), age ($p\!=\!0.459$, $d\!=\!0.031$), and sex ($p\!=\!0.408$, $V\!=\!0.022$).
+The target slope approaches borderline significance ($p\!=\!0.050$, $d\!=\!0.098$); however, the effect size is trivial ($d < 0.10$), and the $p$-value does not survive correction for multiple comparisons (Bonferroni-adjusted $\alpha\!=\!0.05/11\!=\!0.0045$).
+In substantive terms, mean slopes are $-0.91$ (with FVC) vs $-1.00$ (without FVC)~pts/30d---a difference of $0.09$~pts/30d that is clinically negligible relative to the overall slope standard deviation ($\sigma\!=\!0.89$).
+Similarly, lab values (creatinine $p\!=\!0.092$, ALT $p\!=\!0.097$) show no significant difference.
 
-The variables that \emph{do} differ significantly are related to study design rather than disease severity: study arm ($V\!=\!0.357$, $p < 0.001$) and number of concomitant medications ($d\!=\!0.332$, $p < 0.001$) reflect the fact that certain trials systematically collected FVC while others did not.
-BMI also differs ($d\!=\!0.468$), which is expected because FVC testing often occurs in the same visit as vital sign measurement.
+The variables that \emph{do} differ significantly are related to study design rather than disease severity: study arm ($V\!=\!0.357$, $p < 0.001$) and number of concomitant medications ($d\!=\!0.332$, $p < 0.001$) reflect the fact that certain clinical trials systematically collected FVC while others did not.
+Riluzole shows a nominally significant association ($p\!=\!0.015$, $V\!=\!0.065$), but the effect is negligible and does not survive Bonferroni correction ($p > 0.0045$), suggesting a weak confound with trial protocol rather than a clinically meaningful difference.
+Weight ($d\!=\!0.146$, $p\!=\!0.003$) and BMI ($d\!=\!0.468$, $p < 0.001$) also differ between groups, which is expected because FVC testing often occurs in the same visit as anthropometric measurement, creating correlated availability.
 
-Since the outcome (slope) and the most clinically relevant baselines (ALSFRS-R, age) are unrelated to FVC availability, the missingness mechanism is classified as \emph{Missing at Random} (MAR), driven by study-protocol factors rather than by the patient's disease trajectory.
+Since the outcome (slope) and the most clinically relevant baselines (ALSFRS-R, age) are unrelated to FVC availability---the borderline slope result ($p\!=\!0.050$) has a trivial effect size and does not survive multiple-comparison correction---the missingness mechanism is classified as \emph{Missing at Random} (MAR), driven by study-protocol factors rather than by the patient's disease trajectory.
 This supports the use of median imputation for FVC features without introducing outcome-dependent bias.
+The Bonferroni-adjusted threshold ($\alpha/11\!=\!0.0045$) further narrows the significant variables to study arm, BMI, weight, and concomitant medication count---all of which reflect trial-level data-collection practices rather than individual disease severity.
 
 
 % ============================================================
