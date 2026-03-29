@@ -279,12 +279,14 @@ def pairwise_wilcoxon_bonferroni(score_matrix: np.ndarray, labels: list[str]):
 def plot_fold_boxplot(fold_df: pd.DataFrame, out_path: str):
     """
     Boxplot + individual fold dots for PR-AUC per model, ordered by mean.
-    Every point has its numeric value annotated.
+    Every point has its numeric value annotated (auto-repelled to avoid overlap).
     """
+    from adjustText import adjust_text
+
     models = fold_df.groupby("model")["pr_auc"].mean().sort_values(ascending=False).index.tolist()
     n = len(models)
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(12, 6))
 
     # Prepare data in order
     data_list = [fold_df.loc[fold_df["model"] == m, "pr_auc"].values for m in models]
@@ -305,24 +307,31 @@ def plot_fold_boxplot(fold_df: pd.DataFrame, out_path: str):
         patch.set_facecolor(cmap(i / max(n - 1, 1)))
         patch.set_alpha(0.55)
 
-    # Scatter individual dots with jitter and annotate values
+    # Scatter individual dots with jitter and collect annotation texts
     np.random.seed(SEED)
+    texts = []
     for i, (m, vals) in enumerate(zip(models, data_list)):
-        x_jitter = np.random.uniform(-0.12, 0.12, size=len(vals))
+        x_jitter = np.random.uniform(-0.15, 0.15, size=len(vals))
         xs = (i + 1) + x_jitter
-        ax.scatter(xs, vals, s=50, zorder=5, edgecolors="black", linewidth=0.6,
+        ax.scatter(xs, vals, s=55, zorder=5, edgecolors="black", linewidth=0.6,
                    color=cmap(i / max(n - 1, 1)), alpha=0.9)
         for xj, v in zip(xs, vals):
-            ax.annotate(f"{v:.3f}", (xj, v), textcoords="offset points",
-                        xytext=(0, 7), fontsize=7.5, ha="center", va="bottom",
-                        fontweight="bold")
+            texts.append(ax.text(xj, v, f"{v:.3f}", fontsize=7, ha="center",
+                                 va="bottom", fontweight="bold"))
+
+    # Auto-repel annotations to avoid overlap
+    adjust_text(texts, ax=ax, force_text=(0.4, 0.6),
+                arrowprops=dict(arrowstyle="-", color="gray", lw=0.5, alpha=0.6),
+                expand=(1.4, 1.8), only_move={"text": "y"})
 
     # Mean line
     for i, mu in enumerate(means):
         ax.hlines(mu, i + 0.7, i + 1.3, color="red", linewidth=1.2,
                   linestyle="--", zorder=4)
-        ax.text(i + 1.35, mu, f"μ={mu:.3f}", fontsize=7.5, color="red",
-                va="center", fontweight="bold")
+        ax.annotate(f"μ = {mu:.3f}", xy=(i + 1.3, mu),
+                    xytext=(8, 0), textcoords="offset points",
+                    fontsize=7.5, color="red", fontweight="bold",
+                    va="center", ha="left")
 
     ax.set_ylabel("PR-AUC (average precision)", fontsize=11)
     ax.set_title("Per-fold PR-AUC — 5-fold GroupKFold (6 m horizon, DEV set)",

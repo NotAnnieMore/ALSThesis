@@ -61,7 +61,7 @@ At block level, 60.7\% of subjects ($n\!=\!845$) have at least one non-missing F
 Treatment features have high coverage (riluzole: 100\%, study arm: 91.1\%, concomitant medication count: 100\%).
 Labs are moderately available (creatinine: 64.7\%, ALT: 69.0\%).
 
-\begin{table}[ht!]
+\begin{table}[ht]
 \centering
 \caption{Feature coverage for the 6-month cohort ($N\!=\!1{,}392$). Block-level coverage indicates the fraction of subjects with at least one non-missing feature in the block.}
 \label{tab:feature_coverage}
@@ -97,6 +97,9 @@ Because missing data can introduce bias if its absence is related to the outcome
 We compared the two groups across 11 variables using Mann--Whitney~U tests for continuous variables and $\chi^2$ tests for categorical variables, with effect sizes reported as Cohen's~$d$ and Cramér's~$V$ respectively (Table~\ref{tab:fvc_missingness}).
 
 \input{images/tables/step5v2_fvc_missingness.tex}
+\break
+
+
 
 \noindent\textbf{Key findings.}
 Of the 11 tests performed, we first note that the three variables most directly related to the prediction task show no significant association with FVC availability:
@@ -127,7 +130,7 @@ When used directly in the \gls{BMI} formula ($\text{BMI} = \text{weight\,(kg)} \
 
 After selecting the measurement closest to $t_0$ per subject, 132 of the original 147 raw records remained in the baseline feature file (\texttt{features\_vitals\_t0.csv}, $N = 4{,}438$).
 We corrected the issue by applying plausible adult bounds---Height $\in [120, 220]$\,cm; Weight $\in [30, 200]$\,kg---and setting any value outside these ranges to \texttt{NaN}.
-This affected 132 height entries and 31 weight entries; the resulting missing values are handled downstream by median imputation inside each model's preprocessing pipeline (see Section~\ref{sec:results_tuning}).
+This affected 132 height entries and 31 weight entries; the resulting missing values are handled downstream by median imputation inside each model's preprocessing pipeline (see Section~\ref{sec:results_optuna_v2}).
 After correction, \gls{BMI} in the six-month analysis cohort ($N = 1{,}392$) ranges from 15.5 to 46.9, consistent with published \gls{BMI} distributions for \gls{ALS} patients in clinical trials~\cite{Anani2023}.
 All v2 datasets (used in tuning, ablation, and all subsequent analyses) were regenerated from the corrected vitals file to ensure that no downstream result is affected by the original erroneous values.
 
@@ -179,7 +182,6 @@ Figure~\ref{fig:eda_arm_rapid} displays the rapid-progression rates with numeric
   \label{fig:eda_arm_dist}
 \end{figure}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.55\linewidth]{images/figures/eda_treat_arm_rapid_rate.png}
@@ -198,6 +200,7 @@ The 5-percentage-point gap in rapid rates is therefore likely attributable to th
 Riluzole---the only disease-modifying therapy approved for \gls{ALS} at the time of the PRO-ACT trials---was used pre-baseline by 902 subjects (64.8\%).
 Patients with and without riluzole show nearly identical rapid-progression rates ($30.8$\% vs $28.6$\%), a difference of just 2.2 percentage points.
 This is consistent with the established literature reporting a modest survival benefit but no significant impact on \gls{ALSFRS-R} functional decline~\cite{Miller2012}.
+Figure~\ref{fig:eda_riluzole} shows the slope distributions and rapid-progression rates by riluzole status, confirming the absence of a meaningful difference.
 
 \begin{figure}[ht!]
   \centering
@@ -213,9 +216,9 @@ A $\chi^2$ test confirms no significant association ($\chi^2 = 0.66$, $p = 0.416
 
 Crossing both treatment variables reveals a noteworthy pattern (Figure~\ref{fig:eda_interaction}): the Placebo + riluzole subgroup has the highest rapid-progression rate ($33.5$\%, $n\!=\!526$), while Active + riluzole has the lowest ($25.7$\%, $n\!=\!315$).
 In contrast, both ``no riluzole'' subgroups cluster near $27.5$\%, suggesting that the signal concentrates among riluzole users rather than across both strata.
-No formal test of interaction was performed, as the subgroup sizes (especially Active + no riluzole, $n\!=\!191$) limit statistical power, and the analysis remains exploratory.
+No formal test of interaction was performed, as the subgroup sizes (especially Active + no riluzole, $n\!=\!191$) limit statistical power, and the analysis remains exploratory.\\\\
 
-\begin{figure}[hbt!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.55\linewidth]{images/figures/eda_treat_interaction.png}
   \caption{Rapid-progression rate by study arm $\times$ riluzole subgroup. The dashed line indicates the global prevalence (30\%).}
@@ -330,6 +333,7 @@ The results reveal two distinct metric clusters:
 \end{itemize}
 
 These findings validate PR-AUC as an appropriate primary metric for model selection in our imbalanced classification setting, while highlighting that $F_1$/$F_2$ should only be evaluated after threshold optimisation (Section~\ref{sec:results_threshold_xgb}).
+Figure~\ref{fig:metric_heatmap} visualises the cross-validation metric values for all 13 configurations, sorted by PR-AUC; the disconnection between threshold-free and threshold-dependent metrics is clearly visible.
 
 \begin{figure}[ht!]
   \centering
@@ -358,6 +362,8 @@ The four top-ranked models were evaluated across six cumulative feature configur
 Blocks C and D are designed to disentangle the independent contribution of FVC (C) from the joint effect of FVC and vitals (D).
 
 \input{images/tables/step5v2_ablation.tex}
+
+Figure~\ref{fig:ablation_v2} plots the cumulative PR-AUC trajectories for each model.
 
 \begin{figure}[ht!]
   \centering
@@ -421,30 +427,30 @@ Table~\ref{tab:step5v2_tuning_3m} and Figure~\ref{fig:prauc_barchart_3m} present
     This consistency strengthens the conclusion that the relative model ordering is robust.
 \end{enumerate}
 
-
 \subsection{Cross-Horizon Comparison (3m vs 6m)}
 \label{subsec:results_3m_vs_6m}
 
-Table~\ref{tab:3m_vs_6m} and Figure~\ref{fig:3m_vs_6m_scatter} compare PR-AUC across the two horizons for matched model configurations.
+
+Table~\ref{tab:3m_vs_6m} and Figures~\ref{fig:3m_vs_6m_grouped}--\ref{fig:3m_vs_6m_scatter} compare PR-AUC across the two horizons for matched model configurations.
 
 \input{images/tables/step5v2_3m_vs_6m_comparison.tex}
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step5v2_3m_vs_6m_prauc.png}
   \caption{Side-by-side PR-AUC comparison between 3-month and 6-month horizons for matched model $\times$ mode configurations. Annotations show exact PR-AUC values.}
   \label{fig:3m_vs_6m_grouped}
 \end{figure}
 
-\clearpage
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.65\linewidth]{images/figures/step5v2_3m_vs_6m_scatter.png}
   \caption{Scatter plot of 3-month vs 6-month PR-AUC for each model configuration. Points above the parity line perform better at 3 months; below, better at 6 months. Numerical $\Delta$ annotations quantify the difference.}
   \label{fig:3m_vs_6m_scatter}
 \end{figure}
 
-\clearpage
+%\break
+
 \noindent\textbf{Key findings.}
 \begin{enumerate}
   \item \textbf{PR-AUC differences between horizons are small} ($|\Delta| \leq 0.021$ for all configurations).
@@ -495,7 +501,7 @@ As expected given the Friedman outcome, no pair achieves statistical significanc
 
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.75\linewidth]{images/figures/step7_pairwise_heatmap.pdf}
+  \includegraphics[width=0.95\linewidth]{images/figures/step7_pairwise_heatmap.pdf}
   \caption{Heatmap of Bonferroni-corrected $p$-values from pairwise Wilcoxon signed-rank tests.
   Green cells indicate higher $p$-values (no significant difference); no cell reaches $p < 0.05$ after correction.}
   \label{fig:step7_heatmap}
@@ -540,9 +546,9 @@ The $F_1$-optimal threshold at $t\!=\!0.21$ is adopted as the primary operating 
 It achieves the best balance between sensitivity and positive predictive value: the model captures 86\% of rapid progressors while maintaining precision above the baseline prevalence.
 Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sweep.
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\linewidth]{images/figures/step6_threshold_sweep.png}
+  \includegraphics[width=0.70\linewidth]{images/figures/step6_threshold_sweep.png}
   \caption{Threshold sweep on DEV out-of-fold predictions for XGBoost (unbalanced, 6\,m).
   The $F_1$-optimal threshold ($t\!=\!0.21$, blue dotted) and Youden's~$J$ operating point ($t\!=\!0.35$, purple dotted) are annotated.}
   \label{fig:step6_threshold_sweep}
@@ -579,9 +585,9 @@ Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
   DecisionTree  & bal.   & 0.373 & 0.569 & 0.417 & 0.417 & 0.270 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table}\hfill \break
 
-\noindent Key observations:
+\noindent\textbf{Key observations:}
 \begin{enumerate}
   \item \textbf{PR-AUC generalises well.}
     RandomForest (PR-AUC\,$=\!0.459$) and XGBoost ($0.456$) both exceed their cross-validated estimates ($0.431$ and $0.434$, respectively), indicating no overfitting.
@@ -602,18 +608,16 @@ Although RandomForest achieves the highest TEST PR-AUC ($0.459$ vs $0.456$ for X
 (ii)~XGBoost consistently ranks first in both Optuna tuning (PR-AUC $0.434$) and cross-validation re-evaluation, whereas RF only overtakes on the single TEST evaluation;
 (iii)~XGBoost achieves the lowest Brier score ($0.197$), indicating superior probabilistic calibration;
 and (iv)~tree-based gradient boosting is natively supported by TreeSHAP, enabling exact and efficient Shapley-value computation for the explainability analysis in Section~\ref{sec:results_shap}.
-
 Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC across all models.
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.82\linewidth]{images/figures/step6_test_prauc_bar.png}
   \caption{PR-AUC on the held-out TEST set (6\,m) for the seven best-per-family models.
   The dashed line indicates the baseline prevalence (0.30).}
   \label{fig:step6_test_prauc_bar}
-\end{figure}
+\end{figure} 
 
-\clearpage
 \subsection{PR and ROC Curves}
 
 Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the precision--recall and ROC curves for all models on the TEST set.
@@ -625,7 +629,6 @@ Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the pre
   \label{fig:step6_pr_curves}
 \end{figure}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.82\linewidth]{images/figures/step6_roc_curves.png}
@@ -633,7 +636,7 @@ Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the pre
   \label{fig:step6_roc_curves}
 \end{figure}
 
-\clearpage
+
 \subsection{Threshold Validation on TEST}
 
 The $F_1$-optimal threshold $t\!=\!0.21$, selected on DEV OOF predictions (Section~\ref{sec:results_threshold_xgb}), is validated on the TEST set.
@@ -681,13 +684,12 @@ XGBoost achieves a Brier score of \textbf{0.197}, the lowest among all models, i
   \caption{Calibration reliability diagram for XGBoost (unbalanced) on the TEST set. The dashed line indicates perfect calibration.}
   \label{fig:step6_calibration}
 \end{figure}
-
-\clearpage
+\newpage
 \subsection{Confusion Matrix}
 
 Figure~\ref{fig:step6_cm} presents the confusion matrix at the $F_1$-optimal threshold ($t\!=\!0.21$).
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.50\linewidth]{images/figures/step6_confusion_matrix.png}
   \caption{Confusion matrix for XGBoost (unbalanced) on the TEST set at $t\!=\!0.21$.}
@@ -712,21 +714,21 @@ The baseline ALSFRS-R total score dominates with a mean $|\text{SHAP}|$ of \text
 FVC in litres (0.131) and respiratory rate (0.100) form a second tier, followed by age (0.067), FVC as percentage of normal (0.067), and pulse (0.065).
 All five feature blocks contribute at least one variable to the top~15, confirming the value of the multi-block design from the ablation study (Section~\ref{sec:methods_ablation}).
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.70\linewidth]{images/figures/shap_bar_global.png}
+  \includegraphics[width=0.85\linewidth]{images/figures/shap_bar_global.png}
   \caption{Mean absolute SHAP values (top~15 features) for the final XGBoost model on the TEST set. Baseline ALSFRS-R total score is the dominant predictor, followed by FVC and respiratory rate.}
   \label{fig:shap_bar_global}
 \end{figure}
-
+\newpage
 The beeswarm plot (Figure~\ref{fig:shap_beeswarm}) reveals the direction of these effects.
 Low ALSFRS-R scores (red dots on the positive SHAP side) push the prediction towards rapid progression, consistent with the clinical understanding that lower functional scores indicate more severe impairment.
 Similarly, low FVC values increase the predicted risk, reflecting compromised respiratory function.
 Higher respiratory rate and higher age also contribute positively to the rapid-progression probability.
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.72\linewidth]{images/figures/shap_beeswarm.png}
+  \includegraphics[width=0.85\linewidth]{images/figures/shap_beeswarm.png}
   \caption{SHAP beeswarm plot for the final XGBoost model. Each dot represents one subject; colour indicates feature value (red\,=\,high, blue\,=\,low). Low ALSFRS-R and low FVC increase the predicted risk of rapid progression.}
   \label{fig:shap_beeswarm}
 \end{figure}
@@ -767,7 +769,7 @@ The low ALSFRS-R score (31) is the dominant driver towards the rapid class, with
   \includegraphics[width=0.72\linewidth]{images/figures/shap_waterfall_TP.png}
   \caption{SHAP waterfall plot for the TP case study (Subject~941957). Low ALSFRS-R and advanced age drive the prediction towards rapid progression.}
   \label{fig:shap_wf_tp}
-\end{figure}
+\end{figure} \hfill \break
 
 \noindent\textbf{False Positive (Subject~220808).}
 Despite a moderate ALSFRS-R score (41), this patient was classified as rapid (Figure~\ref{fig:shap_wf_fp}).
@@ -785,9 +787,9 @@ This rapid progressor was missed by the model (Figure~\ref{fig:shap_wf_fn}).
 The relatively high ALSFRS-R (43) and preserved FVC (83\%) push the prediction towards the slow class, masking the underlying rapid trajectory.
 This case highlights a limitation of baseline-only models: subjects with high initial function but steep subsequent decline are inherently difficult to detect without longitudinal follow-up data.
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.72\linewidth]{images/figures/shap_waterfall_FN.png}
+  \includegraphics[width=0.62\linewidth]{images/figures/shap_waterfall_FN.png}
   \caption{SHAP waterfall plot for the FN case study (Subject~251602). High baseline function masks the rapid decline trajectory.}
   \label{fig:shap_wf_fn}
 \end{figure}
@@ -797,7 +799,7 @@ The correctly classified slow progressor (Figure~\ref{fig:shap_wf_tn}) shows a h
 
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.72\linewidth]{images/figures/shap_waterfall_TN.png}
+  \includegraphics[width=0.62\linewidth]{images/figures/shap_waterfall_TN.png}
   \caption{SHAP waterfall plot for the TN case study (Subject~271583). High baseline function, young age, and preserved FVC confirm slow progression.}
   \label{fig:shap_wf_tn}
 \end{figure}
@@ -819,7 +821,6 @@ Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} present the LIME explanations for e
   \label{fig:lime_tp}
 \end{figure}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FP.png}
@@ -827,7 +828,6 @@ Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} present the LIME explanations for e
   \label{fig:lime_fp}
 \end{figure}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FN.png}
@@ -835,7 +835,6 @@ Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} present the LIME explanations for e
   \label{fig:lime_fn}
 \end{figure}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_TN.png}
@@ -882,11 +881,11 @@ Because features are standardised prior to fitting, coefficients are directly co
 
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.70\linewidth]{images/figures/lr_coefficients.png}
+  \includegraphics[width=0.80\linewidth]{images/figures/lr_coefficients.png}
   \caption{Standardised coefficients of the balanced Logistic Regression model (top~15 by absolute value). Negative coefficients (blue) reduce the log-odds of rapid progression; positive coefficients (red) increase it.}
   \label{fig:lr_coefs}
 \end{figure}
-
+\newpage
 \noindent The top three LR coefficients by absolute value are:
 \begin{enumerate}
   \item \textbf{ALSFRS-R\_t0} ($\beta = -0.339$): higher baseline function decreases the log-odds of rapid progression.
@@ -923,7 +922,7 @@ All analyses use the held-out TEST set ($N\!=\!279$) at the $F_1$-optimal thresh
 \label{subsec:results_error_profile}
 % ------------------------------------------------------------
 
-Figure~\ref{fig:error_age} through Figure~\ref{fig:error_fvc} break down the confusion-matrix outcomes by age group, ALSFRS-R severity, sex, and FVC status.
+Figures~\ref{fig:error_age}--\ref{fig:error_fvc} break down the confusion-matrix outcomes by age group, ALSFRS-R severity, sex, and FVC status.
 
 \begin{figure}[ht!]
   \centering
@@ -932,7 +931,6 @@ Figure~\ref{fig:error_age} through Figure~\ref{fig:error_fvc} break down the con
   \label{fig:error_age}
 \end{figure}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/error_profile_alsfrs.png}
@@ -940,7 +938,6 @@ Figure~\ref{fig:error_age} through Figure~\ref{fig:error_fvc} break down the con
   \label{fig:error_alsfrs}
 \end{figure}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/error_profile_sex.png}
@@ -948,15 +945,14 @@ Figure~\ref{fig:error_age} through Figure~\ref{fig:error_fvc} break down the con
   \label{fig:error_sex}
 \end{figure}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/error_profile_fvc.png}
   \caption{Distribution of prediction outcomes by FVC (\% of normal). Subjects with higher FVC ($>$88\%) show a larger proportion of false negatives.}
   \label{fig:error_fvc}
 \end{figure}
-
-\noindent Key findings from the error analysis:
+\newpage
+\noindent\textbf{Key findings from the error analysis:}
 \begin{itemize}
   \item Of the 12 false negatives, the majority have ALSFRS-R $\geq 40$ and FVC $>$ 80\%, confirming the pattern identified in the SHAP case studies (Section~\ref{subsec:results_shap_local}): patients with well-preserved baseline function are the hardest to identify as rapid progressors.
   \item False positives (133) are distributed across all subgroups, reflecting the model's aggressive screening posture at $t\!=\!0.21$.
@@ -1001,7 +997,6 @@ FVC (\%) & $\leq$77\% & 40  & 16 & 0.590 & 0.938 & 0.417 & 0.577 \\
 \end{tabular}
 \end{table}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/subgroup_pr_auc.png}
@@ -1009,16 +1004,14 @@ FVC (\%) & $\leq$77\% & 40  & 16 & 0.590 & 0.938 & 0.417 & 0.577 \\
   \label{fig:subgroup_prauc}
 \end{figure}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/subgroup_recall.png}
   \caption{Recall by clinical subgroup on the TEST set ($t\!=\!0.21$). Recall exceeds 0.77 in all subgroups except patients with mild baseline function (ALSFRS-R $>$42: recall$\,=\,$0.55).}
   \label{fig:subgroup_recall}
 \end{figure}
-
-\clearpage
-\noindent Key observations:
+\newpage
+\noindent\textbf{Key observations:}
 \begin{itemize}
   \item \textbf{ALSFRS-R severity is the strongest moderator}: PR-AUC ranges from 0.558 (severe, $\leq$35) to 0.206 (mild, $>$42).
     Recall drops from 97.2\% to 54.5\% for the mildest group, confirming that patients with high baseline function are the most difficult to screen.
@@ -1067,7 +1060,6 @@ The marginal gain from the last 40\% of data is only $+0.025$, with decreasing v
 This plateau behaviour confirms the finding from the ablation study: performance is primarily \textit{feature-driven} rather than data-driven.
 Collecting additional subjects with the same baseline feature set is unlikely to materially improve discrimination; instead, gains would require richer features (e.g., longitudinal follow-up, genetic markers, or imaging biomarkers).
 
-\clearpage
 % ------------------------------------------------------------
 \subsection{Bootstrap Confidence Intervals}
 \label{subsec:results_bootstrap}
@@ -1094,15 +1086,14 @@ Brier     & 0.197 & [0.174,~0.221] & 0.047 \\
 \end{tabular}
 \end{table}
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.78\linewidth]{images/figures/bootstrap_ci.png}
   \caption{Forest plot of bootstrap 95\% confidence intervals for TEST-set metrics ($B\!=\!2{,}000$). CI widths of $\leq 0.20$ confirm that point estimates are reasonably stable given the sample size.}
   \label{fig:bootstrap_ci}
 \end{figure}
-
-\noindent Key observations:
+\newpage
+\noindent\textbf{Key observations:}
 \begin{itemize}
   \item All confidence intervals are relatively narrow (CI width $\leq 0.204$), confirming that the TEST set ($N\!=\!279$) provides reasonably stable performance estimates.
   \item The Brier score has the tightest CI (width $= 0.047$), reflecting its use of continuous probabilities rather than binary predictions.
@@ -1123,7 +1114,7 @@ Figure~\ref{fig:pdp_top3} shows partial dependence plots for the three features 
   \caption{Partial Dependence Plots for the top-3 SHAP features. ALSFRS-R total shows a strong monotonically decreasing relationship with predicted rapid-progression probability. FVC (litres) and respiratory rate show more nuanced, non-linear effects.}
   \label{fig:pdp_top3}
 \end{figure}
-
+\newpage
 \noindent The PDPs reveal the shape of each feature's marginal influence on predicted rapid-progression probability:
 \begin{itemize}
   \item \textbf{ALSFRS-R total (baseline):} The strongest and most clearly monotonic effect. Predicted probability decreases sharply as baseline function increases, consistent with the clinical intuition that patients with lower baseline scores are at higher risk. The $\Delta$ annotation quantifies the total range of the PDP curve.
@@ -1173,7 +1164,7 @@ Patient ID & P(rapid) & Pred & True & Tier & Top SHAP Feature \\
 \end{tabular}
 \end{table}
 
-\noindent Key observations:
+\noindent\textbf{Key observations:}
 \begin{itemize}
   \item Both true rapid progressors were correctly identified (2/2 TP, 0 FN in this sample), consistent with the high recall of the $F_1$-optimal threshold.
   \item Five false positives appear among the 12 patients (42\%), consistent with the model's operating point (precision $\approx 35$\% at $t = 0.21$).
@@ -1209,7 +1200,7 @@ Random 010 & 33.4\% & Rapid & M & ALSFRS-R (40) \\
 \bottomrule
 \end{tabular}
 \end{table}
-
+\newpage
 \noindent The synthetic reports exhibit realistic behaviour:
 \begin{itemize}
   \item The predicted probability range (18--54\%) is comparable to the real TEST-set distribution (P10 = 16.5\%, P90 = 47.4\%).
