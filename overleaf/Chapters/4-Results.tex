@@ -186,6 +186,7 @@ Figure~\ref{fig:eda_arm_rapid} displays the rapid-progression rates with numeric
   \label{fig:eda_arm_rapid}
 \end{figure}
 
+\clearpage
 A $\chi^2$ test of independence between study arm and rapid-progression status yields $\chi^2 = 3.62$, $p = 0.057$ (marginally non-significant at $\alpha = 0.05$).
 A Mann-Whitney~$U$ test comparing the slope distributions of Active vs Placebo gives $U = 200{,}472$, $p = 0.229$, confirming no statistically significant difference.
 The 5-percentage-point gap in rapid rates is therefore likely attributable to the heterogeneity of the ``Active'' arm and chance variation.
@@ -235,11 +236,12 @@ Two supplements---Betacarotene ($25.4$\%) and Nutrasense Createam ($26.9$\%)---a
 
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.85\linewidth]{images/figures/eda_treat_top_meds.png}
+  \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_top_meds.png}
   \caption{Top 15 pre-baseline medications by cohort prevalence, coloured by whether their rapid-progression rate exceeds the global prevalence (30\%, red dashed line). Green bars fall below the global rate.}
   \label{fig:eda_top_meds}
 \end{figure}
 
+\clearpage
 \subsection{Summary}
 \label{subsec:results_eda_treat_summary}
 
@@ -274,6 +276,7 @@ Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the
   \label{fig:prauc_barchart}
 \end{figure}
 
+\clearpage
 \noindent\textbf{Key observations.}
 \begin{enumerate}
   \item \textbf{Top-ranked model.} XGBoost (unbalanced) achieves the highest PR-AUC ($0.434 \pm 0.049$), closely followed by Random Forest (unbalanced, $0.431 \pm 0.042$) and SVM (balanced, $0.425 \pm 0.049$).
@@ -405,6 +408,7 @@ Table~\ref{tab:step5v2_tuning_3m} and Figure~\ref{fig:prauc_barchart_3m} present
   \label{fig:prauc_barchart_3m}
 \end{figure}
 
+\clearpage
 \noindent\textbf{Key observations.}
 \begin{enumerate}
   \item \textbf{XGBoost balanced} achieves the highest 3-month PR-AUC ($0.426 \pm 0.036$), followed by XGBoost unbalanced ($0.423$) and LightGBM unbalanced ($0.423$).
@@ -495,8 +499,10 @@ As expected given the Friedman outcome, no pair achieves statistical significanc
   \label{fig:step7_heatmap}
 \end{figure}
 
+\clearpage
+
 \input{images/tables/step7_pairwise_wilcoxon.tex}
-\break
+
 \subsection{Interpretation}
 
 The lack of significant differences among the seven models is consistent with the literature on clinical \gls{ALS} prediction, where modest sample sizes and high outcome variability limit the statistical power of cross-validated comparisons~\cite{kueffner2019}.
