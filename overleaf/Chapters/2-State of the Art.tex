@@ -40,12 +40,12 @@ Alongside PRO-ACT, national or regional clinical databases and dedicated cohorts
 
 
 \section{Modelling strategies for ALS progression and survival}
-3.1 Classical statistical and probabilistic models
+\subsection{Classical statistical and probabilistic models}
 
 Traditional approaches to ALS prognosis have relied on Cox proportional hazards models and other regression-based methods, sometimes extended with mixture models or dynamic Bayesian networks (DBNs). Halbersberg and Lerner, reviewed within the AI-and-statistics literature, use DBNs to jointly model ALSFRS and FVC trajectories and dependencies between clinical and respiratory domains, capturing temporal structure in disease progression~\cite{Halbersberg2023}. Probabilistic graphical models have also been applied for survival and functional outcomes, representing ALS progression as a network of conditional dependencies between symptoms, interventions and outcomes.
 These methods offer advantages in interpretability and explicit handling of uncertainty but can struggle with high-dimensional feature spaces and complex non-linear patterns in data, especially when interacting biomarkers and multi-system involvement are considered.
 
-3.2 Supervised ML for functional decline and survival
+\subsection{Supervised ML for functional decline and survival}
 
 A broad range of supervised ML algorithms has been explored to predict ALSFRS(-R) slope, categorize progression speed or estimate short-term survival. Grollemund et al. summarize applications of support vector machines (SVM), random forests (RF), k-nearest neighbors (k-NN), gradient boosting and neural networks across diagnostic and prognostic tasks, often reporting modest but clinically relevant gains over conventional regression~\cite{Grollemund2019}. Papaiz et al. similarly identify classification and regression schemes predicting survival at fixed time horizons (e.g., 12-month survival), ALSFRS(-R) changes, and need for non-invasive ventilation or gastrostomy~\cite{Papaiz2022}.
 The PRO-ACT-based DREAM Phil Bowen ALS Prediction Prize4Life Challenge formalized ALSFRS slope prediction between 3 and 12 months as a benchmark, stimulating numerous ML solutions. Pancotti et al. revisited this challenge with deep learning architectures (fully connected networks, autoencoders and recurrent models) and found that carefully tuned deep models achieved performance comparable to or better than state-of-the-art methods such as Bayesian decision trees and RFs, confirming the feasibility of data-driven ALSFRS slope prediction from early clinical data~\cite{Pancotti2022}.
@@ -66,7 +66,7 @@ More recently, Anani et al. combined multiple ALS datasets (PRO-ACT, ExonHit, PU
 Complementary work by Qin et al. optimizes deep learning, XGBoost and LightGBM models on PRO-ACT to predict ALS progression and classify onset type (bulbar vs limb). After extensive preprocessing and hyperparameter tuning, a 1D convolutional neural network (CNN) achieved R² values above 0.7 and competitive RMSE for ALSFRS-based progression, while an optimized XGBoost model reached AUC 0.955 and accuracy 0.98 for onset-type classification~\cite{Qin2025}. These results illustrate the power of modern ML and deep learning in capturing complex relationships in multi-dimensional clinical datasets.
 Beyond clinical trial data, Imamura et al. propose a different perspective by using deep learning on images of induced pluripotent stem cell (iPSC)-derived motor neurons. A CNN (VGG-16-based) trained to distinguish ALS versus control motor neurons achieved AUC 0.97, demonstrating proof-of-concept for cell-level diagnostic support, even though generalizability and clinical integration remain open issues~\cite{Imamura2022}.
 
-3.3 Unsupervised and longitudinal pattern discovery
+\subsection{Unsupervised and longitudinal pattern discovery}
 
 ALS heterogeneity has also motivated unsupervised approaches to identify progression patterns. Ramamoorthy et al.~\cite{Ramamoorthy2022} apply a mixture of Gaussian processes to sparse longitudinal ALSFRS-R data from multiple cohorts, identifying distinct non-linear progression trajectories associated with meaningful differences in survival. Their work demonstrates that clinically relevant stratification can emerge directly from temporal patterns, even when patient follow-up is irregular or incomplete. Time-series clustering, principal component analysis and UMAP have also been used to reveal subgroups with similar trajectories, often feeding back into supervised models as data-driven stratification. Anani et al. use Kaplan–Meier analysis on model-derived risk scores to derive five survival clusters with distinct profiles, while earlier UMAP-based analyses on the same datasets showed that manifold learning can uncover clinically meaningful subgroups~\cite{Anani2023}. Segura et al.’s NLP study similarly identifies patterns in symptom timelines that differentiate spinal and bulbar ALS, supporting ML-based phenotype clustering from real-world data~\cite{Paganoni2023}.
 
@@ -76,11 +76,11 @@ Although many ALS prognostic models use complex ML techniques, explicit attentio
 
 Several strands of recent work move towards more explainable solutions:
 
-Model-level interpretability via feature selection and simpler models
+\subsection{Model-level interpretability via feature selection and simpler models}
 
 Anani et al. deliberately combines metaheuristic feature selection with logistic regression, generating models that are both performant and easier to interpret~\cite{Anani2023}. By constraining the feature set to 19 variables and using a linear model, they reduce the “black-box” perception and allow clinicians to relate model outputs to familiar parameters.
 
-Post-hoc explainability using XAI frameworks.
+\subsection{Post-hoc explainability using XAI frameworks}
 
 Qin et al. explicitly adopt SHAP (Shapley Additive Explanations) to provide local and global explanations for their optimized XGBoost model. SHAP identifies ALSFRS-R subscores, time since diagnosis and laboratory parameters as key drivers of individual risk predictions, aligning model reasoning with clinical understanding~\cite{Qin2025}.
 A representative example of SHAP-based global interpretability in ALS prognosis is shown in Figure 4, illustrating how different clinical variables contribute to a neural network’s prediction of disease progression.
