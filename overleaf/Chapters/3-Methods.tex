@@ -540,7 +540,23 @@ Within the baseline block, \gls{ALSFRS-R} total and sex have 100\% coverage; age
 The treatment block has near-complete coverage (riluzole and concomitant medication count are available for all subjects; study arm for 91.1\%).
 Labs (creatinine, \gls{ALT}) are available for 64.7\% and 69.0\% of subjects, respectively.
 
-This heterogeneous coverage motivates the use of median imputation within the preprocessing pipeline (Section~\ref{sec:methods_preprocessing}) and the \gls{MAR} analysis (Section~\ref{sec:results_fvc_missingness}) to verify that missingness is not outcome-dependent.
+This heterogeneous coverage motivates the use of median imputation within the preprocessing pipeline (Section~\ref{sec:methods_preprocessing}) and the formal missingness analysis described next.
+
+\subsection{FVC Missingness Analysis}
+\label{subsec:methods_fvc_missingness}
+Because nearly half the cohort lacks \gls{FVC} measurements, it is essential to determine whether the absence of respiratory data is related to the outcome---i.e.\ whether the missingness mechanism is Missing at Random (\gls{MAR}) or Missing Not at Random (\gls{MNAR}).
+If \gls{FVC} were preferentially missing for the sickest patients, median imputation would systematically underestimate respiratory impairment in the rapid-progression subgroup, biasing the model towards under-detection.
+
+To investigate this, we split each horizon-specific cohort into two groups---subjects \textit{with} and subjects \textit{without} a valid \gls{FVC} measurement at baseline---and compare them across eleven clinical variables: eight continuous (\gls{ALSFRS-R} total at $t_0$, age, \gls{ALSFRS-R} slope, creatinine, \gls{ALT}, \gls{BMI}, weight, and concomitant-medication count) and three categorical (sex, study arm, riluzole use).
+For continuous variables we apply the two-sided Mann--Whitney~$U$ test, a non-parametric test chosen because several of the distributions are skewed (e.g.\ medication counts, lab values) and sample sizes differ between the two groups.
+Effect sizes are quantified with Cohen's~$d$ (pooled standard deviation, $\text{ddof}=1$); we adopt the conventional thresholds of $|d| < 0.20$ (negligible), $0.20$--$0.50$ (small), $0.50$--$0.80$ (medium), and $> 0.80$ (large)~\cite{cohen1988statistical}.
+For categorical variables we use Pearson's $\chi^2$ test of independence, with effect size reported as Cram\'er's~$V$ ($V = \sqrt{\chi^2 / (n \cdot \min(r-1,\,c-1))}$); the same magnitude bands apply.
+Groups with fewer than five subjects are excluded to avoid unstable test statistics.
+
+The analysis is run independently for the 3-month and 6-month cohorts.
+If none of the eleven comparisons yields a statistically significant difference ($p < 0.05$) combined with a non-negligible effect size ($|d| \geq 0.20$ or $V \geq 0.20$), the missingness is classified as \gls{MAR} and median imputation is considered adequate.
+Conversely, any significant association with a medium or large effect would signal informative missingness and prompt a more sophisticated imputation strategy.
+The results of this analysis are presented in Section~\ref{sec:results_fvc_missingness}.
 
 \subsection{Data Quality: BMI Correction}
 \label{sec:methods_bmi_correction}
@@ -550,6 +566,22 @@ To address this, we applied plausible adult bounds: any height outside $[120, 22
 This correction affected 132 height and 31 weight records.
 After correction, \gls{BMI} ranges from 15.5 to 46.9 in the six-month cohort.
 All v2 datasets used in subsequent analyses were regenerated with the corrected vitals.
+
+\section{Exploratory Analysis: Treatment Variables and Progression}
+\label{sec:methods_eda_treatment}
+Before entering the modelling pipeline, the three treatment-related features---study arm (Active vs.\ Placebo), pre-baseline riluzole use, and the number of concomitant medications---deserve separate exploratory attention.
+Because \gls{PRO-ACT} pools data from multiple clinical trials that tested \textit{different} experimental compounds, the ``Active'' arm is not a single pharmacological intervention; comparing Active versus Placebo across the aggregated database therefore conflates heterogeneous treatments.
+Similarly, riluzole use is recorded observationally and is not randomly assigned at the point of data collection, so any association with progression may be confounded by disease severity at baseline (sicker patients may be more likely to receive riluzole early).
+
+With these caveats firmly in mind, we conduct a descriptive analysis with four objectives:
+\begin{enumerate}
+  \item \textbf{Study-arm distribution:} characterise the proportion of Active vs.\ Placebo subjects overall and within each progression class, using a $\chi^2$ test to assess whether the rapid/slow ratio differs between arms.
+  \item \textbf{Riluzole--progression association:} compare \gls{ALSFRS-R} slope distributions between riluzole users and non-users using the Mann--Whitney $U$ test, and tabulate rapid-progression rates by riluzole status with a $\chi^2$ test.
+  \item \textbf{Arm $\times$ riluzole interaction:} visualise the joint effect of study arm and riluzole use on the proportion of rapid progressors, to identify any subgroup-specific patterns.
+  \item \textbf{Top concomitant medications:} rank the 15 most frequently prescribed concurrent medications and overlay the rapid-progression rate for each, providing a first look at which comedications cluster with faster decline.
+\end{enumerate}
+All tests use $\alpha = 0.05$ and are intended as descriptive flags rather than causal claims; no adjustment for multiple comparisons is applied at this exploratory stage.
+The key finding from this analysis is that neither study arm nor riluzole use shows a clinically meaningful association with the rate of rapid progression (Section~\ref{sec:results_eda_treatment}), supporting the decision to retain these variables as features without further causal modelling (e.g.\ propensity-score adjustment or inverse-probability weighting).
 
 \section{Modeling Setup}
 \label{sec:methods_modeling}
@@ -593,6 +625,7 @@ We address this through three complementary strategies:
   \item \textbf{Metric choice.} Precision--Recall Area Under the Curve (\gls{PR-AUC}, equivalently Average Precision) is used as the primary ranking and optimisation metric.
     Unlike \gls{ROC-AUC}, \gls{PR-AUC} is sensitive to the positive-class prevalence and penalises models that achieve high recall only at the expense of many false positives---a desirable property in a clinical screening context.
     \gls{ROC-AUC} is additionally reported for comparability with prior \gls{ALS} literature.
+    To verify empirically that \gls{PR-AUC} is a suitable primary metric, we compute Spearman rank correlations between \gls{PR-AUC}, \gls{ROC-AUC}, $F_1$, and $F_2$ across all 13 configurations; high inter-metric correlation would confirm that the ranking is robust to the choice of summary statistic.
   \item \textbf{Operating-point selection.} Decision thresholds are not fixed at $t\!=\!0.5$.
     Instead, within each cross-validation fold, the threshold that maximises the $F_2$ score on the training data is selected and applied to the fold's test partition.
     $F_2$ weights recall twice as heavily as precision, reflecting the clinical priority of identifying patients at risk of rapid decline (where missing a high-risk patient is worse than a false alarm).
@@ -676,6 +709,28 @@ The best hyperparameters per configuration are persisted as \gls{JSON} files for
 This unified protocol---same data splits, same fold-wise label procedure, same number of trials---ensures that all 13 model $\times$ mode configurations are evaluated on an equal footing, eliminating confounds from inconsistent search budgets or differing validation protocols.
 No trial pruning (e.g.\ \textit{MedianPruner}) is employed: each trial completes its full 5-fold cross-validation in a matter of seconds, so early stopping would offer negligible time savings while risking the premature discard of configurations that perform poorly on one fold but well on average.
 
+\subsection{Cross-Horizon Comparison}
+\label{subsec:methods_cross_horizon}
+Although the 6-month horizon is our primary analysis (owing to its richer slope estimates and better alignment with clinical follow-up cadence), we repeat the full Optuna tuning protocol for the 3-month cohort to verify that the choice of horizon is empirically justified rather than assumed.
+The 3-month re-tuning retains the same 60-trial budget, \gls{PR-AUC} objective, and GroupKFold structure, and is applied to all model$\times$mode configurations present in the 3-month summary.
+We then pair each configuration that exists at both horizons by model family and class-weight mode and compare their mean cross-validated \gls{PR-AUC} side by side---via grouped bar charts and a scatter plot with a parity line---to quantify the absolute difference $\Delta = \text{PR-AUC}_{3\text{m}} - \text{PR-AUC}_{6\text{m}}$.
+If the 6-month horizon consistently achieves higher (or comparable) discriminative performance across models, the choice to focus downstream evaluation on the 6-month cohort is reinforced; if 3 months were systematically superior, the primary horizon would be reconsidered.
+
+\subsection{Statistical Comparison of Models}
+\label{subsec:methods_statistical_comparison}
+Beyond comparing raw \gls{PR-AUC} means, we apply formal non-parametric tests to determine whether the observed performance differences among model families are statistically significant.
+Because the same five GroupKFold folds are shared by all models, the per-fold scores are \textit{dependent} samples, ruling out standard independent-sample tests.
+
+For the omnibus question---``do the seven best model$\times$mode configurations differ in median \gls{PR-AUC}?''---we use the \textbf{Friedman test}~\cite{friedman1937ranks}, a non-parametric repeated-measures alternative to one-way ANOVA that operates on the rank matrix of size $7 \times 5$ (seven models, five folds).
+The null hypothesis is that the rank distributions are identical across all models.
+
+When the Friedman test rejects the omnibus null, we proceed with pairwise \textbf{Wilcoxon signed-rank tests} (two-sided) for all $\binom{7}{2} = 21$ model pairs.
+Because 21 simultaneous tests inflate the family-wise error rate, Bonferroni correction is applied: each raw $p$-value is multiplied by 21 and capped at 1.0, and significance is declared at the corrected level $\alpha = 0.05$.
+
+An important structural limitation must be acknowledged: with only $K\!=\!5$ paired observations, the Wilcoxon signed-rank test has a minimum achievable exact $p$-value of $1/2^5 = 0.03125$; after Bonferroni correction this becomes $0.03125 \times 21 \approx 0.66$, making it \textit{arithmetically impossible} to reach corrected significance for any single pair.
+We therefore interpret the pairwise results as descriptive evidence of effect direction and magnitude rather than as definitive hypothesis tests, and complement them with visual summaries (fold-level box plots and a corrected-$p$ heatmap) to aid the reader's judgement.
+The results of this analysis are presented in Section~\ref{sec:results_statistical_comparison}.
+
 \section{Final Model Training and Persistence}
 \label{sec:methods_final_model}
 Following model selection, we retrain the tuned XGBoost pipeline on the \textit{entire} 6-month cohort ($N\!=\!1{,}392$; \gls{DEV}~+~\gls{TEST} combined), since all model-selection decisions have already been finalised and the held-out split has served its evaluation purpose.
@@ -683,6 +738,10 @@ The resulting artifact comprises:
 (i)~the complete \texttt{scikit-learn} \texttt{Pipeline}---imputer, encoder, optional scaler, and classifier---serialised with \texttt{joblib}, so that new patients can be scored without any external preprocessing steps; and
 (ii)~a \gls{JSON} metadata file recording the ordered feature list, the 30th-percentile slope cutoff ($-1.25$\,points/month), and the decision threshold ($t\!=\!0.21$).
 This self-contained package feeds the downstream explainability analyses in Chapter~\ref{ch:results}.
+
+In addition, a final \textbf{balanced Logistic Regression} model is trained on the same full cohort using the Optuna-tuned hyperparameters from the LR\_balanced configuration (loaded from the persisted \gls{JSON} file), with the identical preprocessing pipeline (median imputation, one-hot encoding, $z$-score scaling).
+The \gls{LR} pipeline is serialised separately (\texttt{final\_lr\_6m.joblib}) together with its own metadata file.
+This parallel artifact is not used for prediction in the deployed system; its sole purpose is to provide an intrinsically interpretable coefficient analysis that complements the post-hoc \gls{SHAP} explanations of the XGBoost model (Section~\ref{subsec:methods_lr_coefs}).
 
 \section{Explainability Plan (XAI)}
 \label{sec:methods_xai_plan}
@@ -756,6 +815,13 @@ where the ratio $t/(1-t)$ represents the relative cost of a false positive versu
 The model's net-benefit curve is compared against two reference strategies: \textit{treat all} (classify every patient as rapid) and \textit{treat none} (classify no patient as rapid).
 A model is clinically useful at thresholds where its net benefit exceeds both references.
 The analysis is evaluated over the range $t \in [0.01,\, 0.80]$; thresholds above 0.80 are omitted because they imply an implausibly high cost of false positives and produce unstable net-benefit estimates due to very few predicted-positive cases.
+
+\subsection{Calibration Analysis}
+\label{subsec:methods_calibration}
+A well-calibrated model produces predicted probabilities that match observed event frequencies: among patients assigned $P(\text{rapid}) \approx 0.30$, roughly 30\% should indeed experience rapid progression.
+To assess calibration visually, we construct a \textit{reliability diagram} by binning the \gls{TEST}-set predicted probabilities into ten equal-width bins (0.0--0.1, 0.1--0.2, \ldots, 0.9--1.0) and plotting the mean predicted probability in each bin against the observed proportion of rapid progressors.
+A perfectly calibrated model lies on the diagonal; systematic deviations above or below indicate under-confidence or over-confidence, respectively.
+Calibration is additionally summarised numerically by the Brier score, already defined in Section~\ref{subsec:methods_bootstrap}.
 
 \subsection{Learning Curves}
 \label{subsec:methods_learning_curves}
