@@ -152,9 +152,9 @@ Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipelin
   Stages~1--4 prepare and partition the data under a leakage-free protocol;
   stages~5--6 perform model development exclusively on the DEV set
   (5-fold subject-wise GroupKFold);
-  stage~9 translates model outputs into structured clinical risk reports with per-patient SHAP explanations and monitoring suggestions.
   stage~7 provides a single unbiased evaluation on the held-out TEST set;
-  stage~8 adds post-hoc explainability via SHAP.}
+  stage~8 adds post-hoc explainability via SHAP; and
+  stage~9 translates model outputs into structured clinical risk reports with per-patient SHAP explanations and monitoring suggestions.}
   \label{fig:pipeline_overview}
 \end{figure}
 
@@ -229,7 +229,7 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
     \textbf{Subjects with valid ALSFRS-R assessment(s)}\\[-2pt]
     {\scriptsize $N = 5{,}436$}
   };
-  \node[excl, right=1.2cm of f1] (e1) {
+  \node[excl, right=1cm of f1] (e1) {
     Excluded: $5{,}287$ without\\valid ALSFRS-R data
   };
 
@@ -247,7 +247,7 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
   };
 
   % Overlap annotation
-  \node[font=\scriptsize, text=black!60, below=0.15cm of f1]
+  \node[font=\scriptsize, text=black!60, below=0.30cm of f1]
     (overlap) {720 subjects eligible at both horizons};
 
   % DEV / TEST split — 3m
@@ -623,7 +623,7 @@ We evaluate a diverse set of seven supervised learning algorithms spanning diffe
 This selection covers instance-based, linear, kernel-based, bagging, and boosting paradigms, allowing a principled comparison of model families rather than relying on a single architecture.
 Deep learning architectures (e.g.\ \glspl{DNN}, \glspl{CNN}) are excluded because the cohort size ($N\!=\!1{,}392$ for 6 months) is insufficient to train deep models without severe overfitting, and because black-box neural networks conflict with the explainability requirement that is central to this work.
 Na\"ive Bayes was also considered but excluded because the conditional-independence assumption is clearly violated by correlated features in the dataset (e.g.\ weight, height, and \gls{BMI}).
-Following hyperparameter optimisation (Section~\ref{subsec:methods_optuna}), the final explainable model is selected based on the best cross-validated \gls{PR-AUC}, with interpretability provided via \gls{SHAP} (Section~\ref{sec:methods_xai_plan}) and, for Logistic Regression, via direct coefficient analysis.
+Following hyperparameter optimisation (Section~\ref{sec:methods_optuna}), the final explainable model is selected based on the best cross-validated \gls{PR-AUC}, with interpretability provided via \gls{SHAP} (Section~\ref{sec:methods_xai_plan}) and, for Logistic Regression, via direct coefficient analysis.
 
 \subsection{Preprocessing Pipeline}
 \label{sec:methods_preprocessing}
@@ -752,7 +752,7 @@ This isolates where predictive signal originates without the confound of re-tuni
 A cumulative design---rather than a leave-one-block-out scheme---was chosen because it mirrors the realistic clinical scenario of progressively adding data sources and directly highlights the marginal gain from each new block of variables.
 
 \section{Hyperparameter Optimization (Optuna)}
-\label{subsec:methods_optuna}
+\label{sec:methods_optuna}
 Hyperparameter optimisation is performed using \textit{Optuna}~\cite{optuna2019}, a Bayesian framework based on the Tree-structured Parzen Estimator (\gls{TPE}) algorithm.
 \gls{TPE} models the objective function as a ratio of two density estimators (one for good trials, one for bad trials) and samples new hyperparameter candidates from the region of parameter space that maximises the expected improvement.
 Compared to grid or random search, \gls{TPE} converges to strong configurations with fewer evaluations, which is important given the computational cost of nested cross-validation.
@@ -776,15 +776,15 @@ The best hyperparameters per configuration are persisted as \gls{JSON} files for
 This unified protocol---same data splits, same fold-wise label procedure, same number of trials---ensures that all 13 model $\times$ mode configurations are evaluated on an equal footing, eliminating confounds from inconsistent search budgets or differing validation protocols.
 No trial pruning (e.g.\ \textit{MedianPruner}) is employed: each trial completes its full 5-fold cross-validation in a matter of seconds, so early stopping would offer negligible time savings while risking the premature discard of configurations that perform poorly on one fold but well on average.
 
-\subsection{Cross-Horizon Comparison}
-\label{subsec:methods_cross_horizon}
+\section{Cross-Horizon Comparison}
+\label{sec:methods_cross_horizon}
 Although the 6-month horizon is our primary analysis (owing to its richer slope estimates and better alignment with clinical follow-up cadence), we repeat the full Optuna tuning protocol for the 3-month cohort to verify that the choice of horizon is empirically justified rather than assumed.
 The 3-month re-tuning retains the same 60-trial budget, \gls{PR-AUC} objective, and GroupKFold structure, and is applied to all model$\times$mode configurations present in the 3-month summary.
 We then pair each configuration that exists at both horizons by model family and class-weight mode and compare their mean cross-validated \gls{PR-AUC} side by side---via grouped bar charts and a scatter plot with a parity line---to quantify the absolute difference $\Delta = \text{PR-AUC}_{3\text{m}} - \text{PR-AUC}_{6\text{m}}$.
 If the 6-month horizon consistently achieves higher (or comparable) discriminative performance across models, the choice to focus downstream evaluation on the 6-month cohort is reinforced; if 3 months were systematically superior, the primary horizon would be reconsidered.
 
-\subsection{Statistical Comparison of Models}
-\label{subsec:methods_statistical_comparison}
+\section{Statistical Comparison of Models}
+\label{sec:methods_statistical_comparison}
 Beyond comparing raw \gls{PR-AUC} means, we apply formal non-parametric tests to determine whether the observed performance differences among model families are statistically significant.
 Because the same five GroupKFold folds are shared by all models, the per-fold scores are \textit{dependent} samples, ruling out standard independent-sample tests.
 
@@ -888,7 +888,7 @@ The analysis is evaluated over the range $t \in [0.01,\, 0.80]$; thresholds abov
 A well-calibrated model produces predicted probabilities that match observed event frequencies: among patients assigned $P(\text{rapid}) \approx 0.30$, roughly 30\% should indeed experience rapid progression.
 To assess calibration visually, we construct a \textit{reliability diagram} by binning the \gls{TEST}-set predicted probabilities into ten equal-width bins (0.0--0.1, 0.1--0.2, \ldots, 0.9--1.0) and plotting the mean predicted probability in each bin against the observed proportion of rapid progressors.
 A perfectly calibrated model lies on the diagonal; systematic deviations above or below indicate under-confidence or over-confidence, respectively.
-Calibration is additionally summarised numerically by the Brier score, already defined in Section~\ref{subsec:methods_bootstrap}.
+Calibration is additionally summarised numerically by the Brier score (Table~\ref{tab:metrics}).
 
 \subsection{Learning Curves}
 \label{subsec:methods_learning_curves}
