@@ -507,6 +507,16 @@ The choice of the 30th percentile is motivated by three considerations:
 \end{enumerate}
 The fold-wise label definition means that the exact slope cutoff varies slightly across folds, but the semantic interpretation---``clinically concerning rate of decline''---remains consistent.
 To give a concrete sense of scale: on the full 6-month dataset the 30th-percentile cutoff corresponds to approximately $-1.2$\,points/month, meaning that a subject labelled \textit{rapid} loses more than one point on the 48-point \gls{ALSFRS-R} scale every month.
+Figure~\ref{fig:slope_histogram_6m} illustrates the resulting distribution.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.85\linewidth]{images/figures/slope_histogram_6m.png}
+  \caption{Distribution of ALSFRS-R slopes (points/30\,days) for the 6-month cohort ($N\!=\!1{,}392$).
+  The dashed line marks the 30th-percentile cutoff ($-1.25$\,points/month); subjects to the left (red) are labelled \textit{rapid}, those to the right (blue) \textit{slow}.
+  The cutoff shown is computed on the full dataset for illustration; in practice it is recomputed within each cross-validation fold.}
+  \label{fig:slope_histogram_6m}
+\end{figure}
 
 \section{Feature Engineering at Baseline ($t_0$)}
 \label{sec:methods_features}
@@ -524,6 +534,9 @@ We group features into clinically coherent blocks:
 The full feature set (v2) comprises 35 predictors.
 Four columns present in the dataset are excluded before modelling: three temporal offsets used only for merge bookkeeping (\texttt{t0\_delta\_days}, \texttt{vitals\_delta\_days}, \texttt{fvc\_delta\_days}) and one near-constant field (\texttt{ALSFRS\_Responded\_By}, $>$93\% missing).
 This block structure supports interpretability and enables ablation studies (Section~\ref{sec:methods_ablation}).
+Table~\ref{tab:feature_summary} provides a consolidated view of all 35 predictors with their block assignment, data type, and coverage.
+
+\input{images/tables/feature_summary.tex}
 
 \subsection{Temporal Selection Rule (Last Pre-Baseline)}
 \label{sec:methods_last_prebaseline}
@@ -645,6 +658,33 @@ We deliberately avoid synthetic oversampling techniques (e.g.\ \gls{SMOTE}, \gls
 (i) generating artificial samples in a clinical dataset risks introducing physiologically implausible feature combinations, and
 (ii) cost-sensitive learning via class weights achieves a similar effect without altering the training distribution.
 
+\section{Evaluation Metrics}
+\label{sec:methods_metrics}
+Multiple complementary metrics are used to assess classifier performance from different perspectives.
+Table~\ref{tab:metrics} formalises the measures referenced throughout this work, where $P$ denotes precision, $R$ denotes recall, TP true positives, FP false positives, FN false negatives, $p_i$ the predicted probability for subject~$i$, and $y_i \in \{0,1\}$ the observed label.
+
+\begin{table}[ht!]
+\centering
+\caption{Evaluation metrics used in this work. All metrics are computed with respect to the positive class (\textit{rapid} progression) unless stated otherwise.}
+\label{tab:metrics}
+\small
+\renewcommand{\arraystretch}{1.8}
+\begin{tabular}{l l l}
+\toprule
+Metric & Definition & Role \\
+\midrule
+Precision ($P$) & $\dfrac{\text{TP}}{\text{TP} + \text{FP}}$ & Component of $F$-scores \\
+Recall ($R$) & $\dfrac{\text{TP}}{\text{TP} + \text{FN}}$ & Clinical priority (sensitivity) \\
+$F_1$ & $\dfrac{2PR}{P + R}$ & Threshold-dependent report \\
+$F_2$ & $\dfrac{5PR}{4P + R}$ & Threshold selection (recall $2{\times}$) \\
+\gls{PR-AUC} & $\displaystyle\sum_{n}(R_n - R_{n-1})\,P_n$ & Primary tuning objective \\
+\gls{ROC-AUC} & Area under TPR\,vs\,FPR curve & Secondary ranking metric \\
+Brier score & $\dfrac{1}{N}\displaystyle\sum_{i=1}^{N}(p_i - y_i)^2$ & Calibration assessment \\
+\bottomrule
+\end{tabular}
+\renewcommand{\arraystretch}{1.0}
+\end{table}
+
 \section{Validation Strategy}
 \label{sec:methods_validation}
 \subsection{Subject-wise Cross-Validation (GroupKFold)}
@@ -701,8 +741,11 @@ The search is configured as follows:
   \item \textbf{Reproducibility:} \gls{TPE} sampler seeded at 42.
   \item \textbf{Hyperparameter spaces:} model-specific ranges covering learning rate, regularisation strength, tree depth, number of estimators, and kernel parameters, as applicable.
     For instance, the XGBoost search space spans \texttt{learning\_rate} $\in [0.01,\,0.20]$ (log-uniform), \texttt{max\_depth} $\in [2,\,8]$, \texttt{n\_estimators} $\in [200,\,1{,}200]$, and regularisation terms over several orders of magnitude; \gls{LR} varies $C \in [10^{-3},\,50]$ with $\ell_1$/$\ell_2$ penalty selection; \gls{SVM} searches $C \in [0.01,\,100]$ across \gls{RBF} and linear kernels.
-    Full search-space definitions for all seven model families are available in the source-code repository.
+    Table~\ref{tab:optuna_spaces} details the complete search-space definitions for all seven model families.
 \end{itemize}
+
+\input{images/tables/optuna_search_spaces.tex}
+
 Additional metrics (\gls{ROC-AUC}, $F_1$, $F_2$ at threshold 0.5) are recorded for every trial but do not influence the search direction.
 The best hyperparameters per configuration are persisted as \gls{JSON} files for downstream use in ablation and final model training.
 

@@ -1,0 +1,65 @@
+\begin{table}[ht!]
+\centering
+\caption{Optuna hyperparameter search spaces for the seven model families.
+All searches use 60 TPE trials with seed 42.
+``Log'' denotes log-uniform sampling; ``Step'' denotes uniform with fixed step size; all other integer/float ranges are sampled uniformly.
+Fixed parameters (\texttt{random\_state}, \texttt{n\_jobs}, \texttt{solver}) are omitted for brevity.}
+\label{tab:optuna_spaces}
+\footnotesize
+\begin{tabular}{l l l l}
+\toprule
+Model & Hyperparameter & Range & Scale \\
+\midrule
+\multirow{3}{*}{KNN}
+  & \texttt{n\_neighbors}     & $[3,\ 51]$, step 2   & Uniform \\
+  & \texttt{weights}          & \{uniform, distance\} & Categorical \\
+  & \texttt{metric}           & \{euclidean, manhattan\} & Categorical \\
+\cmidrule{1-4}
+\multirow{4}{*}{Decision Tree}
+  & \texttt{max\_depth}         & $[2,\ 20]$   & Uniform \\
+  & \texttt{min\_samples\_split} & $[2,\ 50]$   & Uniform \\
+  & \texttt{min\_samples\_leaf}  & $[1,\ 30]$   & Uniform \\
+  & \texttt{criterion}          & \{gini, entropy\} & Categorical \\
+\cmidrule{1-4}
+\multirow{5}{*}{Random Forest}
+  & \texttt{n\_estimators}       & $[100,\ 800]$, step 50 & Uniform \\
+  & \texttt{max\_depth}          & $[3,\ 20]$    & Uniform \\
+  & \texttt{min\_samples\_split} & $[2,\ 30]$    & Uniform \\
+  & \texttt{min\_samples\_leaf}  & $[1,\ 20]$    & Uniform \\
+  & \texttt{max\_features}       & \{sqrt, log2\} & Categorical \\
+\cmidrule{1-4}
+\multirow{3}{*}{SVM}
+  & \texttt{C}       & $[0.01,\ 100]$      & Log \\
+  & \texttt{kernel}  & \{rbf, linear\}      & Categorical \\
+  & \texttt{gamma}   & $[10^{-4},\ 1.0]$\textsuperscript{a} & Log \\
+\cmidrule{1-4}
+\multirow{2}{*}{Logistic Reg.}
+  & \texttt{C}       & $[10^{-3},\ 50]$   & Log \\
+  & \texttt{penalty} & \{$\ell_1$, $\ell_2$\} & Categorical \\
+\cmidrule{1-4}
+\multirow{9}{*}{LightGBM}
+  & \texttt{n\_estimators}       & $[200,\ 1{,}200]$, step 50 & Uniform \\
+  & \texttt{learning\_rate}      & $[0.01,\ 0.20]$ & Log \\
+  & \texttt{num\_leaves}         & $[15,\ 127]$    & Uniform \\
+  & \texttt{max\_depth}          & $[-1,\ 12]$     & Uniform \\
+  & \texttt{min\_child\_samples} & $[5,\ 50]$      & Uniform \\
+  & \texttt{subsample}           & $[0.6,\ 1.0]$   & Uniform \\
+  & \texttt{colsample\_bytree}   & $[0.6,\ 1.0]$   & Uniform \\
+  & \texttt{reg\_lambda}         & $[10^{-3},\ 10]$ & Log \\
+  & \texttt{reg\_alpha}          & $[10^{-6},\ 1.0]$ & Log \\
+\cmidrule{1-4}
+\multirow{9}{*}{XGBoost}
+  & \texttt{n\_estimators}       & $[200,\ 1{,}200]$, step 50 & Uniform \\
+  & \texttt{learning\_rate}      & $[0.01,\ 0.20]$  & Log \\
+  & \texttt{max\_depth}          & $[2,\ 8]$        & Uniform \\
+  & \texttt{min\_child\_weight}  & $[1.0,\ 20.0]$   & Log \\
+  & \texttt{subsample}           & $[0.6,\ 1.0]$    & Uniform \\
+  & \texttt{colsample\_bytree}   & $[0.6,\ 1.0]$    & Uniform \\
+  & \texttt{gamma}               & $[0.0,\ 5.0]$    & Uniform \\
+  & \texttt{reg\_lambda}         & $[10^{-3},\ 10]$  & Log \\
+  & \texttt{reg\_alpha}          & $[10^{-6},\ 1.0]$ & Log \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+{\scriptsize \textsuperscript{a}Sampled only when \texttt{kernel\,=\,rbf}.}
+\end{table}

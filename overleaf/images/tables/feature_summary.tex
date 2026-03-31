@@ -1,0 +1,56 @@
+\begin{table}[ht!]
+\centering
+\caption{Complete feature set (v2): 35 predictors grouped by clinical block.
+Coverage denotes the percentage of 6-month cohort subjects ($N\!=\!1{,}392$) with a non-missing value.
+\textit{Type} distinguishes numeric features (median-imputed) from categorical features (most-frequent imputed, then one-hot encoded).}
+\label{tab:feature_summary}
+\footnotesize
+\begin{tabular}{r l l c r}
+\toprule
+\# & Feature & Block & Type & Cover.\ (\%) \\
+\midrule
+ 1 & ALSFRS-R total ($t_0$)       & Baseline & Num & 100.0 \\
+ 2 & Age                           & Baseline & Num &  87.1 \\
+ 3 & Sex                           & Baseline & Cat & 100.0 \\
+ 4 & Ethnicity                     & Baseline & Cat &  62.4 \\
+ 5 & Race: Caucasian               & Baseline & Bin &  89.7 \\
+ 6 & Race: Black / African Amer.   & Baseline & Bin &   8.7 \\
+ 7 & Race: Asian                   & Baseline & Bin &   8.4 \\
+ 8 & Race: Amer.\ Indian / Alaska  & Baseline & Bin &   7.7 \\
+ 9 & Race: Hawaiian / Pac.\ Isl.   & Baseline & Bin &   7.3 \\
+10 & Race: Other                   & Baseline & Bin &   2.3 \\
+11 & Race: Unknown                 & Baseline & Bin &   7.5 \\
+12 & R-1 Dyspnea                   & Baseline & Num &  93.8 \\
+13 & R-2 Orthopnea                 & Baseline & Num &  93.8 \\
+14 & R-3 Respiratory Insufficiency  & Baseline & Num &  93.8 \\
+15 & Mode of Administration         & Baseline & Cat &  17.0 \\
+\cmidrule{1-5}
+16 & Weight (kg)                    & Vitals   & Num &  79.2 \\
+17 & Height (cm)                    & Vitals   & Num &  44.9 \\
+18 & BMI                            & Vitals   & Num &  44.3 \\
+19 & Pulse                          & Vitals   & Num &  71.8 \\
+20 & Respiratory Rate               & Vitals   & Num &  66.8 \\
+21 & Temperature                    & Vitals   & Num &  66.6 \\
+22 & BP Systolic                    & Vitals   & Num &  71.9 \\
+23 & BP Diastolic                   & Vitals   & Num &  71.9 \\
+24 & Standing BP Systolic           & Vitals   & Num &   5.5 \\
+25 & Standing BP Diastolic          & Vitals   & Num &   5.5 \\
+26 & Supine BP Systolic             & Vitals   & Num &   5.5 \\
+27 & Supine BP Diastolic            & Vitals   & Num &   5.5 \\
+\cmidrule{1-5}
+28 & FVC (litres)                   & FVC      & Num &  56.3 \\
+29 & FVC (\% of normal)             & FVC      & Num &  54.5 \\
+30 & Subject normal (litres)        & FVC      & Num &  33.3 \\
+\cmidrule{1-5}
+31 & Riluzole use (pre-$t_0$)       & Treatment & Bin & 100.0 \\
+32 & Study arm                      & Treatment & Cat &  91.1 \\
+33 & No.\ concomitant medications   & Treatment & Num & 100.0 \\
+\cmidrule{1-5}
+34 & ALT (SGPT)                     & Labs     & Num &  69.0 \\
+35 & Creatinine                     & Labs     & Num &  64.7 \\
+\bottomrule
+\end{tabular}
+\par\smallskip
+{\scriptsize Num = numeric; Cat = categorical (one-hot encoded); Bin = binary indicator.
+Coverage for race indicators reflects the fraction of subjects for whom that specific race field was recorded in the source database.}
+\end{table}
