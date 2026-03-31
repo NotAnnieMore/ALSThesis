@@ -76,7 +76,7 @@ Respiratory (FVC) & 3 & 60.7 \\
 Treatment & 3 & $\sim$100 \\
 Labs & 2 & 64.7--69.0 \\
 \midrule
-All features (v2) & 35 & 100\textsuperscript{$\dagger$} \\
+All features & 35 & 100\textsuperscript{$\dagger$} \\
 \bottomrule
 \multicolumn{3}{l}{\footnotesize $\dagger$After median imputation, all subjects have complete feature vectors.}
 \end{tabular}
@@ -132,7 +132,7 @@ After selecting the measurement closest to $t_0$ per subject, 132 of the origina
 We corrected the issue by applying plausible adult bounds---Height $\in [120, 220]$\,cm; Weight $\in [30, 200]$\,kg---and setting any value outside these ranges to \texttt{NaN}.
 This affected 132 height entries and 31 weight entries; the resulting missing values are handled downstream by median imputation inside each model's preprocessing pipeline (see Section~\ref{sec:results_optuna_v2}).
 After correction, \gls{BMI} in the six-month analysis cohort ($N = 1{,}392$) ranges from 15.5 to 46.9, consistent with published \gls{BMI} distributions for \gls{ALS} patients in clinical trials~\cite{Anani2023}.
-All v2 datasets (used in tuning, ablation, and all subsequent analyses) were regenerated from the corrected vitals file to ensure that no downstream result is affected by the original erroneous values.
+All datasets (used in tuning, ablation, and all subsequent analyses) were regenerated from the corrected vitals file to ensure that no downstream result is affected by the original erroneous values.
 
 
 % ============================================================
@@ -140,7 +140,7 @@ All v2 datasets (used in tuning, ablation, and all subsequent analyses) were reg
 \label{sec:results_eda_treatment}
 % ============================================================
 
-Three treatment-related features are available in the v2 dataset: clinical trial arm (\texttt{study\_arm}), pre-baseline riluzole use (\texttt{riluzole\_pre\_t0}), and the number of concomitant medications (\texttt{n\_conmeds\_pre\_t0}).
+Three treatment-related features are available in the dataset: clinical trial arm (\texttt{study\_arm}), pre-baseline riluzole use (\texttt{riluzole\_pre\_t0}), and the number of concomitant medications (\texttt{n\_conmeds\_pre\_t0}).
 Before incorporating these features into the predictive pipeline, we investigate their descriptive association with the \gls{ALSFRS-R} slope and the binary rapid-progression label (global rate: 30.0\%, $N=418/1{,}392$).
 
 \textbf{Important caveat.}
@@ -345,7 +345,7 @@ Figure~\ref{fig:metric_heatmap} visualises the cross-validation metric values fo
 
 \clearpage 
 % ============================================================
-\section{Feature Block Ablation (v2 Features)}
+\section{Feature Block Ablation}
 \label{sec:results_ablation_v2}
 % ============================================================
 
@@ -358,7 +358,7 @@ The four top-ranked models were evaluated across six cumulative feature configur
 \textbf{C}~(A + FVC, $n\!=\!18$),
 \textbf{D}~(A + vitals + FVC, $n\!=\!30$),
 \textbf{E}~(D + treatment, $n\!=\!33$),
-\textbf{F}~(full v2 with labs, $n\!=\!35$).
+\textbf{F}~(full set with labs, $n\!=\!35$).
 Blocks C and D are designed to disentangle the independent contribution of FVC (C) from the joint effect of FVC and vitals (D).
 
 \input{images/tables/step5v2_ablation.tex}

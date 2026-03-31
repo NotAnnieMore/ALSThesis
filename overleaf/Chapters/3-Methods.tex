@@ -531,7 +531,7 @@ We group features into clinically coherent blocks:
   \item \textbf{Treatment block} ($n\!=\!3$): riluzole use before $t_0$, clinical-trial study arm, and number of concomitant medications.
   \item \textbf{Labs block} ($n\!=\!2$): creatinine and \gls{ALT} at baseline.
 \end{itemize}
-The full feature set (v2) comprises 35 predictors.
+The full feature set comprises 35 predictors.
 Four columns present in the dataset are excluded before modelling: three temporal offsets used only for merge bookkeeping (\texttt{t0\_delta\_days}, \texttt{vitals\_delta\_days}, \texttt{fvc\_delta\_days}) and one near-constant field (\texttt{ALSFRS\_Responded\_By}, $>$93\% missing).
 This block structure supports interpretability and enables ablation studies (Section~\ref{sec:methods_ablation}).
 Table~\ref{tab:feature_summary} provides a consolidated view of all 35 predictors with their block assignment, data type, and coverage.
@@ -578,7 +578,7 @@ These erroneous records produced physiologically implausible \gls{BMI} values (u
 To address this, we applied plausible adult bounds: any height outside $[120, 220]$\,cm or weight outside $[30, 200]$\,kg was set to \texttt{NaN}.
 This correction affected 132 height and 31 weight records.
 After correction, \gls{BMI} ranges from 15.5 to 46.9 in the six-month cohort.
-All v2 datasets used in subsequent analyses were regenerated with the corrected vitals.
+All datasets used in subsequent analyses were regenerated with the corrected vitals.
 
 \section{Exploratory Analysis: Treatment Variables and Progression}
 \label{sec:methods_eda_treatment}
@@ -721,7 +721,7 @@ To quantify the contribution of each feature block, we conduct a cumulative abla
   \item C: A + \gls{FVC} ($n\!=\!18$),
   \item D: A + Vitals + \gls{FVC} ($n\!=\!30$),
   \item E: D + Treatment ($n\!=\!33$),
-  \item F: D + Treatment + Labs ($n\!=\!35$, full v2).
+  \item F: D + Treatment + Labs ($n\!=\!35$, full set).
 \end{itemize}
 Using the \textbf{Optuna-tuned hyperparameters} from the full-feature configuration, each block is evaluated under the same leakage-free \gls{CV} protocol.
 This isolates where predictive signal originates without the confound of re-tuning per block.
