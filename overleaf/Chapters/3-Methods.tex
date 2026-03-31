@@ -2,7 +2,8 @@
 
 \section{Overview of the Pipeline}
 \label{sec:methods_overview}
-This chapter describes the end-to-end methodology used to build an explainable binary classifier for anticipating \textit{rapid} versus \textit{slow} functional progression in amyotrophic lateral sclerosis (ALS) patients, using PRO-ACT data.
+This chapter describes the end-to-end methodology used to build an explainable binary classifier for anticipating \textit{rapid} versus \textit{slow} functional progression in amyotrophic lateral sclerosis (\gls{ALS}) patients, using \gls{PRO-ACT} data.
+Since clinicians are unlikely to act on predictions they cannot scrutinise, interpretability is treated as a first-class design requirement rather than a post-hoc addition.
 The pipeline follows a strict leakage-free design:
 (i) define a subject-level baseline timepoint $t_0$,
 (ii) construct predictors using only information available up to $t_0$,
@@ -152,28 +153,30 @@ Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipelin
 \label{sec:methods_dataset}
 \subsection{PRO-ACT Data Sources}
 \label{sec:methods_proact_sources}
-We use the Pooled Resource Open-Access ALS Clinical Trials (PRO-ACT) database, the largest publicly available repository of ALS clinical trial data, aggregating records from multiple completed trials.
-PRO-ACT is selected because no comparable public ALS dataset approaches its scale ($>$10{,}000 subjects) or breadth of longitudinal clinical variables; smaller alternatives (e.g.\ single-centre registries) lack the statistical power required for robust model development and cross-validation.
+We use the Pooled Resource Open-Access \gls{ALS} Clinical Trials (\gls{PRO-ACT}) database, the largest publicly available repository of \gls{ALS} clinical trial data, aggregating records from multiple completed trials conducted between the mid-1990s and early 2010s.
+\gls{PRO-ACT} is selected because no comparable public \gls{ALS} dataset approaches its scale ($>$10{,}000 subjects) or breadth of longitudinal clinical variables; smaller alternatives (e.g.\ single-centre registries) lack the statistical power required for robust model development and cross-validation.
 The raw database comprises 16 tables with longitudinal clinical, demographic, and laboratory measurements.
 In this work, we employ the following source tables:
 \begin{itemize}
-  \item \textbf{ALSFRS-R:} longitudinal functional assessments (used for baseline anchoring and target construction),
+  \item \textbf{\gls{ALSFRS-R}:} longitudinal functional assessments (used for baseline anchoring and target construction),
   \item \textbf{Demographics:} age, sex, ethnicity, and race,
-  \item \textbf{Vital Signs:} weight, height, BMI, pulse, respiratory rate, temperature, and blood pressure variants (systolic, diastolic, standing, supine),
-  \item \textbf{FVC:} forced vital capacity measurements (litres, percent of normal) as a marker of respiratory function,
+  \item \textbf{Vital Signs:} weight, height, \gls{BMI}, pulse, respiratory rate, temperature, and blood pressure variants (systolic, diastolic, standing, supine),
+  \item \textbf{\gls{FVC}:} forced vital capacity measurements (litres, percent of normal) as a marker of respiratory function,
   \item \textbf{Riluzole:} administration records of riluzole (the only disease-modifying therapy approved during the trial period),
   \item \textbf{Concomitant Medications:} count of concurrent medications as a proxy for comorbidity burden,
-  \item \textbf{Labs:} serum creatinine and alanine aminotransferase (ALT), selected due to their established association with ALS prognosis in prior literature~\cite{Anani2023}.
+  \item \textbf{Labs:} serum creatinine and alanine aminotransferase (\gls{ALT}), selected due to their established association with \gls{ALS} prognosis in prior literature~\cite{Anani2023}.
 \end{itemize}
+Other laboratory markers available in \gls{PRO-ACT} (e.g.\ albumin, uric acid, blood urea nitrogen) were considered but ultimately excluded because their coverage fell below 40\% of subjects or because the existing literature did not provide consistent evidence of prognostic value in \gls{ALS}.
 We deliberately restrict the feature set to routinely collected clinical variables to maximise translational potential; imaging, genetic, and electrophysiological markers are excluded because they are not universally available in clinical practice.
 
 \subsection{Study Population and Eligibility}
 \label{sec:methods_population}
-From the full PRO-ACT database ($N\!=\!5{,}436$ subjects with at least one ALSFRS-R record), subjects are retained if they satisfy three conditions:
-(i) a valid ALSFRS-R total score at baseline ($t_0$),
-(ii) at least one further ALSFRS-R measurement within the target-horizon window (Section~\ref{sec:methods_targets}), and
+From the full \gls{PRO-ACT} database ($N\!=\!5{,}436$ subjects with at least one \gls{ALSFRS-R} record), subjects are retained if they satisfy three conditions:
+(i) a valid \gls{ALSFRS-R} total score at baseline ($t_0$),
+(ii) at least one further \gls{ALSFRS-R} measurement within the target-horizon window (Section~\ref{sec:methods_targets}), and
 (iii) a computable functional slope that meets the quality threshold (Section~\ref{sec:methods_slope}).
 These criteria yield horizon-specific cohorts: $N\!=\!2{,}407$ for 3 months and $N\!=\!1{,}392$ for 6 months, with 720 subjects eligible at both horizons.
+Because the two horizons are modelled independently---each with its own target labels, slope cutoff, and holdout partition---this overlap does not introduce any form of data leakage; a subject's 3-month and 6-month analyses are treated as entirely separate problems.
 The reduction from 5{,}436 to 1{,}392 (6-month) is primarily driven by the requirement for follow-up measurements near the 180-day mark.
 Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
 
@@ -211,30 +214,21 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
     {\scriptsize $N = 10{,}723$ total subjects}
   };
 
-  % Filter 1
+  % Filter: valid ALSFRS-R
   \node[box, below=of top] (f1) {
-    \textbf{Subjects with $\geq 1$ ALSFRS-R record}\\[-2pt]
+    \textbf{Subjects with valid ALSFRS-R assessment(s)}\\[-2pt]
     {\scriptsize $N = 5{,}436$}
   };
   \node[excl, right=1.2cm of f1] (e1) {
-    Excluded: $5{,}287$ subjects\\without ALSFRS-R data
-  };
-
-  % Filter 2
-  \node[box, below=of f1] (f2) {
-    \textbf{Valid baseline ALSFRS-R at $t_0$}\\[-2pt]
-    {\scriptsize $N = 5{,}169$}
-  };
-  \node[excl, right=1.2cm of f2] (e2) {
-    Excluded: $267$ with missing\\or invalid baseline score
+    Excluded: $5{,}287$ without\\valid ALSFRS-R data
   };
 
   % Split into horizons
-  \node[splitbox=teal, below=1cm of f2, xshift=-3cm] (h3) {
+  \node[splitbox=teal, below=1cm of f1, xshift=-3cm] (h3) {
     \textbf{3-month cohort}\\[-2pt]
     {\scriptsize $N = 2{,}407$ (44.3\%)}
   };
-  \node[splitbox=orange, below=1cm of f2, xshift=3cm] (h6) {
+  \node[splitbox=orange, below=1cm of f1, xshift=3cm] (h6) {
     \textbf{6-month cohort}\\[-2pt]
     {\scriptsize $N = 1{,}392$ (25.6\%)}
   };
@@ -243,7 +237,7 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
   };
 
   % Overlap annotation
-  \node[font=\scriptsize, text=black!60, below=0.15cm of f2]
+  \node[font=\scriptsize, text=black!60, below=0.15cm of f1]
     (overlap) {720 subjects eligible at both horizons};
 
   % DEV / TEST split — 3m
@@ -265,11 +259,9 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
   % ====== ARROWS ======
   \draw[arr] (top) -- (f1);
   \draw[earr] (f1.east) -- (e1.west);
-  \draw[arr] (f1) -- (f2);
-  \draw[earr] (f2.east) -- (e2.west);
 
   % Split to horizons
-  \draw[arr] (f2.south) -- ++(0,-0.35) coordinate (sp1) -| (h3.north);
+  \draw[arr] (f1.south) -- ++(0,-0.35) coordinate (sp1) -| (h3.north);
   \draw[arr] (sp1) -| (h6.north);
   \draw[earr] (h6.east) -- (e3.west);
 
@@ -281,26 +273,27 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
 
   \end{tikzpicture}
   \caption{CONSORT-style flowchart of cohort derivation.
-  Starting from the full PRO-ACT database, successive eligibility filters reduce the sample to horizon-specific cohorts, each split into development (DEV, 80\%) and held-out test (TEST, 20\%) partitions.
-  Red boxes indicate exclusion criteria applied at each stage.}
+  Starting from the full PRO-ACT database, an eligibility filter retains subjects with valid ALSFRS-R data, which are then split into horizon-specific cohorts, each partitioned into development (DEV, 80\%) and held-out test (TEST, 20\%) sets.
+  Red boxes indicate exclusion criteria.}
   \label{fig:consort_flowchart}
 \end{figure}
 
 \subsection{Held-Out Data Partitioning}
 \label{sec:methods_holdout}
-Before any modelling, each horizon-specific cohort is partitioned into a \textbf{development (DEV)} set (80\%) and a \textbf{held-out test (TEST)} set (20\%) using a stratified random split (stratified by the binary target to preserve class proportions).
-The 80/20 ratio follows standard ML practice for moderate-sized datasets: 80\% provides sufficient data for 5-fold cross-validation within the DEV set, while 20\% yields a TEST set large enough ($N\!=\!279$ for 6 months) for stable bootstrap confidence intervals.
-For the 6-month horizon this yields DEV $n\!=\!1{,}113$ and TEST $n\!=\!279$; for 3 months, DEV $n\!=\!1{,}925$ and TEST $n\!=\!482$.
-All hyperparameter tuning, cross-validation, ablation, and model selection are performed exclusively on the DEV set.
-The TEST set is reserved for a single, unbiased evaluation of the final selected model (Section~\ref{sec:results_test_eval}), preventing any form of selection bias or inadvertent data snooping.
+Before any modelling, each horizon-specific cohort is partitioned into a \textbf{development (\gls{DEV})} set (80\%) and a \textbf{held-out test (\gls{TEST})} set (20\%) using a stratified random split (stratified by the binary target to preserve class proportions).
+The 80/20 ratio follows standard \gls{ML} practice for moderate-sized datasets: 80\% provides sufficient data for 5-fold cross-validation within the \gls{DEV} set, while 20\% yields a \gls{TEST} set large enough ($N\!=\!279$ for 6 months) for stable bootstrap confidence intervals.
+For the 6-month horizon this yields \gls{DEV} $n\!=\!1{,}113$ and \gls{TEST} $n\!=\!279$; for 3 months, \gls{DEV} $n\!=\!1{,}925$ and \gls{TEST} $n\!=\!482$.
+All hyperparameter tuning, cross-validation, ablation, and model selection are performed exclusively on the \gls{DEV} set.
+The \gls{TEST} set is reserved for a single, unbiased evaluation of the final selected model (Section~\ref{sec:results_test_eval}), preventing any form of selection bias or inadvertent data snooping.
 
 \section{Baseline Definition and Leakage-Free Protocol}
 \label{sec:methods_baseline}
 \subsection{Baseline Timepoint ($t_0$)}
 \label{sec:methods_t0}
-For each subject, the baseline timepoint $t_0$ is defined as the \textbf{first visit with a valid ALSFRS-R total score}.
+For each subject, the baseline timepoint $t_0$ is defined as the \textbf{first visit with a valid \gls{ALSFRS-R} total score}.
 This choice provides a consistent subject-level anchor and maximizes cohort size while remaining clinically meaningful.
 Using the first visit rather than a later one avoids selecting subjects with atypically long follow-up, which could bias the cohort towards slower progressors.
+In the majority of \gls{PRO-ACT} subjects this first valid assessment coincides with the trial enrolment visit (recorded as $\Delta = 0$\,days), making $t_0$ clinically analogous to the point at which a treating physician would realistically have access to baseline data.
 
 \subsection{Why Baseline Matters}
 \label{sec:methods_baseline_why}
@@ -484,18 +477,19 @@ We define two prediction horizons:
   \item \textbf{6 months:} $H=180$ days with tolerance $\pm 7$ days.
 \end{itemize}
 Tolerance accounts for real-world visit variability while preserving temporal specificity.
-Both horizons are explored; the 6-month window is ultimately preferred because it yields more data points per subject for slope estimation (median $n_{\text{points}} = 7$), produces more reliable progression labels, and aligns with the clinical follow-up cadence recommended for ALS patients~\cite{Pancotti2022}.
+Both horizons are explored; the 6-month window is ultimately preferred because it yields more data points per subject for slope estimation (median $n_{\text{points}} = 7$), produces more reliable progression labels, and aligns with the clinical follow-up cadence recommended for \gls{ALS} patients~\cite{Pancotti2022}.
 
 \subsection{Slope Estimation}
 \label{sec:methods_slope}
-Functional progression is quantified via the ALSFRS-R slope from baseline to the horizon.
-We use the total ALSFRS-R score rather than individual sub-items or survival endpoints because it captures overall functional decline in a single continuous measure, is the most widely adopted outcome in ALS clinical trials, and permits direct comparison with prior prognostic studies~\cite{Pancotti2022, Anani2023}.
-For each subject and horizon, we collect all ALSFRS-R measurements within the window $[t_0,\; t_0 + H \pm 7\text{d}]$ and estimate the rate of functional change by ordinary least squares regression of the ALSFRS-R total score against time (in days).
-The resulting coefficient is normalised to \emph{points per 30\,days} to provide a clinically intuitive unit.
+Functional progression is quantified via the \gls{ALSFRS-R} slope from baseline to the horizon.
+We use the total \gls{ALSFRS-R} score rather than individual sub-items or survival endpoints because it captures overall functional decline in a single continuous measure, is the most widely adopted outcome in \gls{ALS} clinical trials, and permits direct comparison with prior prognostic studies~\cite{Pancotti2022, Anani2023}.
+For each subject and horizon, we collect all \gls{ALSFRS-R} measurements within the window $[t_0,\; t_0 + H \pm 7\text{d}]$ and estimate the rate of functional change by ordinary least squares regression of the \gls{ALSFRS-R} total score against time (in days).
+The resulting \gls{OLS} coefficient $\hat{\beta}_1$ (points per day) is rescaled to \emph{points per 30\,days} ($\text{slope}_{30} = \hat{\beta}_1 \times 30$), providing a clinically intuitive unit that is directly comparable across subjects.
 A negative slope indicates functional decline; the more negative the slope, the faster the patient is deteriorating.
+This \gls{OLS}-based approach assumes that functional decline within the observation window is approximately linear---a reasonable approximation for the relatively short horizons of 90 and 180 days, and one adopted across most prior \gls{ALS} prognostic studies~\cite{Pancotti2022}.
 
 Slope quality is monitored via two indicators:
-(i) the number of ALSFRS-R measurements contributing to each estimate ($n_{\text{points}}$), and
+(i) the number of \gls{ALSFRS-R} measurements contributing to each estimate ($n_{\text{points}}$), and
 (ii) the effective time span covered.
 For the 6-month cohort, 99.8\% of slope estimates are based on $\geq 3$ data points (median $n_{\text{points}} = 7$), indicating robust estimation.
 For 3 months, 90.5\% of slopes use $\geq 3$ points (median $n_{\text{points}} = 4$), reflecting the shorter observation window.
@@ -507,11 +501,12 @@ We define the positive class (\textit{rapid}) as the worst 30\% of slopes (most 
 
 The choice of the 30th percentile is motivated by three considerations:
 \begin{enumerate}
-  \item \textbf{Clinical prevalence:} prior literature reports that approximately one-third of ALS patients exhibit accelerated functional decline within the first year~\cite{Pancotti2022}, making 30\% a clinically grounded cutoff.
+  \item \textbf{Clinical prevalence:} prior literature reports that approximately one-third of \gls{ALS} patients exhibit accelerated functional decline within the first year~\cite{Pancotti2022}, making 30\% a clinically grounded cutoff.
   \item \textbf{Leakage prevention:} computing the percentile on the training fold only ensures that no information from held-out subjects influences the label assignment, maintaining strict temporal and subject-level separation.
   \item \textbf{Class balance:} a 30/70 split produces a moderate imbalance that is challenging enough to test model robustness while remaining tractable with standard balancing techniques (Section~\ref{sec:methods_imbalance}).
 \end{enumerate}
 The fold-wise label definition means that the exact slope cutoff varies slightly across folds, but the semantic interpretation---``clinically concerning rate of decline''---remains consistent.
+To give a concrete sense of scale: on the full 6-month dataset the 30th-percentile cutoff corresponds to approximately $-1.2$\,points/month, meaning that a subject labelled \textit{rapid} loses more than one point on the 48-point \gls{ALSFRS-R} scale every month.
 
 \section{Feature Engineering at Baseline ($t_0$)}
 \label{sec:methods_features}
@@ -520,38 +515,40 @@ The fold-wise label definition means that the exact slope cutoff varies slightly
 Features are extracted using only measurements available up to $t_0$.
 We group features into clinically coherent blocks:
 \begin{itemize}
-  \item \textbf{Baseline block} ($n\!=\!15$): demographic variables (age, sex, ethnicity, race indicators), ALSFRS-R total at baseline, and the three respiratory ALSFRS-R sub-items.
-  \item \textbf{Vitals block} ($n\!=\!12$): last pre-baseline vital sign measurements (weight, height, BMI, pulse, respiratory rate, temperature, blood pressure variants).
-  \item \textbf{Respiratory block} ($n\!=\!3$): FVC at or before baseline (best-trial litres, percent normal, and subject normal flag).
+  \item \textbf{Baseline block} ($n\!=\!15$): demographic variables (age, sex, ethnicity, race indicators), \gls{ALSFRS-R} total at baseline, and the three respiratory sub-items of the revised scale (R-1 Dyspnea, R-2 Orthopnea, R-3 Respiratory Insufficiency).
+  \item \textbf{Vitals block} ($n\!=\!12$): last pre-baseline vital sign measurements (weight, height, \gls{BMI}, pulse, respiratory rate, temperature, blood pressure variants).
+  \item \textbf{Respiratory block} ($n\!=\!3$): \gls{FVC} at or before baseline (best-trial litres, percent normal, and subject normal flag).
   \item \textbf{Treatment block} ($n\!=\!3$): riluzole use before $t_0$, clinical-trial study arm, and number of concomitant medications.
-  \item \textbf{Labs block} ($n\!=\!2$): creatinine and ALT at baseline.
+  \item \textbf{Labs block} ($n\!=\!2$): creatinine and \gls{ALT} at baseline.
 \end{itemize}
-The full feature set (v2) comprises 35 predictors after excluding near-constant columns.
+The full feature set (v2) comprises 35 predictors.
+Four columns present in the dataset are excluded before modelling: three temporal offsets used only for merge bookkeeping (\texttt{t0\_delta\_days}, \texttt{vitals\_delta\_days}, \texttt{fvc\_delta\_days}) and one near-constant field (\texttt{ALSFRS\_Responded\_By}, $>$93\% missing).
 This block structure supports interpretability and enables ablation studies (Section~\ref{sec:methods_ablation}).
 
 \subsection{Temporal Selection Rule (Last Pre-Baseline)}
 \label{sec:methods_last_prebaseline}
-For longitudinal tables (vitals, FVC), we apply a consistent temporal rule:
+For longitudinal tables (vitals, \gls{FVC}), we apply a consistent temporal rule:
 for each subject, we select the \textbf{most recent measurement with timestamp $\leq t_0$}.
 This ``last pre-baseline'' strategy provides clinically plausible baseline status while avoiding leakage.
+When no measurement exists before $t_0$ for a given variable, the value is recorded as missing and handled by median imputation in the preprocessing stage (Section~\ref{sec:methods_preprocessing}).
 
 \subsection{Coverage and Missingness}
 \label{sec:methods_coverage}
 We quantify feature availability per block and report coverage as the fraction of baseline subjects with non-missing values for each feature.
-At the block level, vital signs are available for 81.6\% of subjects, while FVC is available for 53.3\%.
-Within the baseline block, ALSFRS-R total and sex have 100\% coverage; age is available for 87.1\% of subjects.
+At the block level, vital signs are available for 81.6\% of subjects, while \gls{FVC} is available for only 53.3\%---meaning that nearly half of all respiratory-block features will be imputed, placing a practical ceiling on the discriminative contribution of this block.
+Within the baseline block, \gls{ALSFRS-R} total and sex have 100\% coverage; age is available for 87.1\% of subjects.
 The treatment block has near-complete coverage (riluzole and concomitant medication count are available for all subjects; study arm for 91.1\%).
-Labs (creatinine, ALT) are available for 64.7\% and 69.0\% of subjects, respectively.
+Labs (creatinine, \gls{ALT}) are available for 64.7\% and 69.0\% of subjects, respectively.
 
-This heterogeneous coverage motivates the use of median imputation within the preprocessing pipeline (Section~\ref{sec:methods_preprocessing}) and the MAR analysis (Section~\ref{sec:results_fvc_missingness}) to verify that missingness is not outcome-dependent.
+This heterogeneous coverage motivates the use of median imputation within the preprocessing pipeline (Section~\ref{sec:methods_preprocessing}) and the \gls{MAR} analysis (Section~\ref{sec:results_fvc_missingness}) to verify that missingness is not outcome-dependent.
 
 \subsection{Data Quality: BMI Correction}
 \label{sec:methods_bmi_correction}
 During exploratory analysis, we identified 147 raw height records in the vital signs table labelled as ``Centimeters'' that contained values below 120\,cm, consistent with measurements actually recorded in inches but with an incorrect unit label.
-These erroneous records produced physiologically implausible BMI values (up to 4{,}512).
+These erroneous records produced physiologically implausible \gls{BMI} values (up to 4{,}512).
 To address this, we applied plausible adult bounds: any height outside $[120, 220]$\,cm or weight outside $[30, 200]$\,kg was set to \texttt{NaN}.
 This correction affected 132 height and 31 weight records.
-After correction, BMI ranges from 14.4 to 46.9 across the cohort.
+After correction, \gls{BMI} ranges from 15.5 to 46.9 in the six-month cohort.
 All v2 datasets used in subsequent analyses were regenerated with the corrected vitals.
 
 \section{Modeling Setup}
@@ -560,28 +557,31 @@ All v2 datasets used in subsequent analyses were regenerated with the corrected 
 \label{sec:methods_models}
 We evaluate a diverse set of seven supervised learning algorithms spanning different model families, to identify which approaches are best suited for this clinical prediction task:
 \begin{itemize}
-  \item \textbf{K-Nearest Neighbours (KNN):} a non-parametric instance-based learner; included as a baseline that makes no assumptions about the decision boundary.
-  \item \textbf{Decision Tree (DT):} a single tree classifier; included for its intrinsic interpretability and as the building block of ensemble methods.
-  \item \textbf{Random Forest (RF):} bagging ensemble of decision trees; reduces variance relative to a single tree and handles mixed feature types well.
-  \item \textbf{Support Vector Machine (SVM):} maximum-margin classifier with RBF kernel; effective in moderate-dimensional spaces.
-  \item \textbf{Logistic Regression (LR):} linear model; retained as an interpretable baseline whose coefficients provide direct insight into feature effects.
-  \item \textbf{LightGBM (LGBM):} gradient-boosted decision trees with histogram-based splits; efficient on medium-sized tabular datasets.
-  \item \textbf{XGBoost (XGB):} gradient-boosted trees with regularisation; widely adopted in clinical ML and compatible with SHAP-based post-hoc explainability.
+  \item \textbf{K-Nearest Neighbours (\gls{KNN}):} a non-parametric instance-based learner; included as a baseline that makes no assumptions about the decision boundary.
+  \item \textbf{Decision Tree (\gls{DT}):} a single tree classifier; included for its intrinsic interpretability and as the building block of ensemble methods.
+  \item \textbf{Random Forest (\gls{RF}):} bagging ensemble of decision trees; reduces variance relative to a single tree and handles mixed feature types well.
+  \item \textbf{Support Vector Machine (\gls{SVM}):} maximum-margin classifier with \gls{RBF} kernel; effective in moderate-dimensional spaces.
+  \item \textbf{Logistic Regression (\gls{LR}):} linear model; retained as an interpretable baseline whose coefficients provide direct insight into feature effects.
+  \item \textbf{LightGBM (\gls{LGBM}):} gradient-boosted decision trees with histogram-based splits; efficient on medium-sized tabular datasets.
+  \item \textbf{XGBoost (\gls{XGB}):} gradient-boosted trees with regularisation; widely adopted in clinical \gls{ML} and compatible with \gls{SHAP}-based post-hoc explainability.
 \end{itemize}
 This selection covers instance-based, linear, kernel-based, bagging, and boosting paradigms, allowing a principled comparison of model families rather than relying on a single architecture.
-Deep learning architectures (e.g.\ DNNs, CNNs) are excluded because the cohort size ($N\!=\!1{,}392$ for 6 months) is insufficient to train deep models without severe overfitting, and because black-box neural networks conflict with the explainability requirement that is central to this work.
-Following hyperparameter optimisation (Section~\ref{subsec:methods_optuna}), the final explainable model is selected based on the best cross-validated PR-AUC, with interpretability provided via SHAP (Section~\ref{sec:methods_xai_plan}) and, for Logistic Regression, via direct coefficient analysis.
+Deep learning architectures (e.g.\ \glspl{DNN}, \glspl{CNN}) are excluded because the cohort size ($N\!=\!1{,}392$ for 6 months) is insufficient to train deep models without severe overfitting, and because black-box neural networks conflict with the explainability requirement that is central to this work.
+Na\"ive Bayes was also considered but excluded because the conditional-independence assumption is clearly violated by correlated features in the dataset (e.g.\ weight, height, and \gls{BMI}).
+Following hyperparameter optimisation (Section~\ref{subsec:methods_optuna}), the final explainable model is selected based on the best cross-validated \gls{PR-AUC}, with interpretability provided via \gls{SHAP} (Section~\ref{sec:methods_xai_plan}) and, for Logistic Regression, via direct coefficient analysis.
 
 \subsection{Preprocessing Pipeline}
 \label{sec:methods_preprocessing}
 To ensure reproducibility and consistent handling of missing and categorical data, we use a unified preprocessing pipeline:
 \begin{itemize}
-  \item Numeric variables: median imputation; standardization for models sensitive to scaling (LR and SVM),
+  \item Numeric variables: median imputation; $z$-score standardization (\texttt{StandardScaler}) for models sensitive to feature scaling (\gls{LR} and \gls{SVM}),
   \item Categorical variables: most-frequent imputation; one-hot encoding with unseen-category handling.
 \end{itemize}
-Median imputation is chosen over more complex alternatives (e.g.\ MICE, KNN imputation) because (i)~the missingness pattern is confirmed to be Missing at Random (MAR) via the analysis in Section~\ref{sec:results_fvc_missingness}, making single-value imputation adequate, (ii)~the median preserves the marginal distribution without introducing artificial inter-feature correlations, and (iii)~it avoids the risk of data leakage inherent in iterative methods when combined with cross-validation.
+Median imputation is chosen over more complex alternatives (e.g.\ MICE, \gls{KNN} imputation) because (i)~the missingness pattern is confirmed to be Missing at Random (\gls{MAR}) via the analysis in Section~\ref{sec:results_fvc_missingness}, making single-value imputation adequate, (ii)~the median preserves the marginal distribution without introducing artificial inter-feature correlations, and (iii)~it avoids the risk of data leakage inherent in iterative methods when combined with cross-validation.
 One-hot encoding is preferred for categorical variables because all categoricals in the feature set have low cardinality ($\leq 6$ levels), making one-hot encoding both efficient and compatible with all model families; ordinal or target encoding would introduce unjustified assumptions about category ordering.
 Tree-based models (Decision Tree, Random Forest, LightGBM, XGBoost) do not require scaling, but use consistent imputation and encoding.
+The full preprocessing chain is implemented as a \texttt{scikit-learn} \texttt{Pipeline} object.
+Within each cross-validation fold the pipeline is cloned and fitted exclusively on the training partition; the held-out fold is then transformed---never fitted---using the learned imputer medians and scaler parameters, ensuring that no validation-set information leaks into the preprocessing statistics.
 
 \section{Handling Class Imbalance}
 \label{sec:methods_imbalance}
@@ -590,25 +590,25 @@ Although the imbalance ratio ($\approx$1:2.3) is not extreme, it can still bias 
 We address this through three complementary strategies:
 
 \begin{enumerate}
-  \item \textbf{Metric choice.} Precision--Recall Area Under the Curve (PR-AUC, equivalently Average Precision) is used as the primary ranking and optimisation metric.
-    Unlike ROC-AUC, PR-AUC is sensitive to the positive-class prevalence and penalises models that achieve high recall only at the expense of many false positives---a desirable property in a clinical screening context.
-    ROC-AUC is additionally reported for comparability with prior ALS literature.
+  \item \textbf{Metric choice.} Precision--Recall Area Under the Curve (\gls{PR-AUC}, equivalently Average Precision) is used as the primary ranking and optimisation metric.
+    Unlike \gls{ROC-AUC}, \gls{PR-AUC} is sensitive to the positive-class prevalence and penalises models that achieve high recall only at the expense of many false positives---a desirable property in a clinical screening context.
+    \gls{ROC-AUC} is additionally reported for comparability with prior \gls{ALS} literature.
   \item \textbf{Operating-point selection.} Decision thresholds are not fixed at $t\!=\!0.5$.
     Instead, within each cross-validation fold, the threshold that maximises the $F_2$ score on the training data is selected and applied to the fold's test partition.
     $F_2$ weights recall twice as heavily as precision, reflecting the clinical priority of identifying patients at risk of rapid decline (where missing a high-risk patient is worse than a false alarm).
     We prefer $F_2$ over Youden's $J$ index ($J = \text{Sensitivity} + \text{Specificity} - 1$) because $J$ treats sensitivity and specificity symmetrically, whereas our screening scenario demands explicitly higher weight on recall (sensitivity).
-  \item \textbf{Systematic balanced vs.\ unbalanced comparison.} Every model family (except KNN, which has no native class-weighting support) is tuned in two modes:
+  \item \textbf{Systematic balanced vs.\ unbalanced comparison.} Every model family (except \gls{KNN}, which has no native class-weighting support) is tuned in two modes:
     \begin{itemize}
       \item \textit{Unbalanced}: the classifier treats both classes equally, with no cost adjustment.
       \item \textit{Balanced}: class weights inversely proportional to class frequencies are applied.
-        Concretely, Decision Tree, Random Forest, SVM, and Logistic Regression use \texttt{class\_weight=balanced};
+        Concretely, Decision Tree, Random Forest, \gls{SVM}, and Logistic Regression use \texttt{class\_weight=balanced};
         LightGBM uses \texttt{is\_unbalance=True};
-        and XGBoost uses per-fold \texttt{scale\_pos\_weight} computed as $n_{\text{negative}} / n_{\text{positive}}$ on each training fold.
+        and XGBoost uses per-fold \texttt{scale\_pos\_weight} computed as $n_{\text{negative}} / n_{\text{positive}}$ on each training fold (never on the full dataset, to avoid leaking class-ratio information from the held-out partition).
     \end{itemize}
-    This yields 13 model$\times$mode configurations (7 models $\times$ 2 modes minus KNN balanced), enabling a controlled comparison of the effect of class weighting on both threshold-free and threshold-dependent metrics.
+    This yields 13 model$\times$mode configurations (7 models $\times$ 2 modes minus \gls{KNN} balanced), enabling a controlled comparison of the effect of class weighting on both threshold-free and threshold-dependent metrics.
 \end{enumerate}
 
-We deliberately avoid synthetic oversampling techniques (e.g.\ SMOTE, ADASYN) for two reasons:
+We deliberately avoid synthetic oversampling techniques (e.g.\ \gls{SMOTE}, \gls{ADASYN}) for two reasons:
 (i) generating artificial samples in a clinical dataset risks introducing physiologically implausible feature combinations, and
 (ii) cost-sensitive learning via class weights achieves a similar effect without altering the training distribution.
 
@@ -618,23 +618,26 @@ We deliberately avoid synthetic oversampling techniques (e.g.\ SMOTE, ADASYN) fo
 \label{sec:methods_groupkfold}
 All model development (tuning, ablation, model comparison) uses \textbf{GroupKFold} cross-validation with $K\!=\!5$ folds and groups defined by \texttt{subject\_id}.
 This guarantees that all records from a given subject appear in exactly one fold---either in training or in test, never both---preventing optimistic bias from subject-level correlations.
+We chose $K\!=\!5$ rather than a larger number of folds to keep the computational budget manageable: with 13 model configurations and 60 Optuna trials each, every additional fold multiplies the total number of fits, and five folds strike a practical balance between estimation stability and wall-clock time.
+Formal target stratification (\texttt{StratifiedGroupKFold}) is not required here because the binary labels are recomputed from scratch on each fold's training partition, which naturally re-establishes the $\approx$30/70 class ratio at every split.
 
 Within each fold, the binary target (\textit{rapid} vs \textit{slow}) is re-computed from the training partition's slope distribution (30th percentile), ensuring that label thresholds are never influenced by held-out data.
 Performance is reported as mean $\pm$ standard deviation across the five folds, providing a more stable and unbiased estimate than a single fixed split.
 
-\section{Decision Threshold Selection and Sanity Check}
+\section{Decision Threshold Selection}
 \label{sec:methods_threshold}
 \subsection{Fold-wise Threshold Optimization (Maximizing $F_2$)}
 \label{sec:methods_threshold_foldwise}
-For threshold-dependent metrics (e.g., $F_1$, $F_2$, FP/FN), we do not use a fixed threshold of 0.5.
+For threshold-dependent metrics (e.g., $F_1$, $F_2$, \gls{FP}/\gls{FN}), we do not use a fixed threshold of 0.5.
 Instead, within each fold we select a decision threshold on the training data that maximizes $F_2$ and then apply it to the fold test set.
 This yields an operating point that prioritizes recall of \textit{rapid} subjects, consistent with a screening-oriented clinical scenario.
 
 \subsection{Final Threshold for the Deployed Model}
 \label{sec:methods_threshold_final}
-After selecting the final model, we perform a dedicated sanity check to choose a single operating threshold for the final artifact.
-We evaluate a grid of thresholds and select a value that preserves high recall while avoiding an unrealistically high predicted-positive rate.
-For the tuned XGBoost final model, the selected decision threshold was fixed to $0.25$ for subsequent analyses.
+After selecting the final model, we perform a post-hoc threshold calibration to fix a single operating point for the deployed artifact.
+We sweep a fine grid of candidate thresholds (0.01 to 0.99, step 0.01) over the out-of-fold predictions from the \gls{DEV} set and inspect two quantities at each candidate: recall and the predicted-positive rate.
+The goal is to identify the threshold that preserves clinically acceptable recall without flagging an unrealistic proportion of patients as rapid progressors.
+For the tuned XGBoost model the selected threshold is $0.21$, the $F_1$-optimal operating point from this sweep.
 
 \section{Ablation Study}
 \label{sec:methods_ablation}
@@ -642,102 +645,108 @@ To quantify the contribution of each feature block, we conduct a cumulative abla
 \begin{itemize}
   \item A: Baseline only ($n\!=\!15$),
   \item B: A + Vitals ($n\!=\!27$),
-  \item C: A + FVC ($n\!=\!18$),
-  \item D: A + Vitals + FVC ($n\!=\!30$),
+  \item C: A + \gls{FVC} ($n\!=\!18$),
+  \item D: A + Vitals + \gls{FVC} ($n\!=\!30$),
   \item E: D + Treatment ($n\!=\!33$),
   \item F: D + Treatment + Labs ($n\!=\!35$, full v2).
 \end{itemize}
-Using the \textbf{Optuna-tuned hyperparameters} from the full-feature configuration, each block is evaluated under the same leakage-free CV protocol.
+Using the \textbf{Optuna-tuned hyperparameters} from the full-feature configuration, each block is evaluated under the same leakage-free \gls{CV} protocol.
 This isolates where predictive signal originates without the confound of re-tuning per block.
+A cumulative design---rather than a leave-one-block-out scheme---was chosen because it mirrors the realistic clinical scenario of progressively adding data sources and directly highlights the marginal gain from each new block of variables.
 
 \section{Hyperparameter Optimization (Optuna)}
 \label{subsec:methods_optuna}
-Hyperparameter optimisation is performed using \textit{Optuna}~\cite{optuna2019}, a Bayesian framework based on the Tree-structured Parzen Estimator (TPE) algorithm.
-TPE models the objective function as a ratio of two density estimators (one for good trials, one for bad trials) and samples new hyperparameter candidates from the region of parameter space that maximises the expected improvement.
-Compared to grid or random search, TPE converges to strong configurations with fewer evaluations, which is important given the computational cost of nested cross-validation.
+Hyperparameter optimisation is performed using \textit{Optuna}~\cite{optuna2019}, a Bayesian framework based on the Tree-structured Parzen Estimator (\gls{TPE}) algorithm.
+\gls{TPE} models the objective function as a ratio of two density estimators (one for good trials, one for bad trials) and samples new hyperparameter candidates from the region of parameter space that maximises the expected improvement.
+Compared to grid or random search, \gls{TPE} converges to strong configurations with fewer evaluations, which is important given the computational cost of nested cross-validation.
 
 The search is configured as follows:
 \begin{itemize}
-  \item \textbf{Objective:} mean PR-AUC across 5 GroupKFold folds (with fold-wise binary labels).
+  \item \textbf{Objective:} mean \gls{PR-AUC} across 5 GroupKFold folds (with fold-wise binary labels).
   \item \textbf{Budget:} $N_{\text{trials}}\!=\!60$ per model $\times$ mode configuration.
     With $K\!=\!5$ folds each, this amounts to 300 model fits per configuration and $13 \times 300 = 3{,}900$ fits in total.
-  \item \textbf{Reproducibility:} TPE sampler seeded at 42.
+  \item \textbf{Reproducibility:} \gls{TPE} sampler seeded at 42.
   \item \textbf{Hyperparameter spaces:} model-specific ranges covering learning rate, regularisation strength, tree depth, number of estimators, and kernel parameters, as applicable.
+    For instance, the XGBoost search space spans \texttt{learning\_rate} $\in [0.01,\,0.20]$ (log-uniform), \texttt{max\_depth} $\in [2,\,8]$, \texttt{n\_estimators} $\in [200,\,1{,}200]$, and regularisation terms over several orders of magnitude; \gls{LR} varies $C \in [10^{-3},\,50]$ with $\ell_1$/$\ell_2$ penalty selection; \gls{SVM} searches $C \in [0.01,\,100]$ across \gls{RBF} and linear kernels.
+    Full search-space definitions for all seven model families are available in the source-code repository.
 \end{itemize}
-Additional metrics (ROC-AUC, $F_1$, $F_2$ at threshold 0.5) are recorded for every trial but do not influence the search direction.
-The best hyperparameters per configuration are persisted as JSON files for downstream use in ablation and final model training.
+Additional metrics (\gls{ROC-AUC}, $F_1$, $F_2$ at threshold 0.5) are recorded for every trial but do not influence the search direction.
+The best hyperparameters per configuration are persisted as \gls{JSON} files for downstream use in ablation and final model training.
 
 This unified protocol---same data splits, same fold-wise label procedure, same number of trials---ensures that all 13 model $\times$ mode configurations are evaluated on an equal footing, eliminating confounds from inconsistent search budgets or differing validation protocols.
+No trial pruning (e.g.\ \textit{MedianPruner}) is employed: each trial completes its full 5-fold cross-validation in a matter of seconds, so early stopping would offer negligible time savings while risking the premature discard of configurations that perform poorly on one fold but well on average.
 
 \section{Final Model Training and Persistence}
 \label{sec:methods_final_model}
-Following model selection, we train a final tuned XGBoost pipeline on the full 6-month dataset and persist:
-(i) the trained pipeline (preprocessing + classifier) and
-(ii) metadata including the feature list, slope cutoff for label definition, and the final decision threshold.
-This produces a single reproducible artifact for downstream explainability analyses (Chapter~\ref{chap:results}).
+Following model selection, we retrain the tuned XGBoost pipeline on the \textit{entire} 6-month cohort ($N\!=\!1{,}392$; \gls{DEV}~+~\gls{TEST} combined), since all model-selection decisions have already been finalised and the held-out split has served its evaluation purpose.
+The resulting artifact comprises:
+(i)~the complete \texttt{scikit-learn} \texttt{Pipeline}---imputer, encoder, optional scaler, and classifier---serialised with \texttt{joblib}, so that new patients can be scored without any external preprocessing steps; and
+(ii)~a \gls{JSON} metadata file recording the ordered feature list, the 30th-percentile slope cutoff ($-1.25$\,points/month), and the decision threshold ($t\!=\!0.21$).
+This self-contained package feeds the downstream explainability analyses in Chapter~\ref{ch:results}.
 
 \section{Explainability Plan (XAI)}
 \label{sec:methods_xai_plan}
 Explainability is treated as a core requirement for clinical acceptability.
-We employ three complementary techniques---SHAP, LIME, and Logistic Regression coefficient analysis---to explain the final XGBoost model's predictions at both the global and individual levels.
+We employ three complementary techniques---\gls{SHAP}, \gls{LIME}, and Logistic Regression coefficient analysis---to explain the final XGBoost model's predictions at both the global and individual levels.
 
 \subsection{SHAP (SHapley Additive exPlanations)}
 \label{subsec:methods_shap}
-SHAP~\cite{lundberg2017shap} assigns each feature a Shapley value quantifying its contribution to a specific prediction, grounded in cooperative game theory.
+\gls{SHAP}~\cite{lundberg2017shap} assigns each feature a Shapley value quantifying its contribution to a specific prediction, grounded in cooperative game theory.
 For XGBoost, we use \textit{TreeSHAP}~\cite{lundberg2020treeshap}, a polynomial-time exact algorithm that exploits the tree structure to compute Shapley values without the exponential cost of the na\"ive formulation.
 
 Two levels of analysis are performed:
 \begin{itemize}
-  \item \textbf{Global explanations:} mean absolute SHAP values across all TEST-set subjects yield a feature importance ranking, visualised as a bar plot.
+  \item \textbf{Global explanations:} mean absolute \gls{SHAP} values across all \gls{TEST}-set subjects yield a feature importance ranking, visualised as a bar plot.
     A beeswarm (summary) plot additionally shows the distribution and direction of each feature's impact, revealing non-linear or interaction effects.
-  \item \textbf{Local explanations:} per-subject SHAP waterfall plots decompose individual predictions into additive feature contributions relative to the base value $E[f(x)]$.
-    Four representative cases are selected---one from each confusion-matrix quadrant (TP, FP, FN, TN)---by choosing the subject closest to the median predicted probability within each quadrant.
+  \item \textbf{Local explanations:} per-subject \gls{SHAP} waterfall plots decompose individual predictions into additive feature contributions relative to the base value $E[f(x)]$.
+    Four representative cases are selected---one from each confusion-matrix quadrant (\gls{TP}, \gls{FP}, \gls{FN}, \gls{TN})---by choosing the subject closest to the median predicted probability within each quadrant.
     This avoids cherry-picking extreme examples.
 \end{itemize}
 
 \subsection{LIME (Local Interpretable Model-agnostic Explanations)}
 \label{subsec:methods_lime}
-LIME~\cite{ribeiro2016lime} provides an independent local explanation method for cross-validation against SHAP.
-For each of the same four case-study subjects, LIME generates 2{,}000 perturbed neighbours of the input, queries the classifier for predicted probabilities, and fits a sparse linear model in the neighbourhood of the original instance.
+\gls{LIME}~\cite{ribeiro2016lime} provides an independent local explanation method for cross-validation against \gls{SHAP}.
+For each of the same four case-study subjects, \gls{LIME} generates 2{,}000 perturbed neighbours of the input (reduced from the library default of 5{,}000 to limit computation time while remaining large enough for stable local fits), queries the classifier for predicted probabilities, and fits a sparse linear model in the neighbourhood of the original instance.
 The resulting feature weights indicate which variables drive the local decision boundary.
 
-Because the production pipeline includes a one-hot encoder and standard scaler, LIME is applied to the \textit{preprocessed} (fully numeric) feature matrix rather than the raw data, wrapping only the final classifier as a black-box predictor.
+Because the production pipeline includes a one-hot encoder and standard scaler, \gls{LIME} is applied to the \textit{preprocessed} (fully numeric) feature matrix rather than the raw data, wrapping only the final classifier as a black-box predictor.
 This avoids type-conversion errors and ensures that the perturbation distribution matches the feature space seen by the model.
 
 \subsection{SHAP--LIME Concordance}
 \label{subsec:methods_concordance}
-To assess robustness, we compare the top-10 most influential features identified by SHAP and LIME for each case study and count the number of overlapping features.
+To assess robustness, we compare the top-10 features ranked by absolute \gls{SHAP} value against the top-10 ranked by absolute \gls{LIME} weight for each case study and count the number of overlapping features.
 High concordance between the two independent explanation methods increases confidence that the identified drivers are genuine rather than artefacts of a single attribution technique.
 
 \subsection{Logistic Regression Coefficients}
 \label{subsec:methods_lr_coefs}
 The balanced Logistic Regression model (trained with \texttt{class\_weight=balanced}) provides a model-intrinsic form of explainability:
 each standardised coefficient directly quantifies the direction and magnitude of a feature's linear association with the log-odds of rapid progression.
-Comparing the LR coefficient ranking with SHAP importance serves as a further triangulation of feature relevance across fundamentally different model families (linear vs.\ ensemble).
+Comparing the \gls{LR} coefficient ranking with \gls{SHAP} importance serves as a further triangulation of feature relevance across fundamentally different model families (linear vs.\ ensemble).
 
 \section{Supplementary Analyses}
 \label{sec:methods_supplementary}
 
 \subsection{Error Profiling}
 \label{subsec:methods_error_profile}
-To understand \textit{which} patients the model misclassifies, we profile all TEST-set subjects by confusion-matrix quadrant (TP, FP, FN, TN) and stratify by four clinical variables:
+To understand \textit{which} patients the model misclassifies, we profile all \gls{TEST}-set subjects by confusion-matrix quadrant (\gls{TP}, \gls{FP}, \gls{FN}, \gls{TN}) and stratify by four clinical variables:
 \begin{itemize}
   \item \textbf{Age group} (quartile-based: $\leq$49, 50--57, 58--65, $>$65),
   \item \textbf{Sex} (Male, Female),
-  \item \textbf{ALSFRS-R severity} ($\leq$35 severe, 36--39, 40--42, $>$42 mild),
-  \item \textbf{FVC \% of normal} (quartile-based: $\leq$77\%, 78--87\%, 88--98\%, $>$98\%).
+  \item \textbf{\gls{ALSFRS-R} severity} ($\leq$35 severe, 36--39, 40--42, $>$42 mild),
+  \item \textbf{\gls{FVC} \% of normal} (quartile-based: $\leq$77\%, 78--87\%, 88--98\%, $>$98\%).
 \end{itemize}
+These variables were chosen because they span the main clinical axes known to influence \gls{ALS} prognosis: demographics (age, sex), overall functional status (\gls{ALSFRS-R}), and respiratory reserve (\gls{FVC}).
 For each group we report absolute counts and proportions per quadrant, with particular attention to false negatives---the clinically most dangerous error in a screening context.
 
 \subsection{Subgroup Performance Analysis}
 \label{subsec:methods_subgroup}
-To assess whether the model's performance is equitable across clinical subgroups, we compute PR-AUC, recall, precision, and $F_1$ separately for each stratum of the four variables above.
+To assess whether the model's performance is equitable across clinical subgroups, we compute \gls{PR-AUC}, recall, precision, and $F_1$ separately for each stratum of the four variables above.
 Subgroups with fewer than 10 subjects or fewer than 3 rapid progressors are excluded to avoid unreliable metric estimates.
 This analysis reveals whether the model exhibits differential performance (e.g., higher recall for severe patients but lower recall for mild-function patients).
 
 \subsection{Decision Curve Analysis}
 \label{subsec:methods_dca}
-Decision Curve Analysis (DCA)~\cite{vickers2006dca} evaluates the clinical utility of a predictive model by computing the \textit{net benefit} across a range of threshold probabilities.
+Decision Curve Analysis (\gls{DCA})~\cite{vickers2006dca} evaluates the clinical utility of a predictive model by computing the \textit{net benefit} across a range of threshold probabilities.
 The net benefit at threshold $t$ is defined as:
 \begin{equation}
   \text{NB}(t) = \frac{\text{TP}}{N} - \frac{\text{FP}}{N} \cdot \frac{t}{1-t}
@@ -746,18 +755,20 @@ The net benefit at threshold $t$ is defined as:
 where the ratio $t/(1-t)$ represents the relative cost of a false positive versus a missed case.
 The model's net-benefit curve is compared against two reference strategies: \textit{treat all} (classify every patient as rapid) and \textit{treat none} (classify no patient as rapid).
 A model is clinically useful at thresholds where its net benefit exceeds both references.
+The analysis is evaluated over the range $t \in [0.01,\, 0.80]$; thresholds above 0.80 are omitted because they imply an implausibly high cost of false positives and produce unstable net-benefit estimates due to very few predicted-positive cases.
 
 \subsection{Learning Curves}
 \label{subsec:methods_learning_curves}
-To assess whether additional training data would improve performance, we construct learning curves by training the final XGBoost model on progressively larger random subsets of the DEV set (20\%, 30\%, \ldots, 100\%) and evaluating each on the fixed TEST set.
+To assess whether additional training data would improve performance, we construct learning curves by training the final XGBoost model on progressively larger random subsets of the \gls{DEV} set (20\%, 30\%, \ldots, 100\%) and evaluating each on the fixed \gls{TEST} set.
 Subsampling is performed at the subject level (not row level) to preserve the GroupKFold rationale.
 Each fraction below 100\% is repeated five times with different random seeds to estimate variance.
-A plateau in PR-AUC at high fractions indicates a feature-driven, rather than data-driven, performance ceiling.
+Subject selection at each fraction is purely random---no stratification by the target label is applied---so minor variation in class proportions across subsamples is expected and absorbed by the five-repetition averaging.
+A plateau in \gls{PR-AUC} at high fractions indicates a feature-driven, rather than data-driven, performance ceiling.
 
 \subsection{Bootstrap Confidence Intervals}
 \label{subsec:methods_bootstrap}
-To quantify the statistical uncertainty of the TEST-set performance estimates, we compute 95\% confidence intervals via the non-parametric bootstrap~\cite{efron1993bootstrap}.
-For each of $B\!=\!2{,}000$ iterations, we draw a sample of size $N_{\text{test}}$ with replacement from the TEST set and re-compute six metrics: PR-AUC, ROC-AUC, recall, precision, $F_1$, and Brier score.
+To quantify the statistical uncertainty of the \gls{TEST}-set performance estimates, we compute 95\% confidence intervals via the non-parametric bootstrap~\cite{efron1993bootstrap}.
+For each of $B\!=\!2{,}000$ iterations, we draw a sample of size $N_{\text{test}}$ with replacement from the \gls{TEST} set and re-compute six metrics: \gls{PR-AUC}, \gls{ROC-AUC}, recall, precision, $F_1$, and the Brier score (the mean squared error between predicted probabilities and observed binary outcomes, serving as a calibration measure).
 The 2.5th and 97.5th percentiles of the bootstrap distribution define the 95\% confidence interval for each metric.
 Degenerate bootstrap samples (single-class) are discarded.
 This approach makes no distributional assumptions and accounts for the sampling variability inherent in a fixed-size held-out set.
@@ -771,7 +782,7 @@ For a feature $x_j$, the partial dependence function is:
   \label{eq:pdp}
 \end{equation}
 where $\mathbf{x}_{i,\setminus j}$ denotes the values of all features except $x_j$ for subject $i$.
-We compute PDPs for the three features with the highest global SHAP importance (ALSFRS-R total, FVC in litres, respiratory rate). The grid spans the 5th to 95th percentile of each feature's distribution to avoid extrapolation artefacts.
+We compute \glspl{PDP} for the three features with the highest global \gls{SHAP} importance (\gls{ALSFRS-R} total, \gls{FVC} in litres, respiratory rate). The grid spans the 5th to 95th percentile of each feature's distribution to avoid extrapolation artefacts.
 A rug plot of observed values is overlaid to indicate data density.
 
 \section{Patient Risk Report Generator}
@@ -780,28 +791,28 @@ A rug plot of observed values is overlaid to indicate data density.
 To demonstrate how the trained pipeline could be used in a clinical decision-support context, we develop a \textit{patient risk report generator} that produces a structured textual report for a single patient.
 The tool loads the persisted XGBoost pipeline and its associated metadata (feature list, slope cutoff, decision threshold) and accepts patient data from three sources:
 \begin{enumerate}
-  \item \textbf{Dataset lookup:} a subject ID from the held-out TEST set;
-  \item \textbf{JSON file:} a key--value file with baseline feature values, allowing external or synthetic patients;
-  \item \textbf{Demo mode:} a randomly selected TEST-set patient for quick demonstration.
+  \item \textbf{Dataset lookup:} a subject ID from the held-out \gls{TEST} set;
+  \item \textbf{\gls{JSON} file:} a key--value file with baseline feature values, allowing external or synthetic patients;
+  \item \textbf{Demo mode:} a randomly selected \gls{TEST}-set patient for quick demonstration.
 \end{enumerate}
 
 Each report comprises three sections:
 \begin{itemize}
-  \item \textbf{Risk Assessment.} The predicted probability of rapid progression $P(\text{rapid})$ is displayed alongside a three-tier risk classification (LOW: $P < 0.21$; MODERATE: $0.21 \leq P < 0.50$; HIGH: $P \geq 0.50$).
-  Binary classifications at both the $F_1$-optimal and $F_2$-optimal thresholds ($t = 0.21$) are provided.
+  \item \textbf{Risk Assessment.} The predicted probability of rapid progression $P(\text{rapid})$ is displayed alongside a three-tier risk classification: LOW ($P < 0.21$, below the $F_1$-optimal decision threshold), MODERATE ($0.21 \leq P < 0.50$), and HIGH ($P \geq 0.50$, the point at which the model assigns more probability mass to rapid progression than to slow).
+  A binary classification at the optimal operating threshold ($t\!=\!0.21$) is also shown; in this dataset the $F_1$-optimal and $F_2$-optimal thresholds coincide because the $F_2$ curve is nearly flat between 0.15 and 0.21, so the argmax lands at the same point.
   When the true label is available (dataset patients), it is shown for verification.
-  \item \textbf{Top-5 Contributing Features (SHAP).} A local TreeSHAP explanation lists the five features with the largest absolute Shapley values, together with the feature value, SHAP magnitude, and direction of influence.
+  \item \textbf{Top-5 Contributing Features (\gls{SHAP}).} A local TreeSHAP explanation lists the five features with the largest absolute Shapley values, together with the feature value, \gls{SHAP} magnitude, and direction of influence.
   Transformed features (one-hot encoded) are aggregated back to their original variable names for clinical readability.
   \item \textbf{Monitoring Suggestions.}  Rule-based clinical alerts are triggered when a top contributing feature falls outside population-normal bounds.
-  Thirteen features have predefined rules comparing the patient's value against population percentiles (25th or 75th) computed from the DEV set ($N = 1{,}113$).
-  For example, an ALSFRS-R total below the 25th percentile (35~points) triggers a recommendation for monthly functional reassessment.
+  Thirteen features have predefined rules comparing the patient's value against population percentiles (25th or 75th) computed from the \gls{DEV} set ($N = 1{,}113$).
+  For example, an \gls{ALSFRS-R} total below the 25th percentile (35~points) triggers a recommendation for monthly functional reassessment.
 \end{itemize}
 
 \subsection{Synthetic Patient Generator}
 \label{subsec:methods_random_patient}
 To enable demonstration with fictitious patients, a companion script generates random patient profiles with all 35~baseline features.
-Each continuous variable is sampled from a truncated normal distribution calibrated on the full PRO-ACT dataset ($N = 1{,}392$), matching the observed mean, standard deviation, and range.
+Each continuous variable is sampled from a truncated normal distribution calibrated on the full \gls{PRO-ACT} dataset ($N = 1{,}392$), matching the observed mean, standard deviation, and range.
 Categorical variables (sex, ethnicity, race, riluzole use) are sampled with the observed population frequencies.
-Logical correlations are preserved: FVC in litres is conditioned on sex (males $\mu = 3.9$~L, females $\mu = 2.8$~L), and BMI is derived from the sampled weight and height rather than drawn independently.
+Logical correlations are preserved: \gls{FVC} in litres is conditioned on sex (males $\mu = 3.9$~L, females $\mu = 2.8$~L), and \gls{BMI} is derived from the sampled weight and height rather than drawn independently.
 This design ensures that generated patients are statistically plausible without replicating any real individual from the dataset.
 
