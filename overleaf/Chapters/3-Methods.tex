@@ -202,8 +202,8 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
     box/.default={blue},
     splitbox/.style={
       rectangle, rounded corners=3pt, draw=#1!60!black, fill=#1!8,
-      minimum width=4cm, minimum height=0.9cm,
-      text centered, font=\small, text width=3.8cm, inner sep=5pt,
+      minimum width=3cm, minimum height=0.9cm,
+      text centered, font=\small, text width=2.8cm, inner sep=5pt,
       line width=0.5pt
     },
     splitbox/.default={blue},
@@ -251,18 +251,18 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
     (overlap) {720 subjects eligible at both horizons};
 
   % DEV / TEST split — 3m
-  \node[splitbox=teal, below=0.8cm of h3, xshift=-1.2cm] (dev3) {
+  \node[splitbox=teal, below=0.8cm of h3, xshift=-1.8cm] (dev3) {
     \textbf{DEV}\\[-2pt]{\scriptsize $n = 1{,}925$ (80\%)}
   };
-  \node[splitbox=teal, below=0.8cm of h3, xshift=1.2cm] (test3) {
+  \node[splitbox=teal, below=0.8cm of h3, xshift=1.8cm] (test3) {
     \textbf{TEST}\\[-2pt]{\scriptsize $n = 482$ (20\%)}
   };
 
   % DEV / TEST split — 6m
-  \node[splitbox=orange, below=0.8cm of h6, xshift=-1.2cm] (dev6) {
+  \node[splitbox=orange, below=0.8cm of h6, xshift=-1.8cm] (dev6) {
     \textbf{DEV}\\[-2pt]{\scriptsize $n = 1{,}113$ (80\%)}
   };
-  \node[splitbox=orange, below=0.8cm of h6, xshift=1.2cm] (test6) {
+  \node[splitbox=orange, below=0.8cm of h6, xshift=1.8cm] (test6) {
     \textbf{TEST}\\[-2pt]{\scriptsize $n = 279$ (20\%)}
   };
 
