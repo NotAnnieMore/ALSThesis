@@ -9,7 +9,7 @@ The pipeline follows a strict leakage-free design:
 (ii) construct predictors using only information available up to $t_0$,
 (iii) define targets using outcomes observed after $t_0$ for fixed horizons,
 and (iv) evaluate models using subject-wise splits to avoid overlap between training and test subjects.
-Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipeline, which proceeds through eight stages: data collection, study setup, target construction and feature engineering, holdout partitioning, hyperparameter tuning, model evaluation and selection, held-out test evaluation, and explainability.
+Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipeline, which proceeds through nine stages: data collection, study setup, target construction and feature engineering, holdout partitioning, hyperparameter tuning, model evaluation and selection, held-out test evaluation, explainability, and clinical risk reporting.
 
 
 \begin{figure}[p]
@@ -102,6 +102,14 @@ Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipelin
     \enspace$\cdot$\enspace Local: waterfall plots (TP / FP / FN / TN)}
   };
 
+  % === Stage 9: Clinical Risk Report ===
+  \node[sbox=brown, below=of s8] (s9) {
+    \textbf{9.\enspace Clinical Risk Report}\\[-2pt]
+    {\scriptsize Per-patient risk assessment
+    \enspace$\cdot$\enspace SHAP-based feature contributions
+    \enspace$\cdot$\enspace Rule-based monitoring suggestions}
+  };
+
   % ====== ARROWS ======
   % s1 -> s2
   \draw[arr] (s1) -- (s2);
@@ -123,6 +131,7 @@ Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipelin
   \draw[arr] (s5) -- (s6);
   \draw[arr] (s6) -- (s7);
   \draw[arr] (s7) -- (s8);
+  \draw[arr] (s8) -- (s9);
 
   % ====== DEV / TEST ANNOTATIONS ======
   % Dashed boundary around DEV stages (5--6)
@@ -143,6 +152,7 @@ Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipelin
   Stages~1--4 prepare and partition the data under a leakage-free protocol;
   stages~5--6 perform model development exclusively on the DEV set
   (5-fold subject-wise GroupKFold);
+  stage~9 translates model outputs into structured clinical risk reports with per-patient SHAP explanations and monitoring suggestions.
   stage~7 provides a single unbiased evaluation on the held-out TEST set;
   stage~8 adds post-hoc explainability via SHAP.}
   \label{fig:pipeline_overview}
@@ -628,6 +638,20 @@ Tree-based models (Decision Tree, Random Forest, LightGBM, XGBoost) do not requi
 The full preprocessing chain is implemented as a \texttt{scikit-learn} \texttt{Pipeline} object.
 Within each cross-validation fold the pipeline is cloned and fitted exclusively on the training partition; the held-out fold is then transformed---never fitted---using the learned imputer medians and scaler parameters, ensuring that no validation-set information leaks into the preprocessing statistics.
 
+\subsection{Software and Computational Environment}
+\label{sec:methods_environment}
+All experiments were implemented in \textbf{Python~3.12} using the following core libraries:
+\texttt{scikit-learn}~1.8,
+\texttt{XGBoost}~3.2,
+\texttt{LightGBM}~4.6,
+\texttt{Optuna}~4.7,
+\texttt{SHAP}~0.50,
+\texttt{LIME}~0.2,
+\texttt{pandas}~3.0, and
+\texttt{NumPy}~2.4.
+Preprocessing pipelines and model serialisation rely on \texttt{scikit-learn}'s \texttt{Pipeline} and \texttt{joblib}~1.5.
+All models were trained on a consumer-grade workstation running Windows~11 with no \gls{GPU} acceleration; the entire Optuna tuning campaign (3,900 model fits) completed within approximately two hours of wall-clock time.
+
 \section{Handling Class Imbalance}
 \label{sec:methods_imbalance}
 The positive class (\textit{rapid}) constitutes approximately 30\% of the cohort, creating a moderate but non-trivial class imbalance.
@@ -924,4 +948,8 @@ Each continuous variable is sampled from a truncated normal distribution calibra
 Categorical variables (sex, ethnicity, race, riluzole use) are sampled with the observed population frequencies.
 Logical correlations are preserved: \gls{FVC} in litres is conditioned on sex (males $\mu = 3.9$~L, females $\mu = 2.8$~L), and \gls{BMI} is derived from the sampled weight and height rather than drawn independently.
 This design ensures that generated patients are statistically plausible without replicating any real individual from the dataset.
+
+\bigskip
+\noindent
+The results of all analyses described in this chapter are presented in Chapter~\ref{ch:results}.
 
