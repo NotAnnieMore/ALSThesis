@@ -7,8 +7,8 @@ Workflow
 2. For each of the 7 best configs, load best params from JSON and re-run
    5-fold GroupKFold evaluation → per-fold PR-AUC (and ROC-AUC).
 3. Friedman test over 7 models × 5 folds.
-4. If significant, pairwise Wilcoxon signed-rank tests (21 pairs)
-   with Bonferroni correction.
+4. Calculate exploratory pairwise Wilcoxon signed-rank comparisons
+   (21 pairs) with Bonferroni correction.
 5. Generate annotated figures + LaTeX tables.
 
 Outputs
@@ -403,8 +403,9 @@ def save_pairwise_latex(pw_df: pd.DataFrame, friedman_stat: float,
     lines = []
     lines.append(r"\begin{table}[htbp]")
     lines.append(r"  \centering")
-    lines.append(r"  \caption{Pairwise Wilcoxon signed-rank tests with Bonferroni correction "
-                 f"(Friedman $\\chi^2 = {friedman_stat:.2f}$, $p = {friedman_p:.4f}$).}}")
+    lines.append(r"  \caption{Exploratory pairwise Wilcoxon signed-rank comparisons with "
+                 r"Bonferroni correction "
+                 f"(Friedman $\\chi^2_F(6) = {friedman_stat:.2f}$, $p = {friedman_p:.4f}$).}}")
     lines.append(r"  \label{tab:step7_pairwise}")
     lines.append(r"  \small")
     lines.append(r"  \begin{tabular}{llccc}")
@@ -424,8 +425,9 @@ def save_pairwise_latex(pw_df: pd.DataFrame, friedman_stat: float,
     lines.append(r"  \end{tabular}")
     lines.append(r"  \vspace{2pt}")
     lines.append(r"  \begin{flushleft}")
-    lines.append(r"    \footnotesize $^{*}$ Statistically significant at $\alpha = 0.05$ "
-                 r"after Bonferroni correction.")
+    lines.append(r"    \footnotesize The omnibus Friedman test did not reject its null "
+                 r"hypothesis. Pairwise results are shown for descriptive completeness; "
+                 r"no comparison is significant after Bonferroni correction.")
     lines.append(r"  \end{flushleft}")
     lines.append(r"\end{table}")
 
@@ -499,8 +501,9 @@ def main():
     else:
         print("  → Not significant (p ≥ 0.05): no evidence of difference among models.")
 
-    # ── 4. Pairwise Wilcoxon + Bonferroni ──
-    print("\n[4/5] Pairwise Wilcoxon signed-rank (Bonferroni, 21 pairs) ...")
+    # ── 4. Exploratory pairwise Wilcoxon + Bonferroni ──
+    print("\n[4/5] Exploratory pairwise Wilcoxon comparisons "
+          "(Bonferroni, 21 pairs) ...")
     pw_df = pairwise_wilcoxon_bonferroni(score_matrix, labels)
 
     n_sig = pw_df["significant"].sum()

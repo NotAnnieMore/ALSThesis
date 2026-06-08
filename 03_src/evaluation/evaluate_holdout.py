@@ -518,7 +518,7 @@ def write_latex_table(rows, filepath):
         r"\centering",
         r"\caption{Held-out TEST set metrics (6-month horizon, $n=279$). "
         r"PR-AUC, ROC-AUC are threshold-free; F$_1$, F$_2$ at default $t=0.50$; "
-        r"Brier score measures calibration (lower is better).}",
+        r"Brier score measures probabilistic error (lower is better).}",
         r"\label{tab:step6_test_metrics}",
         r"\small",
         r"\begin{tabular}{l c c c c c c}",
@@ -622,8 +622,7 @@ def main():
         X_dev=X_dev, y_dev=y_dev, groups_dev=groups_dev,
     )
 
-    # Use Youden's J as the recommended clinical threshold (balanced TPR/FPR)
-    # F1 threshold also presented as an alternative
+    # Retain both development-derived operating points for comparison.
     thr_youden = best["youden"]["threshold"]
     thr_f1     = best["f1"]["threshold"]
 

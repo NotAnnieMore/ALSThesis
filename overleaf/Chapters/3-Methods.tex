@@ -491,42 +491,59 @@ One implementation detail affects the LightGBM search space. The \texttt{subsamp
 
 \section{Cross-Horizon Comparison}
 \label{sec:methods_cross_horizon}
-Although the 6-month horizon is our primary analysis (owing to its richer slope estimates and better alignment with clinical follow-up cadence), we repeat the full Optuna tuning protocol for the 3-month cohort to verify that the choice of horizon is empirically justified rather than assumed.
-The 3-month re-tuning retains the same 60-trial budget, \gls{PR-AUC} objective, and GroupKFold structure, and is applied to all model$\times$mode configurations present in the 3-month summary.
-We then pair each configuration that exists at both horizons by model family and class-weight mode and compare their mean cross-validated \gls{PR-AUC} side by side---via grouped bar charts and a scatter plot with a parity line---to quantify the absolute difference $\Delta = \text{PR-AUC}_{3\text{m}} - \text{PR-AUC}_{6\text{m}}$.
-If the 6-month horizon consistently achieves higher (or comparable) discriminative performance across models, the choice to focus downstream evaluation on the 6-month cohort is reinforced; if 3 months were systematically superior, the primary horizon would be reconsidered.
+The three-month analysis is used to examine whether the main modelling results are sensitive to the prediction horizon. Rather than repeating the complete seven-family comparison, we retain the four highest-ranked families from the six-month analysis: XGBoost, Random Forest, LightGBM, and Logistic Regression. Each is evaluated in balanced and unbalanced mode, giving eight configurations.
+
+These configurations are tuned independently on the three-month DEV set using the same 60-trial budget, \gls{PR-AUC} objective, five-fold GroupKFold procedure, fold-wise target definition, and preprocessing strategy used at six months. All 480 trials completed successfully, and the resulting hyperparameters are specific to the three-month data.
+
+For the cross-horizon comparison, configurations are matched by model family and class-weight mode. Mean cross-validated \gls{PR-AUC} is displayed side by side, and the difference is defined as
+\[
+\Delta = \text{PR-AUC}_{3\text{m}} - \text{PR-AUC}_{6\text{m}}.
+\]
+Grouped bar charts and a scatter plot with a parity line are used to show the direction and magnitude of these differences.
+
+This comparison is descriptive rather than inferential. The eligible cohorts overlap only partially, their DEV partitions and validation folds differ, and the outcome slopes are estimated over different follow-up periods. The observed differences therefore reflect the combined effects of horizon, cohort composition, target estimation, and sampling variation; they cannot be attributed to the prediction horizon alone.
 
 \section{Statistical Comparison of Models}
 \label{sec:methods_statistical_comparison}
-Beyond comparing raw \gls{PR-AUC} means, we apply formal non-parametric tests to determine whether the observed performance differences among model families are statistically significant.
-Because the same five GroupKFold folds are shared by all models, the per-fold scores are \textit{dependent} samples, ruling out standard independent-sample tests.
+An exploratory statistical comparison is performed for the best configuration from each of the seven model families. Their selected hyperparameters are re-evaluated on the same five GroupKFold splits, producing paired fold-level \gls{PR-AUC} scores. Using common folds controls the composition of each validation set across models, but the scores are not independent experimental replications because the cross-validation training sets overlap.
 
-For the omnibus question---``do the seven best model$\times$mode configurations differ in median \gls{PR-AUC}?''---we use the \textbf{Friedman test}~\cite{friedman1937ranks}, a non-parametric repeated-measures alternative to one-way ANOVA that operates on the rank matrix of size $7 \times 5$ (seven models, five folds).
-The null hypothesis is that the rank distributions are identical across all models.
+The primary comparison uses the Friedman test~\cite{friedman1937ranks}, with folds as blocks and model configurations as treatments. The test is applied to a $5 \times 7$ rank matrix and evaluates whether the models have the same rank distribution across folds. Statistical significance is assessed at $\alpha=0.05$, and Kendall's coefficient of concordance is reported as
+\[
+W = \frac{\chi^2_F}{K(M-1)},
+\]
+where $\chi^2_F$ is the Friedman statistic, $K=5$ is the number of folds, and $M=7$ is the number of models.
 
-When the Friedman test rejects the omnibus null, we proceed with pairwise \textbf{Wilcoxon signed-rank tests} (two-sided) for all $\binom{7}{2} = 21$ model pairs.
-Because 21 simultaneous tests inflate the family-wise error rate, Bonferroni correction is applied: each raw $p$-value is multiplied by 21 and capped at 1.0, and significance is declared at the corrected level $\alpha = 0.05$.
+Pairwise Wilcoxon signed-rank tests~\cite{wilcoxon1945} were also calculated for descriptive completeness. The 21 two-sided comparisons were adjusted using the Bonferroni procedure, with each raw $p$-value multiplied by 21 and capped at 1.0. These pairwise tests are treated as exploratory rather than as confirmatory post-hoc tests when the Friedman test does not reject its omnibus null hypothesis.
 
-An important structural limitation must be acknowledged: with only $K\!=\!5$ paired observations, the Wilcoxon signed-rank test has a minimum achievable exact $p$-value of $1/2^5 = 0.03125$; after Bonferroni correction this becomes $0.03125 \times 21 \approx 0.66$, making it \textit{arithmetically impossible} to reach corrected significance for any single pair.
-We therefore interpret the pairwise results as descriptive evidence of effect direction and magnitude rather than as definitive hypothesis tests, and complement them with visual summaries (fold-level box plots and a corrected-$p$ heatmap) to aid the reader's judgement.
-The results of this analysis are presented in Section~\ref{sec:results_statistical_comparison}.
+The design has limited inferential resolution. With five non-zero paired differences, the smallest attainable exact two-sided Wilcoxon $p$-value is 0.0625; after correction for 21 comparisons, the adjusted value is 1.0. Moreover, both the Friedman approximation and the fold-level variability are based on only five blocks. Failure to reject a null hypothesis in this analysis should therefore be interpreted as insufficient evidence of a difference, not as evidence that the models are equivalent.
+
+Fold-level distributions are shown in the main results, while the exploratory pairwise table is provided in Appendix~\ref{app:stats}.
+
+\section{Held-Out Test Evaluation}
+\label{sec:methods_test_evaluation}
+After hyperparameter tuning and model selection are complete, the best configuration from each model family is fitted once on the full six-month \gls{DEV} partition. The rapid-progression label is defined using the 30th percentile of the DEV slopes ($-1.243$ points per 30 days), and all preprocessing parameters are estimated from DEV data only. The fitted pipelines are then applied without modification to the reserved \gls{TEST} partition.
+
+The seven configurations are compared using \gls{PR-AUC}, \gls{ROC-AUC}, and the Brier score. $F_1$ and $F_2$ at the default threshold of 0.5 are also reported to describe the unadjusted operating behaviour of each model, but are not used to revise the model selection. For the selected unbalanced XGBoost configuration, the DEV-derived threshold $t=0.21$ is applied unchanged to TEST and compared with $t=0.30$, the DEV-derived Youden threshold $t=0.35$, and the default threshold $t=0.50$. Calibration is examined using a reliability diagram with ten equal-width probability bins.
+
+The TEST partition is used to estimate performance after development choices have been fixed. It is not used to retune hyperparameters, choose a different model, or modify the operating threshold. As this is a single internal holdout from the same pooled database, it provides an internal generalisation estimate rather than external validation.
 
 \section{Final Model Training and Persistence}
 \label{sec:methods_final_model}
-Following model selection, we retrain the tuned XGBoost pipeline on the \textit{entire} 6-month cohort ($N\!=\!1{,}392$; \gls{DEV}~+~\gls{TEST} combined), since all model-selection decisions have already been finalised and the held-out split has served its evaluation purpose.
+Only after the held-out evaluation and TEST-based analyses are complete is the tuned XGBoost pipeline refitted on the \textit{entire} six-month cohort ($N\!=\!1{,}392$; \gls{DEV}~+~\gls{TEST}). This post-evaluation refit uses the full-cohort 30th-percentile slope cutoff ($-1.248$ points per 30 days) and retains the operating threshold $t=0.21$ selected from DEV.
 The resulting artifact comprises:
-(i)~the complete \texttt{scikit-learn} \texttt{Pipeline}---imputer, encoder, optional scaler, and classifier---serialised with \texttt{joblib}, so that new patients can be scored without any external preprocessing steps; and
-(ii)~a \gls{JSON} metadata file recording the ordered feature list, the 30th-percentile slope cutoff ($-1.25$\,points/month), and the decision threshold ($t\!=\!0.21$).
-This self-contained package feeds the downstream explainability analyses in Chapter~\ref{ch:study1_results}.
+(i)~the complete \texttt{scikit-learn} \texttt{Pipeline}---imputation, one-hot encoding, and classifier---serialised with \texttt{joblib}, so that new patients can be scored without external preprocessing; and
+(ii)~a \gls{JSON} metadata file recording the ordered feature list, target cutoff, decision threshold, and fitted XGBoost parameters.
+
+This artifact is intended for the prototype reporting workflow after model assessment. It is not used to calculate the held-out performance reported in Section~\ref{sec:results_test_eval}, since the TEST participants are included in its training data.
 
 In addition, a final \textbf{balanced Logistic Regression} model is trained on the same full cohort using the Optuna-tuned hyperparameters from the LR\_balanced configuration (loaded from the persisted \gls{JSON} file), with the identical preprocessing pipeline (median imputation, one-hot encoding, $z$-score scaling).
 The \gls{LR} pipeline is serialised separately (\texttt{final\_lr\_6m.joblib}) together with its own metadata file.
-This parallel artifact is not used for prediction in the deployed system; its sole purpose is to provide an intrinsically interpretable coefficient analysis that complements the post-hoc \gls{SHAP} explanations of the XGBoost model (Section~\ref{subsec:methods_lr_coefs}).
+This parallel artifact provides an interpretable full-cohort model for the reporting workflow. Coefficient comparisons based on the held-out analysis instead use a Logistic Regression pipeline fitted only on DEV.
 
 \section{Explainability Plan (XAI)}
 \label{sec:methods_xai_plan}
 Explainability is treated as a core requirement for clinical acceptability.
-We employ three complementary techniques---\gls{SHAP}, \gls{LIME}, and Logistic Regression coefficient analysis---to explain the final XGBoost model's predictions at both the global and individual levels.
+We employ three complementary techniques---\gls{SHAP}, \gls{LIME}, and Logistic Regression coefficient analysis---to examine the DEV-fitted selected model at both the global and individual levels. This preserves the held-out status of the TEST cases used for explanation.
 
 \subsection{SHAP (SHapley Additive exPlanations)}
 \label{subsec:methods_shap}
@@ -605,7 +622,7 @@ Calibration is additionally summarised numerically by the Brier score (Table~\re
 
 \subsection{Learning Curves}
 \label{subsec:methods_learning_curves}
-To assess whether additional training data would improve performance, we construct learning curves by training the final XGBoost model on progressively larger random subsets of the \gls{DEV} set (20\%, 30\%, \ldots, 100\%) and evaluating each on the fixed \gls{TEST} set.
+To assess whether additional training data would improve performance, we construct learning curves by training the selected XGBoost configuration on progressively larger random subsets of the \gls{DEV} set (20\%, 30\%, \ldots, 100\%) and evaluating each on the fixed \gls{TEST} set.
 Subsampling is performed at the subject level (not row level) to preserve the GroupKFold rationale.
 Each fraction below 100\% is repeated five times with different random seeds to estimate variance.
 Subject selection at each fraction is purely random---no stratification by the target label is applied---so minor variation in class proportions across subsamples is expected and absorbed by the five-repetition averaging.

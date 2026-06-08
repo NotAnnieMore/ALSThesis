@@ -17,7 +17,7 @@ The substantial attrition from 5{,}436 to 1{,}392 at 6 months reflects two struc
 (i)~many clinical trials had follow-up periods shorter than 180~days, so subjects were never assessed near the 6-month mark;
 and (ii)~ALS patients who deteriorated rapidly may have dropped out, been transferred to palliative care, or died before the 180-day window, creating informative censoring that disproportionately removes fast progressors.
 Consequently, the 6-month cohort is likely enriched for slower-progressing subjects relative to the full PRO-ACT population, a caveat that should be borne in mind when interpreting the results.
-Nevertheless, the 6-month horizon yields more temporally stable slope estimates (99.8\% based on $\geq 3$ data points, median 7) and a prediction window that is more clinically actionable for treatment planning.
+Nevertheless, the 6-month horizon provides greater temporal support for slope estimation (99.8\% based on $\geq 3$ data points, median 7) than the 3-month horizon.
 
 \begin{table}[ht!]
 \centering
@@ -373,7 +373,7 @@ Overall, the analysis suggests that the core baseline variables account for most
 \label{sec:results_3m}
 % ============================================================
 
-To assess the generalisability of the pipeline across prediction horizons, we repeated the Optuna tuning procedure for the 3-month horizon ($H\!=\!90 \pm 7$\,d) using the four top-ranked model families from the 6-month analysis (XGBoost, Random Forest, LightGBM, and Logistic Regression), each in balanced and unbalanced modes (8 configurations, 60 trials each, DEV $n\!=\!1{,}925$).
+To examine the sensitivity of the modelling results to the prediction horizon, we repeated the Optuna tuning procedure for the 3-month horizon ($H\!=\!90 \pm 7$\,d). The analysis included the four highest-ranked model families from the 6-month comparison---XGBoost, Random Forest, LightGBM, and Logistic Regression---in balanced and unbalanced modes (eight configurations, 60 trials each; DEV $n\!=\!1{,}925$).
 
 \subsection{3-Month Tuning Results}
 \label{subsec:results_3m_tuning}
@@ -392,13 +392,12 @@ Table~\ref{tab:step5v2_tuning_3m} and Figure~\ref{fig:prauc_barchart_3m} present
 \clearpage
 \noindent\textbf{Key observations.}
 \begin{enumerate}
-  \item \textbf{XGBoost balanced} achieves the highest 3-month PR-AUC ($0.426 \pm 0.036$), followed by XGBoost unbalanced ($0.423$) and LightGBM unbalanced ($0.423$).
-    Unlike the 6-month horizon, where balanced mode slightly reduced PR-AUC for boosted models, at 3 months balanced XGBoost marginally \emph{outperforms} its unbalanced counterpart.
-  \item \textbf{ROC-AUC is higher at 3 months} than at 6 months across all models (e.g.\ XGB balanced: $0.634$ vs $0.604$; RF balanced: $0.628$ vs $0.615$).
-    This is expected because the larger 3-month cohort ($n\!=\!1{,}925$ vs $1{,}113$) provides more statistical power and because shorter-horizon slopes are more directly related to baseline status.
-  \item \textbf{Model ranking is remarkably stable across horizons.}
-    XGBoost and LightGBM dominate at both horizons; Random Forest and Logistic Regression occupy consistent mid-to-lower positions.
-    This consistency strengthens the conclusion that the relative model ordering is robust.
+  \item \textbf{The leading configurations are closely matched.}
+    Balanced XGBoost achieves the highest mean PR-AUC ($0.426 \pm 0.036$), followed by unbalanced XGBoost and unbalanced LightGBM (both $0.423$). The difference between the first four configurations is less than 0.004 and is small relative to their fold-to-fold standard deviations.
+  \item \textbf{Class weighting has little effect on PR-AUC for the boosted models.}
+    Balanced XGBoost exceeds its unbalanced counterpart by 0.003, whereas unbalanced LightGBM exceeds balanced LightGBM by 0.001. As in the six-month analysis, the much larger differences in $F_1$ and $F_2$ at a fixed threshold of 0.5 primarily reflect changes in the probability scale and operating point.
+  \item \textbf{The exact ranking changes between horizons.}
+    XGBoost provides the leading configuration at both horizons and Logistic Regression remains at the lower end of the comparison. However, LightGBM moves above Random Forest at three months, so the results support broad agreement at the extremes rather than an identical model ordering.
 \end{enumerate}
 
 \subsection{Cross-Horizon Comparison (3m vs 6m)}
@@ -412,14 +411,14 @@ Table~\ref{tab:3m_vs_6m} and Figures~\ref{fig:3m_vs_6m_grouped}--\ref{fig:3m_vs_
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step5v2_3m_vs_6m_prauc.png}
-  \caption[PR-AUC comparison: 3-month vs.\ 6-month]{Side-by-side PR-AUC comparison between 3-month and 6-month horizons for matched model $\times$ mode configurations. Annotations show exact PR-AUC values.}
+  \caption[PR-AUC comparison: 3-month vs.\ 6-month]{Descriptive PR-AUC comparison between 3-month and 6-month horizons for matched model $\times$ mode configurations tuned independently on their respective DEV sets. Annotations show mean PR-AUC values.}
   \label{fig:3m_vs_6m_grouped}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.65\linewidth]{images/figures/step5v2_3m_vs_6m_scatter.png}
-  \caption[Scatter plot: 3-month vs.\ 6-month PR-AUC]{Scatter plot of 3-month vs 6-month PR-AUC for each model configuration. Points above the parity line perform better at 3 months; below, better at 6 months. Numerical $\Delta$ annotations quantify the difference.}
+  \caption[Scatter plot: 3-month vs.\ 6-month PR-AUC]{Descriptive comparison of mean PR-AUC at 3 and 6 months for each matched model configuration. Points above the parity line have a higher value at 3 months; points below it have a higher value at 6 months. Numerical annotations show $\Delta = \text{PR-AUC}_{3\text{m}}-\text{PR-AUC}_{6\text{m}}$.}
   \label{fig:3m_vs_6m_scatter}
 \end{figure}
 
@@ -427,21 +426,17 @@ Table~\ref{tab:3m_vs_6m} and Figures~\ref{fig:3m_vs_6m_grouped}--\ref{fig:3m_vs_
 
 \noindent\textbf{Key findings.}
 \begin{enumerate}
-  \item \textbf{PR-AUC differences between horizons are small} ($|\Delta| \leq 0.021$ for all configurations).
-    The largest drops are observed for RF unbalanced ($\Delta = -0.021$) and XGB unbalanced ($\Delta = -0.011$), while LightGBM unbalanced slightly \emph{improves} at 3 months ($\Delta = +0.008$).
-  \item \textbf{The 6-month horizon yields slightly higher PR-AUC overall.}
-    Five of eight matched configurations show higher PR-AUC at 6 months.
-    This may reflect the higher quality of 6-month slopes (99.8\% with $\geq\!3$ ALSFRS-R data points, median 7) compared to 3-month slopes (90.5\% with $\geq\!3$ points, median 4), which introduces more noise in the target labels.
-  \item \textbf{The 3-month horizon has higher ROC-AUC but lower PR-AUC.}
-    This apparent paradox is explained by the interaction between sample size and class prevalence: with $n\!=\!1{,}925$, the 3-month DEV set provides more stable ROC-AUC estimates, but the noisier slope targets reduce the precision of positive-class predictions, causing PR-AUC to decrease slightly.
-  \item \textbf{Both horizons support the same top-model conclusion.}
-    XGBoost is the top-performing model at both horizons (unbalanced at 6m, balanced at 3m), reinforcing its selection as the final model for explainability analysis.
+  \item \textbf{The observed PR-AUC differences are modest.}
+    Across the eight matched configurations, $|\Delta|$ ranges from 0.002 to 0.021. The largest decrease at three months occurs for unbalanced Random Forest ($\Delta=-0.021$), while the largest increase occurs for unbalanced LightGBM ($\Delta=+0.008$).
+  \item \textbf{Six-month PR-AUC is slightly higher on average, but not uniformly so.}
+    Five configurations favour six months and three favour three months. The mean across the matched configurations is 0.419 at six months and 0.414 at three months, a difference of 0.006. These changes are smaller than the cross-validation standard deviation of every individual configuration.
+  \item \textbf{Metric behaviour differs across the two analyses.}
+    All eight matched configurations have higher mean ROC-AUC at three months, whereas PR-AUC changes in both directions. Because the horizons use different eligible cohorts, folds, slope estimates, and fold-level class distributions, the contribution of any one of these factors cannot be isolated from this comparison.
+  \item \textbf{XGBoost leads at both horizons, although the selected mode differs.}
+    The highest mean PR-AUC is obtained by unbalanced XGBoost at six months and balanced XGBoost at three months. This supports the use of XGBoost in the downstream six-month analysis, but does not establish an identical ranking across horizons.
 \end{enumerate}
 
-Based on these findings, we proceed with the \textbf{6-month horizon} as the primary analysis for several reasons:
-(i) higher PR-AUC and more stable slope estimates,
-(ii) a 6-month prediction window is more clinically actionable for treatment planning, and
-(iii) the 3-month results confirm that findings generalise across horizons, providing additional confidence in the pipeline.
+The \textbf{6-month horizon} is retained for the downstream analyses because its slopes are estimated from a longer follow-up period and more observations per participant, while its cross-validated PR-AUC is not lower overall in the matched comparison. The three-month results show that the same pipeline can be applied at a shorter horizon and produces a similar range of PR-AUC values. They should nevertheless be interpreted as a sensitivity analysis, rather than as external validation or evidence that performance generalises unchanged across horizons.
 
 
 % ============================================================
@@ -449,24 +444,29 @@ Based on these findings, we proceed with the \textbf{6-month horizon} as the pri
 \label{sec:results_statistical_comparison}
 % ============================================================
 
-To assess whether the performance differences observed among the seven best-per-family models are statistically significant, we re-evaluate each model's best hyperparameters using the same 5-fold GroupKFold cross-validation protocol, collecting per-fold PR-AUC scores.
+The best configuration from each model family was re-evaluated on the same five GroupKFold splits. This produced paired fold-level PR-AUC scores for an exploratory comparison of the seven selected configurations.
 
 \subsection{Per-Fold Performance}
 
 Figure~\ref{fig:step7_fold_boxplot} shows the per-fold PR-AUC distribution for each model.
-All seven models exhibit substantial fold-to-fold variance (standard deviations between 0.036 and 0.055), driven by both the small number of folds and the fold-wise label definition protocol, where the 30th-percentile cutoff is recalculated on each training fold.
+Mean PR-AUC ranges from 0.434 for unbalanced XGBoost to 0.387 for unbalanced KNN. The fold-level standard deviations range from 0.036 to 0.055, and the distributions overlap across all seven configurations.
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.88\linewidth]{images/figures/step7_fold_prauc_boxplot.pdf}
   \caption[Per-fold PR-AUC distribution, 5-fold CV]{Per-fold PR-AUC for the seven best-per-family models across 5-fold GroupKFold on the DEV set (6-month horizon).
   Individual fold values are annotated; red dashed lines indicate the mean.
-  XGBoost (unbalanced) has the highest mean PR-AUC (0.434), but all models have overlapping distributions.}
+  XGBoost (unbalanced) has the highest mean PR-AUC (0.434), and the distributions overlap across models.}
   \label{fig:step7_fold_boxplot}
 \end{figure}
 
-\gls{XGB} (unbalanced) achieves the highest mean \gls{PR-AUC} during Optuna tuning and cross-validation re-evaluation, and ranks within $\Delta\!=\!0.003$ of the top model (\gls{RF}) on the held-out test set, providing converging evidence for its selection as the final model.
-The decision to select \gls{XGB} is therefore based on consistent rank ordering across multiple evaluation phases rather than on a single statistical test.
+\subsection{Friedman and Pairwise Comparisons}
+
+The Friedman test gives $\chi^2_F(6)=12.43$ and $p=0.053$. The null hypothesis of equal rank distributions is therefore not rejected at $\alpha=0.05$. Kendall's coefficient is $W=0.414$, indicating some agreement among folds in their model rankings, but the five-fold design provides limited power and the asymptotic $p$-value lies close to the chosen threshold.
+
+The exploratory Wilcoxon comparisons are reported in Appendix~\ref{app:stats}. The smallest raw two-sided $p$-value is 0.0625, observed for XGBoost versus Logistic Regression, XGBoost versus Decision Tree, and Random Forest versus KNN. All 21 Bonferroni-adjusted values are 1.0. This result is largely determined by the discrete resolution of a signed-rank test with five pairs and the number of simultaneous comparisons; it should not be interpreted as demonstrating equivalence among the models.
+
+Unbalanced XGBoost remains the selected configuration because it has the highest mean cross-validated PR-AUC under the prespecified selection criterion. Its advantage over unbalanced Random Forest is only 0.003, and the statistical analysis does not establish that this difference is systematic. The selection should therefore be understood as a reproducible ranking decision within this development dataset, rather than evidence that XGBoost is intrinsically superior to the other leading models.
 
 
 % ============================================================
@@ -474,16 +474,16 @@ The decision to select \gls{XGB} is therefore based on consistent rank ordering 
 \label{sec:results_threshold_xgb}
 % ============================================================
 
-The default threshold of $t\!=\!0.50$ produces very few positive predictions for the selected unbalanced XGBoost model. We therefore compare alternative thresholds using out-of-fold (OOF) predictions from five-fold GroupKFold on the DEV set. Labels for this analysis use the fixed DEV 30th-percentile slope cutoff ($-1.243$ points per 30 days).
+The default threshold of $t\!=\!0.50$ produces very few positive predictions for the selected unbalanced XGBoost model. Alternative thresholds are therefore compared using out-of-fold (OOF) predictions from five-fold GroupKFold on the DEV set. Labels for this analysis use the fixed DEV 30th-percentile slope cutoff ($-1.243$ points per 30 days).
 
 Three optimality criteria are evaluated:
 \begin{enumerate}
-  \item \textbf{$F_2$-optimal} ($t\!=\!0.05$): $F_2=0.682$. At this threshold all 1,113 DEV participants are classified as rapid, giving recall 1.00 and precision 0.300. The optimum is therefore driven by the strong weighting of recall and provides no separation into predicted classes.
+  \item \textbf{$F_2$-optimal} ($t\!=\!0.05$): $F_2=0.682$. At the lower boundary of the threshold grid, all 1,113 DEV participants are classified as rapid, giving recall 1.00 and precision 0.300. This solution provides no separation into predicted classes.
   \item \textbf{$F_1$-optimal} ($t\!=\!0.21$): $F_1=0.479$, with recall 0.874 and precision 0.330. This threshold classifies 79.6\% of DEV as rapid.
   \item \textbf{Youden's~$J$} ($t\!=\!0.35$): $J=0.171$, with recall 0.410 and precision 0.424. This criterion gives equal importance to sensitivity and specificity.
 \end{enumerate}
 
-$t=0.21$ is retained as the primary operating point because it maximises $F_1$ without collapsing to an all-positive classification. It nevertheless represents an aggressive classification rule: almost four in five development participants are flagged, and precision is only three percentage points above the rapid-progression prevalence. The threshold is therefore used to evaluate a sensitivity-oriented prototype, not presented as a clinically established cutoff.
+$t=0.21$ is retained as the primary operating point because it maximises $F_1$ within the evaluated grid without collapsing to an all-positive classification. It nevertheless represents an aggressive rule: almost four in five development participants are flagged, and precision is only three percentage points above the rapid-progression prevalence. The threshold is therefore used to evaluate a sensitivity-oriented prototype and is not presented as a clinically established cutoff.
 Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sweep.
 
 \begin{figure}[H]
@@ -500,7 +500,7 @@ Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sw
 \label{sec:results_test_eval}
 % ============================================================
 
-The seven configurations selected within each model family are evaluated once on the held-out TEST partition ($n\!=\!279$, rapid prevalence $30.1$\%) to obtain performance estimates on data not used during model development.
+The seven configurations selected within each model family are fitted on the full DEV partition and evaluated once on the held-out TEST partition ($n\!=\!279$, rapid prevalence $30.1$\%).
 Labels are defined using the 30th-percentile slope cutoff computed on the DEV set ($-1.243$~points per 30 days), ensuring no information leaks from the test set into the labelling process.
 
 \subsection{Discrimination Metrics}
@@ -509,7 +509,7 @@ Table~\ref{tab:step6_test_metrics} reports threshold-free metrics (PR-AUC, ROC-A
 
 \begin{table}[ht!]
 \centering
-\caption[Held-out TEST set metrics, 6-month]{Held-out TEST set metrics (6-month horizon, $n\!=\!279$). PR-AUC and ROC-AUC are threshold-free; $F_1$ and $F_2$ are evaluated at the default $t\!=\!0.50$; the Brier score measures probabilistic error (lower is better).}
+\caption[Held-out TEST set metrics, 6-month]{Held-out TEST set metrics (6-month horizon, $n\!=\!279$) from models fitted on DEV only. PR-AUC and ROC-AUC are threshold-free; $F_1$ and $F_2$ are evaluated at the default $t\!=\!0.50$; the Brier score measures probabilistic error (lower is better).}
 \label{tab:step6_test_metrics}
 \small
 \begin{tabular}{l c c c c c c}
@@ -531,17 +531,17 @@ Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
 \begin{enumerate}
   \item \textbf{PR-AUC on held-out data.}
     Random Forest (PR-AUC\,$=\!0.459$) and XGBoost ($0.456$) both score slightly above their cross-validated development means ($0.431$ and $0.434$, respectively). This provides no evidence of a marked performance drop on the TEST partition, although a single held-out estimate cannot establish the absence of overfitting.
-  \item \textbf{SVM achieves the highest ROC-AUC} ($0.675$) among all models, suggesting strong discriminative power across all operating points.
-    However, its lower PR-AUC and inability to produce positive predictions at $t\!=\!0.50$ limits its practical utility without threshold adjustment.
+  \item \textbf{SVM has the highest ROC-AUC point estimate} ($0.675$), followed closely by Logistic Regression ($0.671$), Random Forest ($0.664$), and XGBoost ($0.660$).
+    Its PR-AUC is lower than that of Random Forest and XGBoost, and it produces no positive predictions at $t\!=\!0.50$. The latter reflects an unsuitable default operating threshold rather than an absence of ranking ability.
   \item \textbf{Default threshold is unsuitable for unbalanced models.}
     XGBoost, RF, and KNN (all trained without class weighting) produce near-zero $F_1$ and $F_2$ at $t\!=\!0.50$, because their predicted probabilities concentrate below $0.50$ for the minority class.
     This reinforces the need for threshold optimisation (Section~\ref{sec:results_threshold_xgb}).
-  \item \textbf{Balanced models have reasonable default-threshold performance.}
-    LogisticRegression balanced achieves $F_1\!=\!0.484$ and $F_2\!=\!0.520$ at $t\!=\!0.50$, making it the best model under the default operating point.
+  \item \textbf{Class weighting changes default-threshold behaviour.}
+    Balanced Logistic Regression achieves the highest $F_1$ ($0.484$) and $F_2$ ($0.520$) at $t\!=\!0.50$. These values describe performance at a common cutoff and do not replace the threshold-free criteria used for model selection.
 \end{enumerate}
 
 \noindent\textbf{Relation to model selection.}
-XGBoost (unbalanced) had already been selected as the final model from the \gls{DEV} results, where it achieved the highest cross-validated PR-AUC. Random Forest obtains the highest TEST PR-AUC by a margin of 0.003, but the held-out results are not used to repeat model selection. XGBoost therefore remains the prespecified final model. Its Brier score ($0.197$) is also the lowest of the seven TEST evaluations, although it differs only slightly from SVM ($0.198$) and Random Forest ($0.199$). The fitted tree ensemble additionally permits exact TreeSHAP analysis in Section~\ref{sec:results_shap}.
+XGBoost (unbalanced) had already been selected from the \gls{DEV} results, where it achieved the highest cross-validated PR-AUC. Random Forest obtains the highest TEST PR-AUC by a margin of 0.002, but the held-out results are not used to repeat model selection. XGBoost therefore remains the prespecified model for the subsequent analyses. Its Brier score ($0.197$) is also the lowest point estimate among the seven TEST evaluations, although it is nearly identical to SVM ($0.198$) and Random Forest ($0.199$).
 Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC across all models.
 
 \begin{figure}[H]
@@ -578,7 +578,7 @@ Table~\ref{tab:step6_threshold_test} compares XGBoost performance at multiple th
 
 \begin{table}[ht!]
 \centering
-\caption[XGBoost performance at different thresholds]{XGBoost (unbalanced, 6\,m) performance on TEST at different decision thresholds.}
+\caption[XGBoost performance at different thresholds]{DEV-fitted XGBoost (unbalanced, 6\,m) performance on TEST at different decision thresholds.}
 \label{tab:step6_threshold_test}
 \small
 \begin{tabular}{c c c c c c c c c}
@@ -605,12 +605,12 @@ $t$ & Precision & Recall & $F_1$ & $F_2$ & TP & FP & FN & TN \\
 
 \subsection{Calibration Analysis}
 
-The probabilistic predictions of the final XGBoost model are examined using a reliability diagram and the Brier score (Figure~\ref{fig:step6_calibration}). Its Brier score is \textbf{0.197}, compared with approximately 0.210 for a constant prediction equal to the TEST-set prevalence. The reliability curve is close to the diagonal in the lower probability bins but departs from it at higher predicted probabilities. Together, these results suggest modest probabilistic improvement over the prevalence-only reference, while leaving some calibration error in the upper part of the observed probability range.
+The probabilistic predictions of the DEV-fitted XGBoost model are examined using a reliability diagram and the Brier score (Figure~\ref{fig:step6_calibration}). Its Brier score is \textbf{0.197}, compared with approximately 0.210 for a constant prediction equal to the TEST prevalence. The reliability curve is close to the diagonal in the lower populated bins but departs from it at higher predicted probabilities, where fewer observations are available. The result indicates a modest reduction in mean squared probabilistic error relative to the constant reference, but does not demonstrate full calibration.
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.55\linewidth]{images/figures/step6_calibration.png}
-  \caption[XGBoost calibration on TEST set]{Calibration reliability diagram for XGBoost (unbalanced) on the TEST set. The dashed line indicates perfect calibration.}
+  \caption[XGBoost calibration on TEST set]{Reliability diagram for the DEV-fitted XGBoost model on TEST. The dashed line indicates perfect calibration; only probability bins containing observations are shown.}
   \label{fig:step6_calibration}
 \end{figure}
 \newpage
@@ -621,9 +621,13 @@ Figure~\ref{fig:step6_cm} presents the confusion matrix at the $F_1$-optimal thr
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.50\linewidth]{images/figures/step6_confusion_matrix.png}
-  \caption[XGBoost confusion matrix at $t{=}0.21$]{Confusion matrix for XGBoost (unbalanced) on the TEST set at $t\!=\!0.21$.}
+  \caption[XGBoost confusion matrix at $t{=}0.21$]{Confusion matrix for the DEV-fitted XGBoost model on TEST at the DEV-derived threshold $t\!=\!0.21$.}
   \label{fig:step6_cm}
 \end{figure}
+
+\subsection{Post-Evaluation Refit}
+
+After completion of the held-out evaluation and the TEST-based analyses reported in this chapter, the selected XGBoost pipeline is refitted on all 1,392 six-month participants for use by the prototype reporting workflow. This artifact uses the full-cohort slope cutoff ($-1.248$ points per 30 days) and retains the DEV-derived operating threshold $t=0.21$. A balanced Logistic Regression pipeline is refitted in parallel. No performance estimate is reported from these full-cohort fits, since they include the former TEST participants in training.
 
 % ============================================================
 \section{Explainability Analysis}
@@ -1162,13 +1166,13 @@ The main findings are:
     Active and Placebo rates are 26.5\% and 31.6\%, respectively ($p=0.057$), while riluzole groups show similar label rates ($p=0.416$) and slope distributions ($p=0.534$).
     These variables remain candidate predictors of patient and trial heterogeneity, without a causal interpretation.
   \item \textbf{Model selection.} Unified Optuna tuning of 7 model families across 13 configurations identifies XGBoost (unbalanced) as the top-ranked model by PR-AUC ($0.434 \pm 0.049$), followed by RF~unbalanced ($0.431$) and SVM~balanced ($0.425$).
-    Several model families obtain similar internal validation performance, with less than 0.01 PR-AUC separating the two leading configurations.
+    Several model families obtain similar internal validation performance, with less than 0.01 PR-AUC separating the two leading configurations. The Friedman test does not reject equal rank distributions across models ($p=0.053$), so the XGBoost selection reflects the prespecified ranking criterion rather than demonstrated statistical superiority.
   \item \textbf{Class balancing.} Balanced and unbalanced modes produce similar PR-AUC values for most model families, although SVM improves by 0.036 with weighting. The larger differences in $F_1$ and $F_2$ at $t\!=\!0.5$ mainly reflect shifts in predicted probabilities and reinforce the need to separate model ranking from operating-threshold selection.
   \item \textbf{Feature-block analysis.} The core baseline block retains most of the cross-validated performance. Adding FVC produces the clearest gains for Random Forest ($+0.025$) and XGBoost ($+0.009$), while the effects of vital signs, treatment variables, and laboratory measurements are smaller and vary by model.
   \item \textbf{Metric consistency.} PR-AUC and ROC-AUC produce strongly correlated model rankings ($\rho\!=\!0.758$), supporting the use of PR-AUC as the primary metric.
     Fixed-cutoff $F_1$ and $F_2$ do not reproduce this ranking and are reserved for operating-point assessment.
-  \item \textbf{Cross-horizon robustness.} The 3-month horizon ($N\!=\!2{,}407$) produces comparable results (top PR-AUC $0.426$, $\Delta \leq 0.021$ vs 6-month), with the same model ranking.
-    The 6-month horizon is retained as the primary analysis due to higher slope quality and greater clinical actionability.
+  \item \textbf{Cross-horizon sensitivity.} The 3-month horizon ($N\!=\!2{,}407$) produces a similar range of PR-AUC values (top PR-AUC $0.426$; $|\Delta| \leq 0.021$ for matched configurations), although the exact ranking changes.
+    The 6-month horizon is retained as the primary analysis because its slopes are based on longer follow-up and more observations per participant.
   \item \textbf{Held-out generalisation.}
     Test-set PR-AUC (RF\,$=\!0.459$, XGB\,$=\!0.456$) is slightly above the corresponding cross-validated development means, with no marked loss of discrimination on the held-out partition.
     Random Forest and XGBoost remain closely matched, but the TEST results are not used to repeat model selection.

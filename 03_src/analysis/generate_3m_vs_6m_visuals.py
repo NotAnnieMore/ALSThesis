@@ -227,8 +227,9 @@ merged_sorted["delta"] = merged_sorted["pr_auc_mean_3m"] - merged_sorted["pr_auc
 lines2 = [
     r"\begin{table}[ht]",
     r"\centering",
-    r"\caption{PR-AUC comparison across prediction horizons for matched model configurations. "
-    r"$\Delta$ = 3m $-$ 6m; positive values indicate better performance at 3 months.}",
+    r"\caption{Descriptive PR-AUC comparison across prediction horizons for matched model configurations. "
+    r"Models were tuned independently on the DEV set for each horizon. "
+    r"$\Delta$ = 3m $-$ 6m; positive values indicate higher performance at 3 months.}",
     r"\label{tab:3m_vs_6m}",
     r"\small",
     r"\begin{tabular}{llccc}",

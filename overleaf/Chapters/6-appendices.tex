@@ -284,11 +284,11 @@ Model & Mode & PR-AUC & ROC-AUC & F$_1$ & F$_2$ & Brier \\
 \section{Statistical Comparison}
 \label{app:stats}
 
-To assess whether the observed performance differences among models are statistically significant, a Friedman test was applied to the per-fold PR-AUC scores from 5-fold GroupKFold cross-validation on the DEV set, followed by pairwise Wilcoxon signed-rank tests with Bonferroni correction.
+The Friedman test was the primary comparison of the per-fold PR-AUC ranks from 5-fold GroupKFold on the DEV set. As the omnibus test did not reject its null hypothesis, the pairwise Wilcoxon signed-rank tests below are included for descriptive completeness and are not treated as confirmatory post-hoc tests.
 
 \begin{table}[htbp]
   \centering
-  \caption[Pairwise Wilcoxon tests with Bonferroni correction]{Pairwise Wilcoxon signed-rank tests with Bonferroni correction (Friedman $\chi^2 = 12.43$, $p = 0.0531$).}
+  \caption[Exploratory pairwise Wilcoxon comparisons]{Exploratory pairwise Wilcoxon signed-rank comparisons with Bonferroni correction (Friedman $\chi^2_F(6) = 12.43$, $p = 0.0531$).}
   \label{tab:app_pairwise}
   \small
   \begin{tabular}{llccc}
@@ -320,5 +320,4 @@ To assess whether the observed performance differences among models are statisti
   \end{tabular}
 \end{table}
 
-The Friedman test yields $\chi^2 = 12.43$ ($p = 0.053$), marginally above the significance threshold at $\alpha = 0.05$.
-No pairwise comparison reaches significance after Bonferroni correction ($p_\text{Bonf.} = 1.000$ for all 21 pairs), confirming that the performance differences among the seven models are not statistically distinguishable given 5 cross-validation folds.
+The Friedman test yields $\chi^2_F(6)=12.43$ ($p=0.053$; Kendall's $W=0.414$), so the null hypothesis of equal rank distributions is not rejected at $\alpha=0.05$. All 21 exploratory pairwise comparisons have $p_\text{Bonf.}=1.000$. With only five pairs, the minimum exact two-sided Wilcoxon $p$-value is 0.0625, making this outcome unavoidable after correction. The table therefore provides no evidence of pairwise differences, but it also cannot establish that the models are equivalent.
