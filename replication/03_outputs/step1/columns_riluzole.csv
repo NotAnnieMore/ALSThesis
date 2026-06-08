@@ -1,0 +1,4 @@
+column,dtype,non_null,null_count,null_pct,n_unique
+subject_id,int64,10363,0,0.0,10253
+Subject_used_Riluzole,str,10363,0,0.0,2
+Riluzole_use_Delta,float64,10333,30,0.3,746

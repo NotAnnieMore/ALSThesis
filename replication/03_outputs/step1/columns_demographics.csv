@@ -1,0 +1,15 @@
+column,dtype,non_null,null_count,null_pct,n_unique
+subject_id,int64,12504,0,0.0,12504
+Demographics_Delta,float64,12419,85,0.7,11
+Age,float64,9483,3021,24.2,195
+Date_of_Birth,float64,1573,10931,87.4,1486
+Ethnicity,str,3764,8740,69.9,4
+Race_Americ_Indian_Alaska_Native,float64,352,12152,97.2,2
+Race_Asian,float64,422,12082,96.6,2
+Race_Black_African_American,float64,484,12020,96.1,2
+Race_Hawaiian_Pacific_Islander,float64,341,12163,97.3,2
+Race_Unknown,float64,365,12139,97.1,2
+Race_Caucasian,float64,8377,4127,33.0,2
+Race_Other,float64,148,12356,98.8,1
+Race_Other_Specify,str,39,12465,99.7,20
+Sex,str,12498,6,0.0,2

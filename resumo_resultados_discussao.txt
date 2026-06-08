@@ -1,0 +1,228 @@
+================================================================================
+  RESUMO DOS RESULTADOS — Para discussão com a orientadora
+  Projeto: Classificação Explicável da Progressão Funcional em ELA
+  Data: 8 Abril 2026
+================================================================================
+
+
+1. ELEGIBILIDADE DOS HORIZONTES
+   Do universo PRO-ACT (5,436 sujeitos com ALSFRS-R), apenas 1,392 (25.6%)
+   têm follow-up no horizonte de 6 meses e 2,407 (44.3%) nos 3 meses.
+   A grande queda (75% de perda) deve-se a ensaios com seguimento curto e a
+   dropout informativo (pacientes mais graves saem antes dos 180 dias).
+   O horizonte de 6m foi escolhido como primário porque 99.8% dos slopes usam
+   >=3 pontos (mediana 7), vs 90.5% nos 3m — slopes mais estáveis. Além disso,
+   6 meses é mais útil clinicamente para planeamento terapêutico.
+
+2. DISTRIBUIÇÃO DOS SLOPES E TARGET BINÁRIO
+   6m: slope médio = -0.95 ± 0.89 pts/30d, mediana = -0.80.
+   3m: slope médio = -0.90 ± 1.16 pts/30d — mais variância (menos pontos).
+   O target "rapid" = piores 30% dos slopes, calculado FOLD-WISE no treino
+   para evitar data leakage. Cutoff global P30 (6m) = -1.25 pts/30d (ou seja,
+   perda >1.25 pontos por mês no ALSFRS-R).
+
+3. MISSINGNESS DO FVC — CONFIRMADO MAR
+   ~47% do cohort não tem FVC. Testámos 11 variáveis entre grupos com/sem FVC.
+   O slope (target) não difere significativamente (p=0.050, d=0.098 — trivial,
+   e não sobrevive correção Bonferroni a 0.0045). ALSFRS-R, idade e sexo
+   também sem diferença. As variáveis que diferem (study arm, nº medicamentos)
+   refletem protocolos dos ensaios, não severidade. Conclusão: missingness é
+   MAR → imputação pela mediana é adequada sem introduzir viés.
+
+4. CORREÇÃO BMI
+   Identificámos 147 registos de altura com erro decimal (17.3 cm em vez de
+   173 cm), gerando BMIs impossíveis (até 4,512). Corrigido com bounds
+   plausíveis [120-220] cm para altura e [30-200] kg para peso. 132 alturas e
+   31 pesos corrigidos. Todos os datasets foram regenerados após a correção.
+
+5. ANÁLISE EXPLORATÓRIA DO TRATAMENTO
+   Nenhuma variável de tratamento tem associação estatisticamente significativa
+   com progressão rápida. Braço Ativo vs Placebo: 26.5% vs 31.6% rapid
+   (χ²=3.62, p=0.057 — marginal), mas "Ativo" mistura compostos diferentes.
+   Riluzole: sem efeito no decline funcional (p=0.416), consistente com a
+   literatura (benefício na sobrevivência, não na ALSFRS-R). Mantemos estas
+   variáveis como covariáveis, sem interpretação causal.
+
+6. TUNING OPTUNA — 13 CONFIGURAÇÕES
+   7 famílias × 2 modos (balanced/unbalanced, exceto KNN) = 13 configs.
+   60 trials TPE por config, 5-fold GroupKFold sujeito-wise, PR-AUC como
+   objetivo. Top-3:
+     XGBoost unbalanced:  PR-AUC = 0.434 ± 0.049
+     Random Forest unbal: PR-AUC = 0.431 ± 0.042
+     SVM balanced:        PR-AUC = 0.425 ± 0.049
+   O spread é pequeno (<0.05 entre top-5) → o teto de performance é ditado
+   pelas features, não pelo modelo. LR balanced atinge 0.407 — competitivo
+   como alternativa interpretável.
+
+7. BALANCED VS UNBALANCED
+   Para PR-AUC (threshold-free), a diferença entre modos é <0.02 para todos
+   os ensembles. Única exceção: SVM melhora bastante com balanceamento
+   (+0.036). Conclusão: com ~30% de positivos, a otimização do threshold é
+   mais eficaz do que class weighting para esta task.
+
+8. CORRELAÇÃO ENTRE MÉTRICAS
+   PR-AUC e ROC-AUC: ρ=0.758 (correlacionadas → ranking robusto).
+   F1/F2 a threshold fixo 0.5: NÃO correlacionadas com PR-AUC (ρ≈0) — medem
+   se as probabilidades estão centradas em 0.5, não a qualidade discriminativa.
+   Valida a escolha de PR-AUC como métrica primária.
+
+9. ABLAÇÃO POR BLOCOS DE FEATURES
+   A → Baseline only (15 features): já capta a maioria do sinal.
+   A→C (+ FVC): maior ganho marginal (+0.025 RF, +0.010 XGB) — FVC é o bloco
+   mais valioso individualmente, consistente com a literatura (marcador
+   respiratório prognóstico). Vitals sozinhos (+0.000), Treatment/Labs
+   marginais (+0.002–0.013). LGBM balanced degrada com mais features (-0.016,
+   possível overfitting). LR sobe monotonicamente — modelo estável.
+
+10. COMPARAÇÃO 3 MESES VS 6 MESES
+    Os mesmos 4 modelos tuned nos dois horizontes: diferenças |Δ| ≤ 0.021.
+    O ranking dos modelos é o mesmo. 6m ligeiramente melhor em PR-AUC (5/8
+    configs). 3m tem ROC-AUC superior (mais dados, N=1,925 vs 1,113). Mantemos
+    6m como primário (slopes melhores + mais útil clinicamente).
+
+11. COMPARAÇÃO ESTATÍSTICA DOS MODELOS
+    Friedman test: χ²=12.43, p=0.053 — marginalmente não-significativo.
+    Nenhum par atinge significância no Wilcoxon com Bonferroni, mas isto é uma
+    LIMITAÇÃO ESTRUTURAL: com k=5 folds, o p mínimo possível é 0.0625 (>0.05).
+    Impossível rejeitar H0 com 5 folds, independentemente do efeito.
+    O p=0.053 do Friedman é sugestivo de diferenças de ranking.
+
+12. OTIMIZAÇÃO DO THRESHOLD
+    Threshold default (0.50): quase inútil para modelos unbalanced (F1≈0).
+    F2-optimal (t=0.05): recall≈1.0 mas precision≈prevalência — trivial.
+    F1-optimal (t=0.21): ADOTADO — melhor balanço recall/precision.
+    Youden's J (t=0.35): mais precision (50%) mas recall cai para 40.5%.
+    Para screening clínico, t=0.21 é preferido (erro de falso negativo é mais
+    grave que falso positivo).
+
+13. AVALIAÇÃO NO HELD-OUT TEST (N=279)
+    RF unbal: PR-AUC=0.459 (best TEST), XGB unbal: 0.456 (Δ=0.003).
+    XGB SELECIONADO como modelo final porque:
+      (i) Δ=0.003 negligível (dentro dos CIs bootstrap)
+      (ii) XGB consistentemente #1 no Optuna e CV-reevaluation
+      (iii) Menor Brier score (0.197) — melhor calibração
+      (iv) TreeSHAP nativo para explicabilidade
+    PR-AUC no TEST > que no CV → sem overfitting.
+    
+    A t=0.21: Recall=85.7% (72/84 rapid), Precision=35.1%, F1=0.498,
+    F2=0.665. 12 falsos negativos, 133 falsos positivos.
+    Os 133 FP representam 48% do TEST — carga gerível num workflow de screening.
+
+14. CALIBRAÇÃO
+    Brier score = 0.197 (melhor de todos os modelos). Reliability diagram
+    mostra boa calibração — probabilidades previstas ~correspondem às
+    frequências observadas.
+
+15. EXPLICABILIDADE — SHAP GLOBAL
+    Top features por |SHAP| médio no TEST:
+      1. ALSFRS_R_t0 = 0.325 (DOMINANTE, >2× o segundo)
+      2. FVC_Liters  = 0.131
+      3. Resp_Rate   = 0.100
+      4. Age         = 0.067
+      5. FVC_%normal = 0.067
+    Beeswarm: ALSFRS-R baixo → mais risco; FVC baixo → mais risco; idade
+    alta → mais risco. Direções clinicamente plausíveis.
+
+16. EXPLICABILIDADE — CASE STUDIES (SHAP + LIME)
+    4 pacientes representativos (TP, FP, FN, TN — closest to median prob):
+    - TP (941957): ALSFRS-R=31, Idade=74, FVC=73% → corretamente rapid.
+    - FP (220808): ALSFRS-R=41, mas vital signs elevam risco → falso alarme.
+    - FN (251602): ALSFRS-R=43, FVC=83% → função preservada mascara decline
+      rápido. O modelo baseia-se no baseline — não "vê" a trajetória futura.
+    - TN (271583): ALSFRS-R=42, Idade=36, FVC=100% → claramente slow.
+    Concordância SHAP-LIME: 40–50% overlap no top-10 features por quadrante.
+    Features core partilhadas: ALSFRS-R, FVC, respiratory rate.
+
+17. COEFICIENTES DA REGRESSÃO LOGÍSTICA
+    LR balanced (modelo paralelo): top coefs alinhados com SHAP do XGBoost:
+      ALSFRS-R_t0: β=-0.339, FVC_Liters: β=-0.122, Resp_Rate: β=+0.100.
+    Triangulação entre modelo linear e ensemble não-linear: mesmos drivers.
+
+18. ERROR PROFILING
+    12 FN concentram-se em pacientes com ALSFRS-R ≥40 e FVC >80% — função
+    preservada no baseline. Limitação intrínseca de modelos baseline-only:
+    pacientes com boa função inicial que declinam rapidamente são os mais
+    difíceis de detetar. FPs distribuídos uniformemente.
+    Sem diferença entre sexos nos padrões de erro.
+
+19. PERFORMANCE POR SUBGRUPO
+    Moderador mais forte: severidade ALSFRS-R.
+      Severo (≤35): PR-AUC=0.558, Recall=97.2% (excelente)
+      Mild (>42):   PR-AUC=0.206, Recall=54.5% (fraco — estes escapam)
+    FVC baixo (≤87%): PR-AUC 0.59-0.68 (bom). FVC alto: PR-AUC 0.31-0.32.
+    Sem viés de sexo: PR-AUC 0.45 (F) vs 0.47 (M).
+    Idade: 50-57 anos melhor subgrupo (PR-AUC=0.567, Recall=95.5%).
+
+20. DECISION CURVE ANALYSIS (DCA)
+    Net benefit positivo para thresholds t ∈ [0.13, 0.57] — gama larga que
+    significa que o modelo tem utilidade clínica para diferentes perfis de
+    custo (tanto clínicos agressivos que querem detetar tudo, como
+    conservadores). No operating point t=0.21 o benefício é substancial
+    vs "tratar todos" e "tratar nenhum".
+
+21. LEARNING CURVES
+    PR-AUC sobe de 0.387 (20% dados) para 0.431 (40%) e estabiliza.
+    Plateau a ~60% dos dados → TETO DITADO PELAS FEATURES, não pelos dados.
+    Mais pacientes com as mesmas features baseline não melhoram o modelo.
+    Para melhorar: features longitudinais, genéticas, imagiológicas.
+
+22. BOOTSTRAP CONFIDENCE INTERVALS (B=2000)
+    PR-AUC:    0.456 [0.364, 0.568] — CI width 0.204
+    ROC-AUC:   0.660 [0.586, 0.730]
+    Recall:    0.857 [0.781, 0.929] — nunca abaixo de 78%
+    Precision: 0.351 [0.283, 0.419]
+    F1:        0.498 [0.423, 0.568]
+    Brier:     0.197 [0.174, 0.221] — mais estável
+    CIs razoavelmente estreitos dado N=279.
+
+23. PARTIAL DEPENDENCE PLOTS (PDPs)
+    ALSFRS-R total: relação monotónica decrescente forte — mais score =
+    menos risco. Efeito de longe o mais forte. Clinicamente coerente.
+    FVC (litros): efeito protetor não-linear — a curva achata em FVC altos.
+    Respiratory rate: padrão mais complexo, não-monotónico — sugere
+    interações com outras features.
+
+24. PATIENT RISK REPORTS (proof-of-concept)
+    12 pacientes reais + 10 sintéticos processados pelo gerador de relatórios.
+    Cada relatório inclui: probabilidade P(rapid), tier de risco (LOW/
+    MODERATE/HIGH), top-5 features SHAP, sugestões de monitorização.
+    ALSFRS-R domina em todos os 12 relatórios reais e 9/10 sintéticos.
+    Sugestões de monitorização clinicamente plausíveis (ALSFRS-R baixo →
+    reavaliação mensal, FVC baixo → espirometria, ALT elevada → função
+    hepática). Prova de conceito funcional para apoio à decisão clínica.
+
+
+================================================================================
+  PONTOS-CHAVE PARA DISCUTIR COM A ORIENTADORA
+================================================================================
+
+A. O modelo funciona bem para pacientes JÁ debilitados no baseline (ALSFRS-R
+   ≤35: recall 97%) mas fraco para pacientes com função preservada (>42:
+   recall 55%). Isto é uma limitação fundamental de usar SÓ features baseline.
+
+B. Performance global PR-AUC ~0.45 → melhor que random (0.30) mas longe de
+   perfeito. O teto é ditado pelas features, não pelo modelo (learning curves
+   + spread pequeno entre modelos + ablation). Para melhorar: features
+   longitudinais.
+
+C. A escolha do P30 fold-wise é defensiva contra leakage mas introduz
+   variação nos cutoffs entre folds (-1.27 a -1.19). É o trade-off correto?
+
+D. 47% missing no FVC é alto. Confirmámos MAR estatisticamente, mas a
+   imputação pela mediana dilui o sinal do FVC. Alternativas (MICE, KNN
+   imputation) valiam a pena testar?
+
+E. Friedman p=0.053 — não rejeitamos H0, mas com k=5 é impossível um par
+   atingir significância. Com k=10 teríamos mais poder mas folds menores.
+   Que valor dar a este resultado?
+
+F. 133 falsos positivos a t=0.21 (48% do TEST classificado como rapid).
+   É gerível num workflow de screening mas é muito. Threshold Youden (t=0.35)
+   reduz FP para 34 mas perde metade dos rapid. Qual o threshold certo
+   depende do contexto clínico.
+
+G. Todas as 3 técnicas de explicabilidade (SHAP, LIME, LR coefs) concordam
+   nos mesmos drivers → confiança de que não é artefacto. Mas vale a pena
+   ter as 3? Ou SHAP + LR seria suficiente?
+
+================================================================================

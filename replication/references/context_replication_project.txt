@@ -1,0 +1,362 @@
+================================================================================
+  REPLICATION PROJECT — COMPLETE CONTEXT FILE
+  Purpose: Load this into a new chat to give full context about the
+           replication study. Then read this thesis project to integrate it.
+  Last updated: May 2026
+================================================================================
+
+
+--------------------------------------------------------------------------------
+SECTION 1 — WHAT THIS PROJECT IS
+--------------------------------------------------------------------------------
+
+This is a REPLICATION + EXTENSION study of:
+  Papaiz et al. (2024) — "An ensemble-imbalance machine learning model for
+  the prediction of ALS prognosis." The paper used PRO-ACT clinical data
+  to classify ALS patients as Short Survivors (death <= 24 months from
+  symptom onset) vs Standard Survival, using 6 classifiers wrapped in
+  BalancedBagging with 23 hand-crafted features.
+
+Our study (by Ivo Camacho, supervised by Maryam Abbasi and Pedro Martins):
+  1. REPLICATES the Papaiz et al. pipeline faithfully on a public PRO-ACT extract
+  2. EXTENDS it with LightGBM (7th classifier), Bayesian HPO (Optuna), 10
+     individual resampling strategies, a held-out test set, and dual SHAP analysis
+  3. Produced a conference paper submitted to EPIA 2026 (Springer LLNCS format)
+
+Folder: G:\TESE\CodigoMain\replication  (subfolder of main thesis project)
+
+
+--------------------------------------------------------------------------------
+SECTION 2 — DATASET
+--------------------------------------------------------------------------------
+
+Source: PRO-ACT database (Pooled Resource Open-Access ALS Clinical Trials)
+  - 16 raw CSV tables; publicly available extract
+
+Target variable:
+  Short Survivor  = died <= 24 months from symptom onset  (minority class)
+  Standard Survival = died > 24 months, or alive > 24 months (majority class)
+
+Exclusions applied (matching reference study):
+  - Censored patients (alive < 24 months, outcome unknown)
+  - Missing site-of-onset records
+  - Missing FVC or height/BMI data (required for 23-feature set)
+  NOTE: FVC missingness was 62.3% after survival+site filters — this is
+        the main reason our cohort is smaller than the reference study.
+
+Final dataset: 1,502 patients
+  Short Survivors:    174  (11.6%)  — minority class, imbalance ratio 7.6
+  Standard Survival: 1,328  (88.4%) — majority class
+
+Reference study had: 1,967 patients (13.0% Short, ratio 6.9)
+  Difference (-23.6%) due to more missing FVC in our PRO-ACT version.
+
+Train/Test split: 80/20, stratified, random_state=42
+  Train: 1,201 patients (139 Short, 1,062 Standard)
+  Test:   301 patients  (35 Short,   266 Standard)  ← sealed until Step 6
+
+23 features (identical to reference study, all ordinal/binary/categorical):
+  Sex_Male, Site_Onset, Age_at_Onset (ordinal 0-4), Riluzole,
+  Diagnosis_Delay (ordinal 0-2: short/avg/long),
+  FVC_at_Diagnosis (binary: <80% vs >=80%),
+  BMI_at_Diagnosis (ordinal 0-3), Patient_with_Gastrostomy,
+  Qty_Regions_Involved (ordinal 1-4),
+  Region_Involved_Bulbar/Upper_Limb/Lower_Limb/Respiratory (binary x4),
+  Q1-Q10_slope (ALSFRS-R decline rate, ordinal 0-2: slow/avg/rapid, x10)
+
+
+--------------------------------------------------------------------------------
+SECTION 3 — EXPERIMENTAL PIPELINE
+--------------------------------------------------------------------------------
+
+Step 1: Data loading & exploration (16 CSVs from PRO-ACT)
+Step 2: Feature engineering & preprocessing (produces 23 features)
+Step 3: Cleaning & filtering (exclusions, final 1,502 patients)
+Step 4: Stratified 80/20 train/test split
+Step 5: Cross-validation model training
+  - 7 classifiers: KNN, Naive Bayes, Decision Tree, Random Forest, SVM, MLP, LightGBM*
+  - 10 imbalance strategies: None, ROS, SMOTE, BorderlineSMOTE, ADASYN,
+      RUS, NearMiss, TomekLinks, SMOTETomek, SMOTEENN
+  - 70 classifier×strategy combinations
+  - Optuna (TPE, 50 trials/combination), optimising ROC-AUC
+  - RepeatedStratifiedKFold: 5 folds × 3 repeats = 15 evaluations per config
+  - CRITICAL: resampling applied ONLY inside training fold, AFTER fold split,
+              BEFORE classifier fitting. Validation fold and test set untouched.
+  * LightGBM is our addition; reference study used 6 classifiers only
+Step 6: Held-out test evaluation (retrain on full train, evaluate on test)
+Step 7: SHAP interpretability
+  - LightGBM: TreeSHAP (exact)
+  - MLP: KernelSHAP (approximate, 100 background, 200 eval samples)
+  - Computed on held-out test set after final retraining
+Step 7b: BalancedBagging replication
+  - Same 7 classifiers, 2 scenarios: Single-Model vs BalancedBagging (10 est.)
+  - Same 5×3 CV protocol
+Step 7c: Statistical validation
+  - Wilcoxon signed-rank test (per-fold balanced accuracy, 15 folds)
+  - Bonferroni correction: alpha_c = 0.05/7 ≈ 0.007
+
+
+--------------------------------------------------------------------------------
+SECTION 4 — KEY RESULTS (all numbers)
+--------------------------------------------------------------------------------
+
+4.1 Cross-Validation (best of 70 configs per classifier):
+  Classifier    Best_Tech   CV_AUC  Recall  Spec    GMean
+  MLP           None        0.915   0.427   0.969   0.641  ← highest AUC, low recall
+  LightGBM      ROS         0.914   0.780   0.864   0.819
+  SVM           SMOTEENN    0.911   0.904   0.784   0.842
+  RandomForest  None        0.906   0.276   0.983   0.517
+  NaiveBayes    None        0.891   0.727   0.867   0.793
+  KNN           RUS         0.880   0.767   0.831   0.797
+  DecisionTree  TomekLinks  0.861   0.413   0.948   0.621
+
+4.2 Held-Out Test Set (n=301, 35 Short, 266 Standard):
+  Classifier    Tech        AUC     BalAcc  Recall  Spec    GMean   TP  FN
+  LightGBM      ROS         0.923   0.844   0.857   0.831   0.844   30   5  ← BEST
+  RandomForest  None        0.919   0.623   0.257   0.989   0.504    9  26
+  MLP           None        0.918   0.514   0.029   1.000   0.169    1  34  ← COLLAPSE
+  SVM           SMOTEENN    0.909   0.826   0.886   0.767   0.824   31   4  ← highest recall
+  NaiveBayes    None        0.889   0.774   0.714   0.835   0.772   25  10
+  KNN           RUS         0.886   0.812   0.800   0.823   0.812   28   7
+  DecisionTree  TomekLinks  0.874   0.628   0.286   0.970   0.526   10  25
+
+  KEY FINDING — AUC-Sensitivity Decoupling:
+    MLP has highest CV AUC (0.915) AND high test AUC (0.918) but only detects
+    1/35 Short Survivors (Recall=0.029). The model correctly ranks probabilities
+    (high AUC) but compresses minority-class scores below the 0.5 threshold.
+    This is a consequence of optimising for AUC under severe imbalance without
+    threshold calibration — not a model failure in terms of ranking ability.
+
+4.3 BalancedBagging Replication (CV Balanced Accuracy):
+  Classifier    Single  BB      Delta   p(Bonf)   Sig
+  KNN           0.566   0.788   +0.221  0.000427  ***
+  NaiveBayes    0.797   0.809   +0.012  1.000000  n.s.
+  DecisionTree  0.653   0.777   +0.125  0.001282  **
+  RandomForest  0.629   0.814   +0.185  0.000427  ***
+  SVM           0.500   0.793   +0.293  0.000427  ***
+  MLP           0.698   0.832   +0.134  0.000427  ***  ← paper's best (≈0.84)
+  LightGBM      0.692   0.820   +0.128  0.000427  ***
+  6/7 classifiers significant (p<0.01 Bonferroni). NaiveBayes: n.s.
+
+4.4 PR Curves (Average Precision, held-out test):
+  LightGBM+ROS:  AP = 0.704
+  MLP+None:      AP = 0.669
+  SVM+SMOTEENN:  AP = 0.595
+  Baseline (random): AP ≈ 0.116 (class prevalence)
+
+4.5 SHAP Feature Importance (LightGBM+ROS, mean |SHAP| on test set):
+  Rank  Feature                 |SHAP|
+  1     Diagnosis_Delay         0.986  ← dominant by large margin
+  2     Q8_Walking_slope        0.495
+  3     Q4_Handwriting_slope    0.449
+  4     Q1_Speech_slope         0.402
+  5     Age_at_Onset            0.364
+  6     Q10_Respiratory_slope   0.340
+  7     Q9_Climbing_slope       0.302
+  8     Sex_Male                0.298
+  9     FVC_at_Diagnosis        0.260
+  Clinical interpretation: Long Diagnosis_Delay → Standard Survival;
+    Short delay + rapid ALSFRS slopes → Short Survivor risk.
+  Consistent with Papaiz et al. findings and ALS clinical literature.
+
+
+--------------------------------------------------------------------------------
+SECTION 5 — CONFERENCE PAPER (EPIA 2026, Springer LLNCS)
+--------------------------------------------------------------------------------
+
+File: G:\TESE\CodigoMain\replication\overleaf\samplepaper.tex
+Bib:  G:\TESE\CodigoMain\replication\overleaf\bibfile.bib
+
+Title: "Ensemble-Imbalance Machine Learning for ALS Prognosis: A Replication
+        Study Extended with Bayesian Optimisation, LightGBM, and SHAP
+        Interpretability"
+
+Authors: Ivo Camacho (IPSantarém), Pedro Martins (IP Coimbra),
+         Maryam Abbasi (IPSantarém / CIAC-PLDIS)
+
+Paper sections and key content:
+  §1 Intro: ALS background, imbalance problem, reference study gaps, 4 contributions
+  §2 Related Work: ML for ALS, imbalance methods, Bayesian HPO, explainability
+  §3 Methodology: dataset, preprocessing, partitioning, experimental setup
+  §4 Results: CV table, test table, BalancedBagging table, comparison table, SHAP
+  §5 Discussion: replication fidelity, FVC exclusion bias, MLP problem,
+                 LightGBM+Optuna advantages, limitations
+  §6 Conclusion
+
+Figures in paper (8 total):
+  fig:overview   — 3-column visual abstract (Data | Models | Output)
+                   File: ensemble_wrapper.png (externally generated)
+  fig:workflow   — TikZ pipeline flowchart (5 stages, colour-coded, inline LaTeX)
+  fig:cvtest     — CV AUC vs Test AUC bar chart (step6_cv_vs_test.png)
+  fig:decoupling — CV AUC vs Test Sensitivity scatter (fig_auc_sensitivity_decoupling.png)
+  fig:pr         — Precision-Recall curves, 3 models + baseline (fig_pr_curves.png)
+  fig:cm         — Confusion matrices, 3 models (fig_confusion_matrices.png)
+  fig:shap       — TreeSHAP bar+beeswarm LightGBM (step7_lightgbm_fig3_combined.png)
+  fig:featbars   — Diagnosis_Delay + Q8 by survival group (fig_feature_bars.png)
+
+All figure files in: G:\TESE\CodigoMain\replication\overleaf\figures\
+
+Key advisor corrections already implemented:
+  1. Terminology: standardised to "Short Survivors" / "Standard Survival" throughout
+     (clinical context); "minority class" / "majority class" (ML context)
+  2. Resampling timing: bold explicit sentence in §3.4 stating resampling
+     applied only inside training fold, after split, before fitting
+  3. FVC exclusion bias: §5.2 expanded to 3 paragraphs covering: cause of
+     size reduction, directional bias mechanism (sickest patients excluded),
+     and impact on estimate precision (35 Short Survivors → 5.7pp per prediction)
+
+
+--------------------------------------------------------------------------------
+SECTION 6 — WHAT NEEDS TO BE ADDED TO THE MAIN THESIS
+--------------------------------------------------------------------------------
+
+The main thesis project is SEPARATE from this replication project.
+The replication work needs to be incorporated into the thesis as a chapter
+or subsection. Items to integrate:
+
+6.1 A chapter/section on the replication study:
+  - Motivation for replicating Papaiz et al.
+  - Methodology (can reference paper but expand for thesis depth)
+  - All results tables (CV, test, BalancedBagging, Bonferroni)
+  - Discussion of MLP AUC-sensitivity decoupling
+  - Discussion of FVC exclusion bias and dataset constraints
+  - SHAP analysis and feature importance
+  - Comparison table: Papaiz et al. vs this work
+
+6.2 Figures to include in thesis (same as paper or higher resolution):
+  - Pipeline/workflow diagram
+  - CV vs Test AUC comparison
+  - AUC-Sensitivity decoupling plot
+  - Confusion matrices (3 models)
+  - PR curves
+  - SHAP combined (bar + beeswarm)
+  - Feature distribution bars (Diagnosis_Delay + Q8)
+
+6.3 Cross-references to note:
+  - The 23 features are the same as defined in the feature engineering chapter
+  - The PRO-ACT dataset is likely already introduced in the thesis
+  - The exclusion criteria (censoring, FVC, site-of-onset) should match
+    what is described in the main thesis data chapter
+  - SHAP methodology likely already introduced in thesis; reference it here
+
+6.4 Specific thesis writing tasks:
+  - Write replication motivation (why replicate Papaiz et al., what gaps exist)
+  - Write extended methodology (Optuna vs GridSearch, 10 strategies vs BB only)
+  - Present the AUC-sensitivity decoupling as a key finding with clinical framing
+  - Discuss LightGBM advantages (TreeSHAP exact, gradient boosting on imbalanced)
+  - Limitations section (cohort size, FVC missing, internal test only, threshold)
+  - Conclusions for this study component
+
+
+--------------------------------------------------------------------------------
+SECTION 7 — OVERLAP WITH MAIN THESIS (READ BEFORE WRITING)
+--------------------------------------------------------------------------------
+
+The main thesis project covers separate work (a different study/application).
+When integrating the replication into the thesis, avoid duplicating content
+that is ALREADY written in the thesis. Instead, REFERENCE those sections.
+
+SHARED ELEMENTS (already in thesis — do NOT rewrite from scratch):
+  PRO-ACT dataset
+    - The dataset description, access, and general structure are likely already
+      introduced in the thesis data chapter.
+    - In the replication chapter: reference that section, then describe ONLY
+      the specific subset used here (1,502 patients, exclusion criteria, why
+      our cohort differs from Papaiz et al.'s 1,967).
+
+  Optuna (Bayesian HPO)
+    - Optuna/TPE/Bayesian optimisation is likely already explained in the
+      thesis methodology or background chapter.
+    - In the replication chapter: reference that explanation, then describe
+      ONLY the specific configuration used here (50 trials, ROC-AUC objective,
+      per-combination tuning vs grid search in the reference study).
+
+  SHAP (explainability)
+    - SHAP methodology (TreeSHAP, KernelSHAP, beeswarm plots) is likely
+      already introduced in the thesis background/methods chapter.
+    - In the replication chapter: reference that, then focus on the RESULTS
+      and clinical interpretation (Diagnosis_Delay dominance, ALSFRS slopes).
+
+WHAT IS UNIQUE TO THE REPLICATION (write in full, no overlap):
+  - The replication framing itself (why replicate Papaiz et al., what gaps)
+  - The 10 imbalance strategies comparison (the main thesis likely uses a
+    different set or different framing)
+  - The 70 classifier × strategy combinations experimental design
+  - The AUC-Sensitivity decoupling finding (MLP collapse on test set)
+  - The BalancedBagging statistical validation (Wilcoxon + Bonferroni)
+  - The cohort comparison table (our 1,502 vs Papaiz 1,967, and why)
+  - The FVC exclusion bias discussion
+  - All numerical results specific to this study
+
+KEY FRAMING PRINCIPLE:
+  Shared methodology, different application, different purpose.
+  The thesis reader should understand: "we use the same tools (PRO-ACT,
+  Optuna, SHAP) but in a completely different experimental context, with
+  different baselines, different scope, and different research questions."
+
+INSTRUCTION FOR THE AI IN THE NEW CHAT:
+  Before writing any section about PRO-ACT / Optuna / SHAP, ask:
+  "Is this already covered in the thesis? If yes, where? I will reference
+  that section instead of rewriting it."
+
+
+--------------------------------------------------------------------------------
+SECTION 8 — FILE MAP (replication project)
+--------------------------------------------------------------------------------
+
+G:\TESE\CodigoMain\replication\
+  01_data\
+    raw\                      16 PRO-ACT CSV files
+    interim\                  step2/3 intermediate files
+    processed\                step3_final_dataset.csv, step4_train/test.csv
+  02_scripts\
+    step1_data_loading_exploration.py
+    step2_preprocessing.py
+    step3_cleaning_filtering.py
+    step4_train_test_split.py
+    step5_modeling.py         (70 combinations, Optuna, CV)
+    step8_figures_paper.py    (fig:cm + fig:decoupling)
+    step9_figures_paper2.py   (fig:pr + fig:featbars)
+    step10_workflow_figure.py (matplotlib prototype, NOT used in paper)
+  03_outputs\
+    summary_for_advisor.txt   (detailed pipeline steps 1-7c, human-readable)
+    summary_paper_writing.txt (paper writing phase, figures, LaTeX details)
+    context_replication_project.txt  (THIS FILE — AI context/memory)
+    step5\step5_cv_results.csv
+  overleaf\
+    samplepaper.tex           main paper file
+    bibfile.bib
+    figures\                  all 8 paper figures (PNG)
+
+
+--------------------------------------------------------------------------------
+SECTION 9 — QUICK REFERENCE (copy-paste for new chats)
+--------------------------------------------------------------------------------
+
+PROMPT TO START A NEW CHAT:
+"I am working on my master's thesis about ML for ALS prognosis. I have a
+ replication study (Papaiz et al. 2024) that is fully complete, including a
+ conference paper (EPIA 2026). Read the file at:
+ G:\TESE\CodigoMain\replication\03_outputs\context_replication_project.txt
+ This file has full context on everything done in the replication project.
+
+ IMPORTANT: The main thesis already covers PRO-ACT, Optuna, and SHAP in
+ its own chapters. Before writing any content about these topics, check
+ what is already in the thesis and REFERENCE those sections instead of
+ rewriting them. Only write from scratch what is unique to the replication
+ (see Section 7 of the context file for the exact list).
+
+ After reading the context file, tell me what you understood before we start."
+
+KEY NUMBERS TO REMEMBER:
+  Dataset: 1,502 patients, 11.6% Short Survivors, 23 features
+  Best model: LightGBM + ROS → AUC=0.923, Recall=0.857 (30/35 detected)
+  Highest recall: SVM + SMOTEENN → Recall=0.886 (31/35 detected)
+  MLP collapse: AUC=0.918 but Recall=0.029 (1/35 detected)
+  Replication confirmed: MLP+BalancedBagging BalAcc=0.832 ≈ paper's 0.84
+  6/7 classifiers improved significantly by BalancedBagging (Bonferroni p<0.01)
+  Top SHAP feature: Diagnosis_Delay (|SHAP|=0.986, dominant by 2x)
+
+================================================================================
+END OF CONTEXT FILE
+================================================================================

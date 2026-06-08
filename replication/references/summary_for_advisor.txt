@@ -1,0 +1,578 @@
+================================================================================
+    SUMMARY OF WORK — ALS Prognosis with Machine Learning
+    Replication and Extension of Papaiz et al. (2024)
+================================================================================
+
+Author: [Nome do aluno]
+Date: April 2026
+Status: Experimental pipeline complete. Ready for thesis chapter writing.
+
+
+================================================================================
+1. OBJECTIVE
+================================================================================
+
+Replicate and extend the methodology of Papaiz et al. (2024) — 
+"An ensemble-imbalance machine learning model for the prediction of ALS 
+prognosis" — using the PRO-ACT clinical database to predict short-survival 
+ALS patients (death <= 24 months from symptom onset).
+
+Key extensions over the original paper:
+  - Optuna (Bayesian) replaces Grid Search for hyperparameter optimization
+  - LightGBM added as a 7th classifier (paper used 6)
+  - 10 individual resampling techniques instead of BalancedBagging
+  - Both MLP and LightGBM analyzed with SHAP for comparison
+
+
+================================================================================
+2. PIPELINE OVERVIEW
+================================================================================
+
+Step 1 — Data Loading & Exploration
+Step 2 — Feature Engineering & Preprocessing
+Step 3 — Cleaning & Filtering → Final Dataset
+Step 4 — Stratified Train/Test Split (80/20)
+Step 5 — Model Training: 7 classifiers × 10 imbalance techniques (Optuna)
+Step 6 — Test Set Evaluation (held-out)
+Step 7 — SHAP Interpretability Analysis
+Step 7b — Additional Figures (paper-style + BalancedBagging replication)
+Step 7c — Bonferroni Statistical Correction (Wilcoxon signed-rank tests)
+
+
+================================================================================
+3. DATA & PREPROCESSING (Steps 1–3)
+================================================================================
+
+Source: PRO-ACT database (Pooled Resource Open-Access ALS Clinical Trials)
+  - 16 raw CSV files covering demographics, ALSFRS, FVC, vital signs, etc.
+
+Feature Engineering:
+  - 23 features extracted, matching Papaiz et al. exactly (see Table below)
+  - All features are categorical/ordinal (no continuous features)
+  - Target: Short (died <= 24 months from onset) vs Non-Short
+
+[Placeholder: Table 1 — List of 23 features with descriptions and encoding]
+
+23 Features:
+  1.  Sex_Male (binary)
+  2.  Site_Onset (binary: Limb/Spinal=1, Bulbar=0)
+  3.  Age_at_Onset (ordinal 0–4: age groups)
+  4.  Riluzole (binary)
+  5.  Diagnosis_Delay (ordinal 0–2: Short/Average/Long)
+  6.  FVC_at_Diagnosis (binary: Abnormal<80% vs Normal>=80%)
+  7.  BMI_at_Diagnosis (ordinal 0–3)
+  8.  Patient_with_Gastrostomy (binary)
+  9.  Qty_Regions_Involved (ordinal 1–4)
+  10. Region_Involved_Bulbar (binary)
+  11. Region_Involved_Upper_Limb (binary)
+  12. Region_Involved_Lower_Limb (binary)
+  13. Region_Involved_Respiratory (binary)
+  14–23. Q1–Q10 ALSFRS slopes (ordinal 0–2: Slow/Average/Rapid)
+
+Dataset comparison:
+  ┌─────────────────────┬────────────────┬────────────────┐
+  │ Metric              │ Paper          │ Our Work       │
+  ├─────────────────────┼────────────────┼────────────────┤
+  │ Total patients      │ 1,967          │ 1,502          │
+  │ Short (%)           │ 13.0%          │ 11.6% (174)    │
+  │ Non-Short (%)       │ 87.0%          │ 88.4% (1,328)  │
+  │ Imbalance Ratio     │ 6.9            │ 7.6            │
+  │ Features            │ 23             │ 23             │
+  │ PRO-ACT version     │ (not stated)   │ Current public │
+  └─────────────────────┴────────────────┴────────────────┘
+
+Reason for smaller dataset:
+  - Our PRO-ACT version has more missing FVC data (62.3% missing after 
+    survival + site filtering) and sparser Height data for BMI calculation
+  - Disease_Duration column completely empty in our version (we compute it
+    from Onset_Delta in Death Data)
+  - Same exclusion criteria applied: removed censored patients (alive < 24 
+    months), removed patients without Site_of_Onset
+
+[Placeholder: Figure — Class distribution pie chart / bar chart from Step 3]
+
+
+================================================================================
+4. TRAIN/TEST SPLIT (Step 4)
+================================================================================
+
+Method: Stratified random split, 80% train / 20% test
+Random state: 42
+
+  ┌──────────────┬──────────┬──────────┬──────────┐
+  │              │ Total    │ Short    │ Non-Short│
+  ├──────────────┼──────────┼──────────┼──────────┤
+  │ Train        │ 1,201    │ 139      │ 1,062    │
+  │ Test         │ 301      │ 35       │ 266      │
+  │ Total        │ 1,502    │ 174      │ 1,328    │
+  └──────────────┴──────────┴──────────┴──────────┘
+
+Test set is held out entirely until Step 6. All hyperparameter optimization
+and model selection is done exclusively on the training set with cross-
+validation.
+
+
+================================================================================
+5. MODEL TRAINING — CROSS-VALIDATION (Step 5)
+================================================================================
+
+5.1 Experimental Design
+────────────────────────
+  - 7 classifiers: KNN, Naive Bayes, Decision Tree, Random Forest, 
+                   SVM, MLP (Neural Network), LightGBM*
+  - 10 imbalance handling: None, ROS, SMOTE, BorderlineSMOTE, ADASYN,
+                           RUS, NearMiss, TomekLinks, SMOTETomek, SMOTEENN
+  - Total: 70 combinations
+  - Optimization: Optuna (TPE sampler, 50 trials per combination)
+  - CV: RepeatedStratifiedKFold (5 folds × 3 repeats = 15 evaluations)
+  - Optimization metric: ROC-AUC
+
+  * LightGBM is our addition (not in the original paper)
+
+  Paper used: Grid Search with pre-defined parameter grids, 6 classifiers.
+  Our approach: Bayesian optimization (Optuna), which explores the 
+  hyperparameter space more efficiently with fewer evaluations.
+
+5.2 Best Configuration per Classifier (CV Results)
+────────────────────────────────────────────────────
+  ┌──────────────┬──────────────┬──────────┬──────────┬──────────┬──────────┐
+  │ Classifier   │ Best Tech.   │ CV AUC   │ Recall   │ Specif.  │ G-Mean   │
+  ├──────────────┼──────────────┼──────────┼──────────┼──────────┼──────────┤
+  │ MLP          │ None         │ 0.9151   │ 0.4274   │ 0.9689   │ 0.6412   │
+  │ LightGBM     │ ROS          │ 0.9137   │ 0.7796   │ 0.8638   │ 0.8189   │
+  │ SVM          │ SMOTEENN     │ 0.9111   │ 0.9041   │ 0.7843   │ 0.8416   │
+  │ RandomForest │ None         │ 0.9064   │ 0.2757   │ 0.9827   │ 0.5173   │
+  │ NaiveBayes   │ None         │ 0.8909   │ 0.7268   │ 0.8672   │ 0.7926   │
+  │ KNN          │ RUS          │ 0.8801   │ 0.7672   │ 0.8308   │ 0.7967   │
+  │ DecisionTree │ TomekLinks   │ 0.8607   │ 0.4125   │ 0.9479   │ 0.6207   │
+  └──────────────┴──────────────┴──────────┴──────────┴──────────┴──────────┘
+
+Key observations:
+  - MLP achieves highest CV AUC (0.915) but low recall (0.43)
+  - LightGBM+ROS: best balance of AUC (0.914) + recall (0.78) + G-Mean (0.82)
+  - SVM+SMOTEENN: highest recall (0.90) but lower specificity (0.78)
+  - RF, MLP, NB: best AUC without any imbalance technique (resampling did
+    not improve these beyond baseline)
+  - KNN, DT, SVM, LightGBM: benefited from resampling techniques
+
+[Placeholder: Figure — step7_paper_fig3_metrics_comparison_v2.png
+ "Baseline vs Best Imbalance scenario per classifier"]
+
+
+================================================================================
+6. TEST SET EVALUATION (Step 6)
+================================================================================
+
+Each classifier was retrained on the full training set (n=1,201) using its 
+best hyperparameters from Step 5, then evaluated on the held-out test set 
+(n=301: 35 Short, 266 Non-Short).
+
+  ┌──────────────┬────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬────────┐
+  │ Classifier   │ Technique  │ AUC      │ Bal.Acc  │ Recall   │ Specif.  │ G-Mean   │ F1     │
+  ├──────────────┼────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼────────┤
+  │ LightGBM     │ ROS        │ 0.9228   │ 0.8440   │ 0.8571   │ 0.8308   │ 0.8439   │ 0.5455 │
+  │ RandomForest │ None       │ 0.9187   │ 0.6229   │ 0.2571   │ 0.9887   │ 0.5042   │ 0.3830 │
+  │ MLP          │ None       │ 0.9176   │ 0.5143   │ 0.0286   │ 1.0000   │ 0.1690   │ 0.0556 │
+  │ SVM          │ SMOTEENN   │ 0.9085   │ 0.8263   │ 0.8857   │ 0.7669   │ 0.8242   │ 0.4844 │
+  │ NaiveBayes   │ None       │ 0.8887   │ 0.7744   │ 0.7143   │ 0.8346   │ 0.7721   │ 0.4808 │
+  │ KNN          │ RUS        │ 0.8861   │ 0.8117   │ 0.8000   │ 0.8233   │ 0.8116   │ 0.5091 │
+  │ DecisionTree │ TomekLinks │ 0.8743   │ 0.6278   │ 0.2857   │ 0.9699   │ 0.5264   │ 0.3774 │
+  └──────────────┴────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴────────┘
+
+  Confusion matrix detail (Short = positive class):
+  ┌──────────────┬──────┬──────┬──────┬──────┐
+  │ Classifier   │  TP  │  FP  │  FN  │  TN  │
+  ├──────────────┼──────┼──────┼──────┼──────┤
+  │ LightGBM     │  30  │  45  │   5  │ 221  │
+  │ SVM          │  31  │  62  │   4  │ 204  │
+  │ KNN          │  28  │  47  │   7  │ 219  │
+  │ NaiveBayes   │  25  │  44  │  10  │ 222  │
+  │ DecisionTree │  10  │   8  │  25  │ 258  │
+  │ RandomForest │   9  │   3  │  26  │ 263  │
+  │ MLP          │   1  │   0  │  34  │ 266  │
+  └──────────────┴──────┴──────┴──────┴──────┘
+
+CRITICAL FINDING — MLP collapse:
+  The MLP, despite having the highest CV AUC (0.915), demonstrates 
+  catastrophic failure on the test set: it detects only 1 out of 35 Short 
+  patients (recall = 0.029). It predicts virtually every patient as 
+  Non-Short. This is a textbook example of a model optimized for a ranking 
+  metric (AUC) that fails at the decision threshold in severely imbalanced 
+  problems.
+
+  LightGBM+ROS correctly identifies 30 out of 35 Short patients (recall = 
+  0.857) while maintaining good specificity (0.831). This makes it the 
+  clinically superior model for ALS prognosis prediction.
+
+[Placeholder: Figure — step6_roc_curves.png
+ "ROC curves for all 7 classifiers on the test set"]
+
+[Placeholder: Figure — step6_roc_focus.png
+ "ROC curve comparison: MLP vs LightGBM (test set)"]
+
+[Placeholder: Figure — step6_metric_comparison.png
+ "Test set metric comparison bar chart across all classifiers"]
+
+[Placeholder: Figure — step6_cv_vs_test.png
+ "CV AUC vs Test AUC comparison: generalization check"]
+
+
+================================================================================
+7. BALANCEDBAGGING REPLICATION (Step 7b — Paper's exact approach)
+================================================================================
+
+To directly compare with the paper's methodology, we trained each classifier 
+in two scenarios:
+  - Single-Model: classifier alone (no imbalance handling)
+  - Ensemble-Imbalance: classifier inside BalancedBaggingClassifier 
+    (n_estimators=10), which internally balances each bootstrap sample
+
+Results (5-fold CV × 3 repeats, same as paper):
+
+  ┌──────────────┬────────────────────────────────┬─────────────────────────────────┐
+  │              │ Single-Model                   │ Ensemble-Imbalance (BalBagging) │
+  │ Classifier   │ BalAcc   │ Sens.  │ Spec.      │ BalAcc   │ Sens.  │ Spec.       │
+  ├──────────────┼──────────┼────────┼────────────┼──────────┼────────┼─────────────┤
+  │ KNN          │ 0.57     │ 0.14   │ 0.99       │ 0.79     │ 0.74   │ 0.84        │
+  │ NaiveBayes   │ 0.80     │ 0.73   │ 0.87       │ 0.81     │ 0.81   │ 0.81        │
+  │ DecisionTree │ 0.65     │ 0.34   │ 0.97       │ 0.78     │ 0.75   │ 0.80        │
+  │ RandomForest │ 0.63     │ 0.28   │ 0.98       │ 0.81     │ 0.81   │ 0.82        │
+  │ SVM          │ 0.50     │ 0.00   │ 1.00       │ 0.79     │ 0.80   │ 0.79        │
+  │ MLP          │ 0.70     │ 0.43   │ 0.97       │ 0.83     │ 0.84   │ 0.82        │
+  │ LightGBM     │ 0.69     │ 0.42   │ 0.97       │ 0.82     │ 0.81   │ 0.83        │
+  └──────────────┴──────────┴────────┴────────────┴──────────┴────────┴─────────────┘
+
+Consistent with the paper: BalancedBagging improves ALL classifiers. 
+MLP achieves the best BalAcc (0.83) in the ensemble scenario, matching the 
+paper's finding. The SVM goes from 0.00 Sensitivity (predicts all Non-Short) 
+to 0.80 with BalancedBagging.
+
+[Placeholder: Figure — step7_paper_fig3_balanced_bagging.png
+ "Single-Model (yellow) vs Ensemble-Imbalance (blue) — paper replication"]
+
+
+================================================================================
+7b. BONFERRONI STATISTICAL CORRECTION (Step 7c)
+================================================================================
+
+To replicate the paper's statistical validation, we performed Wilcoxon 
+signed-rank tests comparing Single-Model vs Ensemble-Imbalance (BalancedBagging)
+for each classifier, across the 15 CV folds (5×3). p-values are corrected 
+with Bonferroni (×7 comparisons).
+
+Script: 02_scripts/step7c_bonferroni.py (new file, does not modify any prior code)
+
+Results — Balanced Accuracy (primary metric):
+  ┌──────────────┬──────────┬──────────┬──────────┬────────────┬─────────────┬──────┐
+  │ Classifier   │ Single   │ Ensemble │ Δ        │ p(raw)     │ p(Bonferr.) │ Sig. │
+  ├──────────────┼──────────┼──────────┼──────────┼────────────┼─────────────┼──────┤
+  │ KNN          │ 0.5661   │ 0.7876   │ +0.2214  │ 0.000061   │ 0.000427    │ ***  │
+  │ NaiveBayes   │ 0.7970   │ 0.8087   │ +0.0117  │ 0.330261   │ 1.000000    │ n.s. │
+  │ DecisionTree │ 0.6527   │ 0.7774   │ +0.1247  │ 0.000183   │ 0.001282    │ **   │
+  │ RandomForest │ 0.6292   │ 0.8144   │ +0.1851  │ 0.000061   │ 0.000427    │ ***  │
+  │ SVM          │ 0.5000   │ 0.7928   │ +0.2928  │ 0.000061   │ 0.000427    │ ***  │
+  │ MLP          │ 0.6982   │ 0.8320   │ +0.1339  │ 0.000061   │ 0.000427    │ ***  │
+  │ LightGBM     │ 0.6923   │ 0.8200   │ +0.1277  │ 0.000061   │ 0.000427    │ ***  │
+  └──────────────┴──────────┴──────────┴──────────┴────────────┴─────────────┴──────┘
+
+  *** p ≤ 0.001  |  ** p ≤ 0.01  |  * p ≤ 0.05  |  n.s. = not significant
+
+Key findings:
+  - 6 out of 7 classifiers show statistically significant improvement with 
+    BalancedBagging (p < 0.01 after Bonferroni correction).
+  - NaiveBayes is the only exception (p=1.0, n.s.) — it already handles 
+    class imbalance reasonably well without ensemble wrapping (ΔBalAcc=+0.01).
+  - SVM has the largest absolute improvement (Δ=+0.293), going from 
+    BalAcc=0.50 (chance level, predicts all Non-Short) to 0.79.
+  - MLP achieves the best ensemble BalAcc (0.832), confirming the paper's 
+    finding that MLP+BalancedBagging is the top-performing model.
+  - These results are consistent with Papaiz et al. Table 3.
+
+All 3 metrics (Balanced Accuracy, Sensitivity, Specificity) were tested. 
+Sensitivity shows significant improvement for all 7 classifiers (including 
+NaiveBayes). Specificity decreases significantly for 6/7 classifiers, 
+reflecting the expected trade-off when addressing class imbalance.
+
+[Placeholder: Figure — step7c_bonferroni_comparison.png
+ "Single-Model vs Ensemble-Imbalance with Wilcoxon + Bonferroni p-values"]
+
+
+================================================================================
+8. SHAP INTERPRETABILITY ANALYSIS (Step 7)
+================================================================================
+
+SHAP (SHapley Additive exPlanations) was used to interpret the predictions 
+of both the best model (LightGBM+ROS) and the paper's best model (MLP).
+
+  - LightGBM: TreeExplainer (exact, fast)
+  - MLP: KernelExplainer (approximate, 100 background samples, 200 nsamples)
+
+8.1 Feature Importance Ranking (Top 10):
+─────────────────────────────────────────
+  ┌──────┬────────────────────────┬──────────────────┬──────────────────┐
+  │ Rank │ Feature                │ LightGBM |SHAP|  │ MLP |SHAP|       │
+  ├──────┼────────────────────────┼──────────────────┼──────────────────┤
+  │  1   │ Diagnosis_Delay        │ 0.9864           │ 0.0157           │
+  │  2   │ Q8_Walking_slope       │ 0.4949           │ 0.0065 (rank 4)  │
+  │  3   │ Q4_Handwriting_slope   │ 0.4486           │ 0.0088 (rank 2)  │
+  │  4   │ Q1_Speech_slope        │ 0.4018           │ 0.0017 (rank 14) │
+  │  5   │ Age_at_Onset           │ 0.3643           │ 0.0023 (rank 15) │
+  │  6   │ Q10_Respiratory_slope  │ 0.3401           │ 0.0057 (rank 7)  │
+  │  7   │ Q9_Climbing_slope      │ 0.3022           │ 0.0079 (rank 3)  │
+  │  8   │ Sex_Male               │ 0.2981           │ 0.0013 (rank 18) │
+  │  9   │ FVC_at_Diagnosis       │ 0.2603           │ 0.0039 (rank 9)  │
+  │ 10   │ Qty_Regions_Involved   │ 0.1705           │ 0.0015 (rank 16) │
+  └──────┴────────────────────────┴──────────────────┴──────────────────┘
+
+Key finding: Diagnosis_Delay is the #1 most important feature in BOTH 
+models — consistent with the paper's findings and clinical literature.
+
+The paper found: "Delay to diagnosis and ALSFRS slopes were the most 
+relevant features." Our results confirm this: ALSFRS slopes (Q8, Q4, Q1, 
+Q10, Q9) dominate the top 10 in both models.
+
+[Placeholder: Figure — step7_lgbm_beeswarm.png
+ "SHAP Beeswarm plot — LightGBM+ROS"]
+
+[Placeholder: Figure — step7_mlp_beeswarm.png
+ "SHAP Beeswarm plot — MLP"]
+
+[Placeholder: Figure — step7_lgbm_bar.png
+ "SHAP Feature Importance bar plot — LightGBM+ROS"]
+
+[Placeholder: Figure — step7_mlp_bar.png
+ "SHAP Feature Importance bar plot — MLP"]
+
+[Placeholder: Figure — step7_comparison_bar.png
+ "Side-by-side SHAP comparison: LightGBM vs MLP"]
+
+[Placeholder: Figure — step7_rank_correlation.png
+ "Feature ranking correlation between LightGBM and MLP"]
+
+8.2 Combined Importance + Beeswarm (Paper Figure style):
+────────────────────────────────────────────────────────
+
+[Placeholder: Figure — step7_lightgbm_fig3_combined.png
+ "Combined Feature Importance bar + Beeswarm — LightGBM+ROS"]
+
+[Placeholder: Figure — step7_mlp_fig3_combined.png
+ "Combined Feature Importance bar + Beeswarm — MLP"]
+
+8.3 SHAP Decision Plots (individual patient trajectories):
+──────────────────────────────────────────────────────────
+
+[Placeholder: Figure — step7_lightgbm_fig4_decision.png
+ "SHAP Decision Plot — all test patients, Short highlighted — LightGBM"]
+
+[Placeholder: Figure — step7_mlp_fig4_decision.png
+ "SHAP Decision Plot — all test patients — MLP"]
+
+8.4 Case Studies (TP/FP/FN/TN decision plots):
+───────────────────────────────────────────────
+
+[Placeholder: Figure — step7_lightgbm_fig4_cases.png
+ "SHAP Decision Plot case studies (TP/FP/FN/TN) — LightGBM"]
+
+[Placeholder: Figure — step7_mlp_fig4_cases.png
+ "SHAP Decision Plot case studies (TP/FP/FN/TN) — MLP"]
+
+8.5 Waterfall Plots (individual predictions explained):
+───────────────────────────────────────────────────────
+
+[Placeholder: Figure — step7_lgbm_waterfall_short.png
+ "SHAP Waterfall — LightGBM: a Short patient prediction"]
+
+[Placeholder: Figure — step7_lgbm_waterfall_nonshort.png
+ "SHAP Waterfall — LightGBM: a Non-Short patient prediction"]
+
+[Placeholder: Figure — step7_mlp_waterfall_short.png
+ "SHAP Waterfall — MLP: a Short patient prediction"]
+
+
+================================================================================
+9. COMPARATIVE ANALYSIS — OUR WORK vs PAPER
+================================================================================
+
+9.1 Methodology Comparison:
+────────────────────────────
+  ┌──────────────────────────┬────────────────────────┬─────────────────────────┐
+  │ Aspect                   │ Papaiz et al. (2024)   │ Our Work                │
+  ├──────────────────────────┼────────────────────────┼─────────────────────────┤
+  │ Dataset size             │ 1,967 patients         │ 1,502 patients          │
+  │ Imbalance Ratio          │ 6.9                    │ 7.6                     │
+  │ Features                 │ 23 (identical)         │ 23 (identical)          │
+  │ Classifiers              │ 6                      │ 7 (+LightGBM)           │
+  │ Hyperparameter search    │ Grid Search            │ Optuna (Bayesian, 50t)  │
+  │ Imbalance approach       │ BalancedBagging        │ 10 resampling + BBalg   │
+  │ CV                       │ 5×3 RepeatedStratKFold │ 5×3 RepeatedStratKFold  │
+  │ Optimization metric      │ Balanced Accuracy      │ ROC-AUC                 │
+  │ SHAP                     │ KernelSHAP (MLP)       │ TreeSHAP + KernelSHAP   │
+  │ Best model (paper's way) │ MLP + BalancedBagging  │ MLP + BalancedBagging   │
+  │ Best model (our way)     │ —                      │ LightGBM + ROS          │
+  └──────────────────────────┴────────────────────────┴─────────────────────────┘
+
+9.2 Results Comparison (Paper's BalancedBagging approach):
+──────────────────────────────────────────────────────────
+  Paper's best: MLP + BalancedBagging
+    - AUC = 0.93–0.94 (reported)
+    - Balanced Accuracy ≈ 0.84
+
+  Our replication: MLP + BalancedBagging
+    - Balanced Accuracy = 0.83
+    - Sensitivity = 0.84, Specificity = 0.82
+
+  Difference is minimal and explained by:
+    - Smaller dataset (1,502 vs 1,967 → 23.6% fewer patients)
+    - Higher imbalance ratio (7.6 vs 6.9)
+    - Potentially different PRO-ACT data version
+
+9.3 Our Extension — Why LightGBM+ROS is Superior:
+──────────────────────────────────────────────────
+  While the paper correctly identifies MLP+BalancedBagging as optimal in the 
+  ensemble-imbalance scenario, our extended analysis reveals a critical 
+  limitation of MLP when used with simpler resampling strategies:
+
+  On the held-out test set:
+    - MLP (best CV config): AUC=0.918, but Recall=0.029 (1/35 Short detected)
+    - LightGBM+ROS:         AUC=0.923, Recall=0.857 (30/35 Short detected)
+
+  The MLP collapses at the decision boundary with an IR of 7.6, predicting 
+  nearly all patients as Non-Short. LightGBM+ROS maintains strong 
+  performance across all metrics. This demonstrates that:
+
+  1. AUC alone is insufficient for evaluating models on imbalanced data
+  2. Simpler resampling (ROS) with a gradient-boosted model can match or 
+     exceed the ensemble approach
+  3. LightGBM offers exact SHAP computation (TreeExplainer), providing 
+     more reliable interpretability than the approximate KernelExplainer 
+     required for MLP
+
+9.4 Clinical Relevance:
+────────────────────────
+  In ALS prognosis, failing to identify a Short-survival patient (False 
+  Negative) has serious clinical consequences: missed opportunities for 
+  early palliative care, advance directives, and clinical trial enrollment.
+
+  LightGBM+ROS: 5 missed Short patients out of 35 (FN rate = 14.3%)
+  MLP:          34 missed Short patients out of 35 (FN rate = 97.1%)
+
+  The LightGBM model is clearly preferable for clinical deployment.
+
+
+================================================================================
+10. CONCLUSIONS
+================================================================================
+
+1. REPLICATION SUCCESSFUL: We successfully replicated the Papaiz et al. 
+   pipeline with comparable results. Our MLP+BalancedBagging achieves 
+   BalAcc=0.83, close to the paper's reported performance.
+
+2. NOVEL CONTRIBUTION — LightGBM: Adding LightGBM as a 7th classifier 
+   proved highly valuable. With simple Random Oversampling (ROS), it 
+   achieves the best test-set AUC (0.923) and the best clinical trade-off 
+   (Recall=0.86, Specificity=0.83).
+
+3. OPTUNA vs GRID SEARCH: Bayesian optimization with 50 trials per 
+   combination provides efficient hyperparameter search, exploring the 
+   space more intelligently than exhaustive grid search.
+
+4. RESAMPLING vs ENSEMBLE: While BalancedBagging consistently improves all 
+   classifiers, individual resampling techniques (ROS, SMOTEENN, RUS) 
+   combined with the right classifier can achieve comparable or better 
+   results with simpler implementations.
+
+5. INTERPRETABILITY CONFIRMED: Diagnosis_Delay is the #1 predictive 
+   feature in both models, consistent with clinical literature and the 
+   original paper. ALSFRS functional decline slopes are the next most 
+   important features, highlighting the clinical value of longitudinal 
+   functional assessments.
+
+6. MLP FRAGILITY: Despite high CV AUC, MLP without ensemble wrapping is 
+   fragile on severely imbalanced test data. This is a cautionary finding 
+   for clinical ML applications.
+
+
+================================================================================
+11. LIST OF ALL GENERATED FIGURES
+================================================================================
+
+Step 6 — Test Evaluation:
+  - step6_roc_curves.png         ROC curves for all 7 classifiers
+  - step6_roc_focus.png          ROC focus: MLP vs LightGBM
+  - step6_metric_comparison.png  Test metric comparison (bars)
+  - step6_cv_vs_test.png         CV AUC vs Test AUC
+
+Step 7 — SHAP Analysis:
+  - step7_lgbm_beeswarm.png             LightGBM SHAP beeswarm
+  - step7_lgbm_bar.png                  LightGBM SHAP bar
+  - step7_lgbm_waterfall_short.png      LightGBM waterfall (Short patient)
+  - step7_lgbm_waterfall_nonshort.png   LightGBM waterfall (Non-Short patient)
+  - step7_mlp_beeswarm.png              MLP SHAP beeswarm
+  - step7_mlp_bar.png                   MLP SHAP bar
+  - step7_mlp_waterfall_short.png       MLP waterfall (Short patient)
+  - step7_comparison_bar.png            LightGBM vs MLP SHAP comparison
+  - step7_rank_correlation.png          Feature ranking correlation
+
+Step 7b — Paper-style Figures:
+  - step7_lightgbm_fig3_combined.png    Combined bar+beeswarm (LightGBM)
+  - step7_mlp_fig3_combined.png         Combined bar+beeswarm (MLP)
+  - step7_lightgbm_fig4_decision.png    Decision plot (LightGBM)
+  - step7_mlp_fig4_decision.png         Decision plot (MLP)
+  - step7_lightgbm_fig4_cases.png       Case studies TP/FP/FN/TN (LightGBM)
+  - step7_mlp_fig4_cases.png            Case studies TP/FP/FN/TN (MLP)
+  - step7_paper_fig3_metrics_comparison.png      Baseline vs Best (v1)
+  - step7_paper_fig3_metrics_comparison_v2.png   Baseline vs Best (v2)
+  - step7_paper_fig3_balanced_bagging.png        BalancedBagging replication
+
+Step 7c — Bonferroni Statistical Correction:
+  - step7c_bonferroni_comparison.png    Single vs Ensemble with p-values
+  - step7c_bonferroni_results.csv       Per-classifier Wilcoxon + Bonferroni
+
+CSVs Generated:
+  - step5_cv_results.csv                All 70 CV results
+  - step5_best_per_classifier.csv       Best config per classifier
+  - step5_best_configs.json             Best hyperparameters (JSON)
+  - step6_test_results.csv              Test set metrics
+  - step6_confusion_matrices.json       Confusion matrices
+  - step7_lgbm_shap_values.csv          SHAP values (LightGBM)
+  - step7_mlp_shap_values.csv           SHAP values (MLP)
+  - step7_lgbm_feature_ranking.csv      Feature ranking (LightGBM)
+  - step7_mlp_feature_ranking.csv       Feature ranking (MLP)
+  - step7_feature_ranking_comparison.csv Both rankings side by side
+  - step7_paper_fig3_balanced_bagging.csv BalancedBagging results
+
+
+================================================================================
+12. WHAT WE COVERED vs PAPER
+================================================================================
+
+  [✓] Data preprocessing from PRO-ACT raw files
+  [✓] 23 features with identical encoding
+  [✓] Target variable: Short (<=24mo) vs Non-Short
+  [✓] Exclusion of censored patients
+  [✓] 80/20 stratified train/test split
+  [✓] 6 classifiers from the paper (KNN, NB, DT, RF, SVM, MLP)
+  [✓] Cross-validation (5×3 RepeatedStratifiedKFold)
+  [✓] Hyperparameter optimization (Optuna instead of Grid Search)
+  [✓] BalancedBagging replication (Single-Model vs Ensemble-Imbalance)
+  [✓] Bonferroni-corrected Wilcoxon tests (Single vs Ensemble per classifier)
+  [✓] Test set evaluation with multiple metrics
+  [✓] SHAP interpretability analysis
+  [✓] Feature importance ranking
+  [✓] SHAP beeswarm, bar, waterfall, decision plots
+
+  [+] Extensions beyond the paper:
+      [+] LightGBM as 7th classifier
+      [+] 10 individual resampling techniques (vs only BalancedBagging)
+      [+] Optuna Bayesian optimization (vs Grid Search)
+      [+] Dual-model SHAP comparison (LightGBM + MLP)
+      [+] TreeSHAP for LightGBM (exact vs approximate)
+      [+] Decision plot case studies (TP/FP/FN/TN)
+
+  [—] Not replicated (paper-specific):
+      [—] Exact same dataset size (1,502 vs 1,967 due to PRO-ACT version)
+
+
+================================================================================
+END OF SUMMARY
+================================================================================

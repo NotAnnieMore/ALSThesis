@@ -1,0 +1,407 @@
+================================================================================
+    SUMMARY — PAPER WRITING PHASE (EPIA 2026 Conference)
+    Continuation of: summary_for_advisor.txt
+================================================================================
+
+Author: Ivo Camacho
+Date: May 2026
+Context: This file covers everything done AFTER the experimental pipeline
+         was complete (Steps 1–7c). It covers the conference paper write-up,
+         additional figures, advisor feedback integration, and LaTeX work.
+         Read summary_for_advisor.txt first for the experimental context.
+
+Target venue: EPIA 2026 (Portuguese Conference on Artificial Intelligence)
+Format: Springer LLNCS (Lecture Notes in Computer Science)
+File: overleaf/samplepaper.tex
+
+
+================================================================================
+1. PAPER STRUCTURE
+================================================================================
+
+The paper was adapted from DATA 2026 (SCITEPRESS) to LLNCS format.
+Final section structure:
+
+  §1  Introduction
+        - ALS background, clinical motivation
+        - Class imbalance problem
+        - Reference study (Papaiz et al. 2024) and its gaps
+        - Our 4 contributions (numbered list)
+        - Forward reference to fig:overview (visual abstract)
+
+  §2  Related Work
+        §2.1 Machine Learning for ALS Prognosis
+        §2.2 Imbalance-Aware Learning and Ensemble Methods
+        §2.3 Bayesian Hyperparameter Optimisation
+        §2.4 Explainability in Clinical ML
+
+  §3  Methodology
+        - Forward reference to fig:workflow at section start
+        §3.1 Dataset Overview (Table: dataset comparison with reference study)
+        §3.2 Data Preprocessing
+        §3.3 Data Partitioning
+        §3.4 Experimental Setup
+              ¶ Classifiers (7: KNN, NB, DT, RF, SVM, MLP, LightGBM)
+              ¶ Imbalance-handling strategies (10, applied IN-FOLD)
+              ¶ Hyperparameter optimisation (Optuna, 50 trials, ROC-AUC)
+              ¶ Cross-validation (5×3 RepeatedStratifiedKFold)
+              ¶ BalancedBagging replication
+              ¶ Statistical validation (Wilcoxon + Bonferroni)
+              ¶ SHAP interpretability
+              ¶ Evaluation metrics
+        - fig:workflow (TikZ pipeline diagram) at end of §3
+
+  §4  Results
+        §4.1 Cross-Validation Performance (Table: best config per classifier)
+        §4.2 Held-Out Test Set Evaluation (Table: test metrics)
+              - fig:cvtest + fig:decoupling (stacked, 1 float)
+              - fig:pr (precision-recall curves)
+              - fig:cm (confusion matrices)
+        §4.3 BalancedBagging Replication and Statistical Validation
+              (Table: Wilcoxon + Bonferroni per classifier)
+        §4.4 Comparison with the Reference Study (Table: methodology comparison)
+        §4.5 Feature Importance via SHAP
+              - fig:shap (TreeSHAP combined bar+beeswarm)
+              - fig:featbars (Diagnosis_Delay + Q8_Walking_slope by group)
+
+  §5  Discussion
+        §5.1 Replication Fidelity
+        §5.2 Dataset Constraints and Potential Exclusion Bias (FVC missingness)
+        §5.3 The MLP Generalisation Problem (AUC–sensitivity decoupling)
+        §5.4 Advantages of LightGBM and Bayesian Optimisation
+        §5.5 Limitations
+
+  §6  Conclusion
+
+
+================================================================================
+2. FIGURES GENERATED FOR THE PAPER
+================================================================================
+
+All figures saved to: overleaf/figures/
+Scripts:
+  - 02_scripts/step8_figures_paper.py    (confusion matrices + decoupling)
+  - 02_scripts/step9_figures_paper2.py   (PR curves + feature bars)
+  - 02_scripts/step10_workflow_figure.py (matplotlib prototype, rejected)
+
+2.1 fig:overview — "ensemble_wrapper.png"
+─────────────────────────────────────────
+  Type: 3-column visual abstract / infographic (generated externally/manually)
+  Content:
+    Left:   Data — PRO-ACT, 1,502 patients, 23 features, 11.6%/88.4% split
+    Centre: Models & Innovation — pipeline with resampling → classifiers →
+            Optuna; Innovations = Optuna + LightGBM + 10-strategy comparison;
+            Validation = 5×3 CV, 70 combos, ROC-AUC
+    Right:  Output — LightGBM+ROS (AUC 0.923, Recall 0.857, 30/35 detected),
+            SHAP interpretation, MLP+BalancedBagging replication result
+  Location in paper: End of §1 Introduction (before Related Work)
+  Label: fig:overview
+
+2.2 fig:workflow — TikZ diagram (inline LaTeX)
+───────────────────────────────────────────────
+  Type: Vertical flowchart built entirely in TikZ (no external image file)
+  Content (top to bottom):
+    [BLUE]   PRO-ACT Database (2,147 raw patients, 16 clinical tables)
+    [RED]    Feature Engineering → Filtering & Exclusions → Train/Test Split
+    [GREEN]  CV Loop (dashed border): Resampling → Classifiers → Optuna
+    [YELLOW] Held-Out Test Evaluation → SHAP Interpretability
+    [MAGENTA] Outputs
+  Implementation notes:
+    - Uses sbox parameterised style (same pattern as thesis main document)
+    - CV dashed border drawn via \draw rectangle coordinates (NOT fit node)
+    - cvlabel node has same minimum width as other boxes → symmetric bounding box
+    - TikZ libraries used: arrows.meta, positioning
+    - fit and backgrounds libraries removed (were causing off-centre rendering)
+  Location in paper: End of §3 Methodology (before §4 Results)
+  Label: fig:workflow
+
+2.3 fig:cvtest — "step6_cv_vs_test.png"
+────────────────────────────────────────
+  Type: Bar chart (CV AUC vs Test AUC, all 7 classifiers)
+  Key message: MLP ranks 1st in CV AUC but collapses on test set
+  Location: §4.2, stacked float with fig:decoupling
+
+2.4 fig:decoupling — "fig_auc_sensitivity_decoupling.png"
+──────────────────────────────────────────────────────────
+  Type: Scatter/bar comparing CV AUC vs Test Sensitivity per classifier
+  Key message: AUC–sensitivity decoupling under severe class imbalance
+  Generated by: step8_figures_paper.py
+  Location: §4.2, stacked float with fig:cvtest (both in one figure{}block)
+
+2.5 fig:pr — "fig_pr_curves.png"
+─────────────────────────────────
+  Type: Precision-Recall curves for 3 highlighted classifiers + baseline
+  Models: LightGBM+ROS (AP=0.704), MLP+None (AP=0.669), SVM+SMOTEENN (AP=0.595)
+  Baseline: dashed at prevalence ≈ 0.116
+  Key message: MLP's minority-class probabilities fall below decision threshold
+  Generated by: step9_figures_paper2.py
+  Location: §4.2 after the stacked float, with \clearpage before it
+
+2.6 fig:cm — "fig_confusion_matrices.png"
+──────────────────────────────────────────
+  Type: 3-panel confusion matrix grid (LightGBM+ROS, SVM+SMOTEENN, MLP+None)
+  Key message: MLP classifies 34/35 Short Survivors as Standard Survival (FN=34)
+  Generated by: step8_figures_paper.py
+  Location: §4.2 after fig:pr
+
+2.7 fig:shap — "step7_lightgbm_fig3_combined.png"
+──────────────────────────────────────────────────
+  Type: Combined bar chart + beeswarm (LightGBM TreeSHAP, held-out test set)
+  Key features: Diagnosis_Delay (#1), then ALSFRS slopes Q8/Q4/Q1/Q10
+  Source: Generated during Step 7 (pre-existing figure reused in paper)
+  Location: §4.4 (now §4.5) Feature Importance via SHAP
+
+2.8 fig:featbars — "fig_feature_bars.png"
+──────────────────────────────────────────
+  Type: Side-by-side horizontal bar charts (% by survival group)
+  Features shown: Diagnosis_Delay + Q8_Walking_slope
+  Groups: Short Survivors (minority) vs Standard Survival (majority)
+  Generated by: step9_figures_paper2.py
+  Location: §4.4 end, after KernelSHAP paragraph
+
+
+================================================================================
+3. FIGURE ORDER IN PAPER (final, resolved)
+================================================================================
+
+  Figure 1  — fig:overview   (Introduction, visual abstract)
+  Figure 2  — fig:workflow   (Methodology, TikZ inline)
+  Figure 3  — fig:cvtest     (Results §4.2, stacked with fig:decoupling)
+  Figure 4  — fig:decoupling (Results §4.2, stacked with fig:cvtest)
+  Figure 5  — fig:pr         (Results §4.2, after stacked block)
+  Figure 6  — fig:cm         (Results §4.2, after fig:pr)
+  Figure 7  — fig:shap       (Results §4.4/§4.5, SHAP section)
+  Figure 8  — fig:featbars   (Results §4.4/§4.5, end of SHAP section)
+
+Float placement solved with:
+  - \usepackage[section]{placeins}  — prevents floats from crossing sections
+  - \clearpage before fig:pr        — flushes stacked float before new figures
+  - [ht!] on most figures
+  - fig:cvtest + fig:decoupling in one \begin{figure}...\end{figure} block
+
+
+================================================================================
+4. TABLES IN PAPER
+================================================================================
+
+  tab:dataset     — Dataset size comparison (this work vs Papaiz et al.)
+  tab:cv          — Best CV results per classifier (AUC, Recall, Spec, G-Mean)
+  tab:test        — Held-out test results per classifier (all metrics)
+  tab:bonferroni  — Single-Model vs BalancedBagging, Wilcoxon+Bonferroni
+  tab:comparison  — Methodology comparison table (paper vs this work)
+
+
+================================================================================
+5. KEY RESULTS (for quick reference in new chats)
+================================================================================
+
+5.1 Cross-Validation (best config per classifier):
+  MLP           None       AUC=0.915  Recall=0.427  Spec=0.969  GMean=0.641
+  LightGBM      ROS        AUC=0.914  Recall=0.780  Spec=0.864  GMean=0.819
+  SVM           SMOTEENN   AUC=0.911  Recall=0.904  Spec=0.784  GMean=0.842
+  Random Forest None       AUC=0.906  Recall=0.276  Spec=0.983  GMean=0.517
+  Naïve Bayes   None       AUC=0.891  Recall=0.727  Spec=0.867  GMean=0.793
+  KNN           RUS        AUC=0.880  Recall=0.767  Spec=0.831  GMean=0.797
+  Decision Tree TomekLinks AUC=0.861  Recall=0.413  Spec=0.948  GMean=0.621
+
+5.2 Held-Out Test Set (n=301: 35 Short, 266 Standard Survival):
+  LightGBM      ROS        AUC=0.923  BalAcc=0.844  Recall=0.857  Spec=0.831
+  Random Forest None       AUC=0.919  BalAcc=0.623  Recall=0.257  Spec=0.989
+  MLP           None       AUC=0.918  BalAcc=0.514  Recall=0.029  Spec=1.000  ← COLLAPSE
+  SVM           SMOTEENN   AUC=0.909  BalAcc=0.826  Recall=0.886  Spec=0.767
+  Naïve Bayes   None       AUC=0.889  BalAcc=0.774  Recall=0.714  Spec=0.835
+  KNN           RUS        AUC=0.886  BalAcc=0.812  Recall=0.800  Spec=0.823
+  Decision Tree TomekLinks AUC=0.874  BalAcc=0.628  Recall=0.286  Spec=0.970
+
+5.3 BalancedBagging Replication (CV Balanced Accuracy):
+  KNN           Single=0.566  BB=0.788  Δ=+0.221  p<0.001 ***
+  Naïve Bayes   Single=0.797  BB=0.809  Δ=+0.012  p=1.000 n.s.
+  Decision Tree Single=0.653  BB=0.777  Δ=+0.125  p=0.001 **
+  Random Forest Single=0.629  BB=0.814  Δ=+0.185  p<0.001 ***
+  SVM           Single=0.500  BB=0.793  Δ=+0.293  p<0.001 ***
+  MLP           Single=0.698  BB=0.832  Δ=+0.134  p<0.001 ***  ← paper's best
+  LightGBM      Single=0.692  BB=0.820  Δ=+0.128  p<0.001 ***
+
+5.4 SHAP Top Features (LightGBM+ROS, mean |SHAP|):
+  1. Diagnosis_Delay        0.986  (★ dominant by large margin)
+  2. Q8_Walking_slope       0.495
+  3. Q4_Handwriting_slope   0.449
+  4. Q1_Speech_slope        0.402
+  5. Age_at_Onset           0.364
+  6. Q10_Respiratory_slope  0.340
+  9. FVC_at_Diagnosis       0.260
+
+5.5 PR Curves (Average Precision on held-out test):
+  LightGBM+ROS:   AP = 0.704
+  MLP+None:        AP = 0.669
+  SVM+SMOTEENN:    AP = 0.595
+  Random baseline: AP ≈ 0.116 (class prevalence)
+
+
+================================================================================
+6. ADVISOR FEEDBACK — CHANGES MADE
+================================================================================
+
+The advisor (Maryam Abbasi) reviewed the paper and required the following,
+all of which have been implemented in samplepaper.tex:
+
+6.1 Terminology standardisation
+────────────────────────────────
+  Problem: Multiple inconsistent terms for the two patient groups.
+  Solution: Standardised throughout the manuscript:
+    - Clinical context  → "Short Survivors" / "Standard Survival"
+    - ML/technical context → "minority class" / "majority class"
+    - Both terms defined formally in §3.1 (Dataset Overview):
+      "patients who died within 24 months... are termed Short Survivors;
+       those who died after 24 months... are termed Standard Survival patients.
+       In machine learning terms, Short Survivors constitute the minority class
+       and Standard Survival patients the majority class."
+  Removed: "short-survival patients", "short-survival class", "non-short",
+           "Non-Short", "non-short survival"
+
+6.2 Resampling timing — explicit statement (§3.4)
+──────────────────────────────────────────────────
+  Problem: Resampling application timing was mentioned too briefly/implicitly.
+  Solution: Bold dedicated sentence added to ¶Imbalance-handling strategies:
+    "Critically, all resampling operations were applied exclusively to the
+     training fold of each cross-validation iteration, after the fold split
+     and before classifier fitting; the validation fold and the held-out test
+     set were never touched by any resampling procedure."
+  This makes the leakage-free protocol unambiguous for reviewers.
+
+6.3 FVC exclusion bias — expanded Discussion (§5.2)
+─────────────────────────────────────────────────────
+  Problem: Paragraph existed but was not explicit enough about:
+    (a) WHY the exclusion likely creates directional bias
+    (b) HOW the smaller dataset degrades variance/precision of estimates
+  Solution: §5.2 entirely rewritten and expanded to 3 paragraphs:
+    Para 1: States the size reduction and its cause (FVC missingness 62.3%)
+    Para 2: Mechanism of directional bias — patients with rapid respiratory
+            decline are MORE likely to be Short Survivors AND MORE likely to
+            have no FVC record. Therefore excluding them may shift the cohort
+            towards milder cases, making the classification task easier and
+            reported metrics potentially optimistic.
+    Para 3: Variance/precision impact — with 35 Short Survivors in test set,
+            2 predictions = 5.7 pp shift in sensitivity. Differences between
+            models should be interpreted cautiously; confidence intervals would
+            be wide. Recommends imputation or more complete extract for future.
+
+
+================================================================================
+7. TECHNICAL NOTES — LaTeX / OVERLEAF
+================================================================================
+
+7.1 Packages used
+──────────────────
+  \usepackage[T1]{fontenc}
+  \usepackage{graphicx}
+  \usepackage{booktabs}
+  \usepackage{amsmath}
+  \usepackage{amssymb}
+  \usepackage{hyperref}            (colorlinks=true, blue)
+  \usepackage[section]{placeins}   (prevents floats crossing section breaks)
+  \usepackage{tikz}
+  \usetikzlibrary{arrows.meta, positioning}
+
+7.2 TikZ rendering issue (resolved)
+─────────────────────────────────────
+  Problem: Figure rendered off-centre to the right.
+  Root cause: The \node[..., fit={...}, label={...}] approach caused TikZ to
+              extend the bounding box asymmetrically (label text outside box).
+  Solution: Abandoned fit node entirely. Instead:
+    1. Created dedicated \node (cvlabel) with minimum width = full box width
+       for the CV loop title text, positioned between split and resamp nodes.
+    2. Dashed CV border drawn with \draw rectangle using explicit coordinates:
+         \draw[...] ([shift={...}]cvlabel.north west)
+                    rectangle
+                    ([shift={...}]s7.south east);
+    3. This mirrors the working pattern from the thesis main document.
+  Also removed: fit, backgrounds from \usetikzlibrary (not needed).
+
+7.3 Bibliography
+──────────────────
+  File: overleaf/bibfile.bib
+  Style: splncs04 (Springer LLNCS)
+  All citations verified present: Papaiz2024, Papaiz2022, PROACT, Feldman2022,
+    Miller2012, Grollemund2019, kueffner2019, Pancotti2022, Qin2025,
+    Ramamoorthy2022, Halbersberg2023, Anani2023, Wang2025, chawla2002smote,
+    lemaitre2017, optuna2019, ke2017lightgbm, lundberg2017shap,
+    lundberg2020treeshap, cedarbaum1999alsfrs, wilcoxon1945
+
+7.4 Pending (before final submission)
+───────────────────────────────────────
+  [ ] Confirm Pedro Martins ORCID (currently placeholder 0000-0000-0000-0000)
+  [ ] Confirm Pedro Martins email (currently jleite@iscac.pt — may be wrong)
+  [ ] Page count check vs EPIA limit (paper has 8 figures — verify limit)
+  [ ] Final proofread pass
+  [ ] Check \inst{2} affiliation for Pedro Martins (Polytechnic of Coimbra?)
+
+
+================================================================================
+8. WHY THIS STUDY — MOTIVATION SUMMARY
+================================================================================
+
+For a new chat context — this explains the purpose quickly:
+
+BACKGROUND:
+  Papaiz et al. (2024) published a study evaluating 6 ML classifiers wrapped
+  in BalancedBagging for predicting ALS Short Survivors using PRO-ACT data.
+  They used 23 ordinal/categorical features derived at diagnosis, GridSearch
+  for hyperparameter tuning, and reported results via cross-validation only.
+  Best: MLP+BalancedBagging (BalAcc ≈ 0.84).
+
+OUR STUDY DOES:
+  1. REPLICATES the above — confirms with Bonferroni-corrected Wilcoxon tests
+     that BalancedBagging improves 6/7 classifiers (p < 0.01).
+  2. EXTENDS with:
+     - LightGBM (7th classifier) → best test AUC=0.923, Recall=0.857
+     - Optuna Bayesian HPO (50 trials) → replaces GridSearch
+     - 10 individual resampling strategies → broader comparison
+     - Held-out test set → exposes MLP AUC–sensitivity decoupling
+     - Dual SHAP (TreeSHAP for LightGBM + KernelSHAP for MLP)
+
+KEY FINDING:
+  MLP has highest CV AUC (0.915) but detects only 1/35 Short Survivors on
+  the held-out test (Recall=0.029). This is NOT a model failure per se —
+  the test AUC is still 0.918 — but a threshold mismatch under severe
+  imbalance. AUC measures ranking ability, not minority-class detection at
+  the default 0.5 threshold. LightGBM+ROS avoids this: Recall=0.857.
+
+CLINICAL RELEVANCE:
+  Missing a Short Survivor (False Negative) means missing the window for
+  palliative care, advance directives, and clinical trial prioritisation.
+  LightGBM+ROS misses 5/35 (14.3%) vs MLP missing 34/35 (97.1%).
+
+
+================================================================================
+9. FILE MAP
+================================================================================
+
+  overleaf/
+    samplepaper.tex          — Main EPIA paper (LLNCS format)
+    bibfile.bib              — All references
+    llncs.cls                — LLNCS document class
+    splncs04.bst             — LLNCS bibliography style
+    figures/
+      ensemble_wrapper.png   — fig:overview (visual abstract, 3-column)
+      fig_workflow.png       — prototype (NOT used; TikZ is inline in .tex)
+      step6_cv_vs_test.png   — fig:cvtest
+      fig_auc_sensitivity_decoupling.png — fig:decoupling
+      fig_pr_curves.png      — fig:pr
+      fig_confusion_matrices.png — fig:cm
+      step7_lightgbm_fig3_combined.png — fig:shap
+      fig_feature_bars.png   — fig:featbars
+
+  02_scripts/
+    step8_figures_paper.py   — generates fig:cm + fig:decoupling
+    step9_figures_paper2.py  — generates fig:pr + fig:featbars
+    step10_workflow_figure.py — matplotlib prototype (NOT used in paper)
+
+  03_outputs/
+    summary_for_advisor.txt  — Experimental pipeline (Steps 1–7c)
+    summary_paper_writing.txt — THIS FILE (paper writing phase)
+
+
+================================================================================
+END
+================================================================================

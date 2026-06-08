@@ -1,0 +1,10 @@
+,0
+total_patients,1502
+train_size,1201
+test_size,301
+train_short,139
+train_nonshort,1062
+test_short,35
+test_nonshort,266
+n_features,23
+random_state,42

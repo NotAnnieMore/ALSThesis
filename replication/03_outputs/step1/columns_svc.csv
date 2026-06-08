@@ -1,0 +1,11 @@
+column,dtype,non_null,null_count,null_pct,n_unique
+subject_id,int64,21115,0,0.0,4294
+Subject_Liters_Trial_1,float64,21108,7,0.0,612
+pct_of_Normal_Trial_1,float64,15477,5638,26.7,1024
+Subject_Liters__Trial_2_,float64,9249,11866,56.2,562
+pct_of_Normal_Trial_2,float64,6568,14547,68.9,1004
+Subject_Liters__Trial_3_,float64,9185,11930,56.5,565
+pct_of_Normal_Trial_3,float64,6544,14571,69.0,998
+Subject_Normal,float64,7298,13817,65.4,400
+Slow_vital_Capacity_Delta,float64,16416,4699,22.3,552
+Slow_Vital_Capacity_Units,str,11590,9525,45.1,2

@@ -1,0 +1,17 @@
+column,dtype,non_null,null_count,null_pct,n_unique
+subject_id,int64,13765,0,0.0,11100
+Site_of_Onset___Bulbar,float64,1713,12052,87.6,2
+Site_of_Onset___Limb,float64,3929,9836,71.5,2
+Site_of_Onset___Limb_and_Bulbar,float64,275,13490,98.0,2
+Site_of_Onset___Other,float64,74,13691,99.5,2
+Site_of_Onset___Other_Specify,str,9,13756,99.9,2
+Site_of_Onset___Spine,float64,397,13368,97.1,1
+Subject_ALS_History_Delta,float64,9923,3842,27.9,22
+Disease_Duration,float64,0,13765,100.0,0
+Symptom,str,2656,11109,80.7,10
+Symptom_Other_Specify,str,50,13715,99.6,35
+Location,str,3259,10506,76.3,811
+Location_Other_Specify,float64,0,13765,100.0,0
+Site_of_Onset,str,5533,8232,59.8,5
+Onset_Delta,float64,9021,4744,34.5,1631
+Diagnosis_Delta,float64,6154,7611,55.3,1048

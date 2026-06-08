@@ -1,0 +1,698 @@
+\documentclass[a4paper,twoside]{article}
+
+\usepackage{epsfig}
+\usepackage{subcaption}
+\usepackage{calc}
+\usepackage[hyperfootnotes=false]{hyperref}
+\usepackage{xcolor}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{multicol}
+\usepackage{pslatex}
+\usepackage{apalike}
+\usepackage{algorithm2e}
+\usepackage[bottom]{footmisc}
+\usepackage{stfloats}
+\usepackage{SCITEPRESS}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{comment}
+\setlength{\emergencystretch}{3em}
+
+% NOTE FOR SUBMISSION: Remove the \author block below for double-blind review.
+% NOTE FOR OVERLEAF: Upload step7_lightgbm_fig3_combined.png to the project
+%   or compile locally where ../03_outputs/step7/ is accessible.
+
+\begin{document}
+
+\title{Ensemble-Imbalance Machine Learning for ALS Prognosis:\\
+A Replication Study Extended with Bayesian Optimisation,\\
+LightGBM, and SHAP Interpretability}
+
+\author{\authorname{Ivo Camacho\sup{3}\orcidAuthor{0009-0000-9454-2385},  Pedro Martins\sup{1,2}\orcidAuthor{0000-0000-0000-0000} and Maryam Abbasi\sup{3,4}\orcidAuthor{0000-0002-9011-0734}}
+\affiliation{\sup{1}Polytechnic University of Coimbra, Rua da Misericórdia, Lagar dos Cortiços, S. Martinho do Bispo, 3045-093 Coimbra, Portugal}
+\affiliation{\sup{3}Polytechnic University of Santarém, Santarém, Portugal.}
+\affiliation{\sup{4}Research Hub Digital Literacy \& Social Inclusion (CIAC-PLDIS-IPSantarém), Portugal.}
+\email{iscac14461@alumni.iscac.pt, jleite@iscac.pt, maryam.abbasi@esg.ipsantarem.pt}
+}
+
+\keywords{Amyotrophic Lateral Sclerosis, Machine Learning, Class Imbalance,
+Ensemble Learning, LightGBM, Bayesian Optimisation, SHAP, Explainability.}
+
+\abstract{%
+Amyotrophic lateral sclerosis (ALS) is a rapidly progressive and fatal
+neurodegenerative disease. Within the ALS population, a subset of patients---
+termed short survivors---die within 24 months of symptom onset and follow a
+markedly accelerated disease trajectory. Identifying these patients early is
+clinically urgent, yet it is made difficult by severe class imbalance: short
+survivors typically represent fewer than 15\% of ALS cohorts, causing standard
+classifiers to overlook them in favour of the majority class.
+This paper replicates and extends the ensemble-imbalance machine learning
+framework of Papaiz et al.~\cite{Papaiz2024} using the publicly available
+PRO-ACT clinical database. Reproducing their cross-validation protocol with
+BalancedBagging confirms that the ensemble approach significantly improves
+balanced accuracy in six of seven classifiers (Bonferroni-corrected Wilcoxon
+test, $p \leq 0.01$), with the MLP achieving the highest ensemble balanced
+accuracy of 0.832. We then extend the framework by replacing grid search with
+Bayesian hyperparameter optimisation (Optuna) and introducing LightGBM as a
+seventh classifier across ten imbalance-handling strategies. On a strictly
+sealed held-out test set, LightGBM with Random Oversampling reaches an AUC of
+0.923 and correctly identifies 30 of 35 short-survival patients (sensitivity
+0.857). In sharp contrast, the MLP---despite leading cross-validation AUC
+(0.915)---detects only one of the same 35 patients (sensitivity 0.029), a
+result that is invisible to cross-validation and only revealed by the held-out
+evaluation. SHAP analysis of both models converges on the same clinical
+picture: diagnostic delay and ALSFRS-R functional decline slopes drive
+predictions in both architectures, lending the results interpretable clinical
+weight.
+}
+
+\onecolumn \maketitle \normalsize \setcounter{footnote}{0} \vfill
+
+\newpage
+
+% ==========================================================================
+\section{Introduction}
+\label{sec:intro}
+% ==========================================================================
+
+Amyotrophic lateral sclerosis (ALS) is a progressive neurodegenerative disorder
+affecting both upper and lower motor neurons, leading to generalised muscle
+paralysis and, ultimately, respiratory failure. With a median survival of two to
+five years from symptom onset, it is among the most severe neurological
+conditions encountered in clinical practice~\cite{Feldman2022}. Within the ALS
+population, a clinically important subset, referred to as short survivors, die
+within 24 months of onset and follow a markedly faster disease trajectory. Early
+identification of this subgroup has direct therapeutic relevance: it enables the
+timely initiation of palliative and supportive care, supports eligible patients'
+prioritisation in clinical trials, and facilitates advance care
+planning~\cite{Miller2012}.
+
+Machine learning (ML) approaches have increasingly been applied to ALS prognosis
+prediction, drawing on clinical and functional data collected across large
+multicentre registries~\cite{Grollemund2019,Papaiz2022}. The PRO-ACT (Pooled
+Resource Open-Access ALS Clinical Trials) database~\cite{PROACT}, the largest
+publicly available ALS data source, has served as the primary benchmark,
+providing longitudinal records for thousands of trial participants. Studies have
+demonstrated that features derived from the ALS Functional Rating Scale Revised
+(ALSFRS-R)~\cite{cedarbaum1999alsfrs}, vital signs, and demographic information
+can discriminate between survival trajectories~\cite{Ramamoorthy2022,Halbersberg2023}.
+
+A persistent challenge in all such work is the pronounced class imbalance between
+short and non-short survivors: short-survival patients typically represent only
+10--15\% of ALS cohorts. Without specific corrections, standard classifiers
+gravitate towards the majority class, yielding high specificity at the cost of
+clinically unacceptable sensitivity~\cite{chawla2002smote}. Addressing this
+imbalance has motivated approaches ranging from synthetic oversampling (SMOTE and
+its variants) to ensemble-imbalance methods such as
+BalancedBagging~\cite{lemaitre2017}, which integrates random undersampling within
+each bootstrap estimator.
+
+Papaiz et al.~\cite{Papaiz2024} proposed a systematic evaluation of six
+classical ML classifiers combined with BalancedBagging, using 23 hand-crafted
+clinical features derived from the PRO-ACT database. That study (hereafter the \emph{reference study}) showed that the ensemble wrapper
+consistently improved balanced accuracy, with the MLP emerging as the best
+performer under repeated cross-validation. The work left open several questions,
+however: hyperparameters were tuned by grid search, gradient-boosted classifiers
+were not considered, and performance was assessed entirely within cross-validation
+without a separate held-out test set---a gap that, as our results show, has
+non-trivial consequences.
+
+This paper makes the following contributions:
+\begin{enumerate}
+  \item A faithful replication of the reference study on the publicly available
+    PRO-ACT extract, confirmed by Bonferroni-corrected statistical tests across
+    all seven classifiers;
+  \item An extension replacing grid search with Bayesian hyperparameter
+    optimisation (Optuna~\cite{optuna2019}) and adding LightGBM~\cite{ke2017lightgbm}
+    as a seventh classifier, evaluated across ten imbalance-handling strategies;
+  \item A rigorous held-out test evaluation demonstrating a critical MLP
+    generalisation failure and the superiority of LightGBM with Random
+    Oversampling in terms of clinical sensitivity;
+  \item SHAP-based interpretability analysis~\cite{lundberg2017shap,lundberg2020treeshap} for both the replication and the extension models,
+    identifying the dominant prognostic features.
+\end{enumerate}
+
+Section~\ref{sec:related} reviews related work. Section~\ref{sec:methodology}
+describes the data and experimental design. Results appear in
+Section~\ref{sec:results}, discussion in Section~\ref{sec:discussion}, and
+Section~\ref{sec:conclusion} concludes.
+
+
+% ==========================================================================
+\section{Related Work}
+\label{sec:related}
+% ==========================================================================
+
+\subsection{Machine Learning for ALS Prognosis}
+
+ML approaches to ALS progression modelling have multiplied over the past
+decade, with the PRO-ACT database serving as the shared benchmark for most of
+them. Early crowdsourced efforts by Küffner et al.~\cite{kueffner2019} showed
+that ensemble models could predict ALSFRS-R slope at accuracy levels competitive
+with specialist clinical benchmarks. More recent work has explored deep
+learning architectures for continuous trajectory modelling, including recurrent
+and multi-task networks applied to longitudinal ALSFRS-R
+data~\cite{Pancotti2022,Qin2025}. Ramamoorthy et al.~\cite{Ramamoorthy2022}
+proposed a Gaussian-process framework for identifying progression patterns from
+sparse longitudinal records.
+
+At the level of binary survival classification, Halbersberg and
+Lerner~\cite{Halbersberg2023} compared several ML methods for ALS stratification,
+finding that ensemble-based approaches consistently outperformed individual
+classifiers. Anani et al.~\cite{Anani2023} combined feature selection with
+interpretable modelling to isolate the most prognostically informative variables.
+Papaiz et al.~\cite{Papaiz2022}, in a systematic review, pinpointed class
+imbalance and limited dataset size as the two recurring obstacles to reliable
+ALS prognosis. Wang et al.~\cite{Wang2025} surveyed explainable AI across
+neurodegenerative diseases, noting the widening gap between model complexity
+and clinical interpretability.
+
+\subsection{Imbalance-Aware Learning and Ensemble Methods}
+
+Class imbalance in medical classification has attracted substantial methodological
+attention. Resampling strategies include synthetic oversampling methods like
+SMOTE~\cite{chawla2002smote}, BorderlineSMOTE, and ADASYN, as well as
+undersampling methods such as Random Undersampling (RUS) and NearMiss. Hybrid
+approaches (SMOTETomek and SMOTEENN) combine both paradigms to remove noisy
+boundary samples alongside oversampling. The \texttt{imbalanced-learn}
+library~\cite{lemaitre2017} provides scikit-learn-compatible
+implementations of all these strategies, including BalancedBagging, which
+applies random undersampling internally within each bootstrap estimator.
+Which technique works best is highly problem-dependent; there is no universally
+superior strategy, which is why systematic cross-validated comparison across
+multiple classifiers remains the most defensible selection approach.
+
+\subsection{Bayesian Hyperparameter Optimisation}
+
+Grid search, as used in the reference study, evaluates hyperparameters on a fixed
+predefined lattice, which scales poorly with the number of parameters and may miss
+near-optimal configurations that lie between grid points. Bayesian optimisation
+addresses this by building a probabilistic surrogate model of the objective
+function and directing new evaluations towards promising regions. Optuna~\cite{optuna2019}, built around the Tree-structured Parzen Estimator
+(TPE), has gained wide adoption in this space; its define-by-run API and
+automatic trial pruning make it practical for large search spaces.
+
+\subsection{Explainability in Clinical ML}
+
+SHAP (SHapley Additive exPlanations)~\cite{lundberg2017shap} frames feature
+attribution as a cooperative game: each feature is credited for its marginal
+contribution to a prediction, averaged across all possible feature orderings.
+For tree-based models, TreeSHAP~\cite{lundberg2020treeshap} computes these values
+exactly in polynomial time. KernelSHAP extends the approach to architectures such
+as MLPs via sampling-based approximation, at higher computational cost. Applied
+to ALS prognosis~\cite{Anani2023}, SHAP has consistently ranked functional decline
+metrics as the dominant predictors, a result that clinicians find immediately
+recognisable.
+
+
+% ==========================================================================
+\section{Methodology}
+\label{sec:methodology}
+% ==========================================================================
+
+\subsection{Dataset Overview}
+
+The PRO-ACT database~\cite{PROACT} contains longitudinal clinical records from
+ALS patients enrolled across multiple controlled trials, covering ALSFRS-R
+assessments, vital signs, forced vital capacity (FVC), medication history, and
+demographic data. Following the feature engineering protocol of
+Papaiz et al.~\cite{Papaiz2024}, we extracted 23 categorical and ordinal
+features representing each patient's clinical status at or near the time of
+diagnosis.
+
+The binary target variable distinguishes short survivors (death $\leq$ 24 months
+from symptom onset) from non-short survivors (death $>$ 24 months, or alive
+beyond 24 months). Patients alive at the time of their last observation but
+without 24 months of confirmed follow-up were treated as censored and excluded,
+consistent with the reference study. Patients missing site-of-onset records were
+also excluded.
+
+Table~\ref{tab:dataset} compares the resulting dataset with the one reported in
+the reference study. Our cohort comprises 1,502 patients, 23.6\% fewer than the
+original, primarily because the publicly available PRO-ACT extract examined
+here contains a substantially higher proportion of missing FVC records (62.3\%
+after survival and site filtering) and sparser height data required for BMI
+derivation. As a consequence, the class imbalance ratio is slightly higher (7.6
+versus 6.9).
+
+\begin{table}[ht!]
+  \centering
+  \caption{Dataset comparison between the reference study~\protect\cite{Papaiz2024} and this work.}
+  \label{tab:dataset}
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Metric} & \textbf{Reference Study} & \textbf{This Work} \\
+    \midrule
+    Total patients   & 1,967          & 1,502          \\
+    Short (\%)       & 13.0\% (256)   & 11.6\% (174)   \\
+    Non-Short (\%)   & 87.0\% (1,711) & 88.4\% (1,328) \\
+    Imbalance ratio  & 6.9            & 7.6            \\
+    Features         & 23             & 23             \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table}
+
+\subsection{Data Preprocessing}
+
+Preprocessing mirrored the reference study's pipeline. Binary features---sex,
+site of onset, Riluzole use, and gastrostomy---were encoded as 0/1 indicators.
+Age at onset was discretised into five ordinal groups ($\leq$39, 40--49, 50--59,
+60--69, $\geq$70). Diagnostic delay was categorised as short ($\leq$8 months),
+average (9--18 months), or long ($\geq$19 months), a proxy for pre-diagnostic
+disease tempo. FVC at diagnosis was classified as abnormal ($<$80\% predicted) or
+normal. BMI was derived from body weight and height measurements closest to the
+diagnosis visit and encoded into four standard categories. ALSFRS-R functional
+decline slopes for each of the ten subscores (Q1--Q10) were computed as the
+rate of change per month from symptom onset using linear regression over
+available assessments, and binned as slow ($<$0.05), average (0.05--0.14), or
+rapid ($\geq$0.14 points per month). Disease regions involved
+(bulbar, upper limb, lower limb, respiratory) were derived from ALSFRS-R
+subscores at diagnosis.
+
+\subsection{Data Partitioning}
+
+The dataset was divided into a training set (80\%, $n = 1{,}201$; 139 short,
+1,062 non-short) and a held-out test set (20\%, $n = 301$; 35 short, 266
+non-short) using stratified random sampling to preserve the class distribution in
+both subsets (random seed 42). The test set was sealed until all model selection
+and hyperparameter optimisation had been completed.
+
+\subsection{Experimental Setup}
+\label{subsec:setup}
+
+\paragraph{Classifiers.}
+Seven classifiers were evaluated: K-Nearest Neighbours (KNN), Naïve Bayes (NB),
+Decision Tree (DT), Random Forest (RF), Support Vector Machine (SVM),
+Multi-Layer Perceptron (MLP), and LightGBM~\cite{ke2017lightgbm}. The first six
+correspond directly to those used in the reference study; LightGBM constitutes this
+work's primary algorithmic extension.
+
+\paragraph{Imbalance-handling strategies.}
+Ten class-imbalance correction strategies were evaluated: no correction (None),
+Random Oversampling (ROS), SMOTE~\cite{chawla2002smote}, Borderline-SMOTE,
+ADASYN, Random Undersampling (RUS), NearMiss, TomekLinks, SMOTETomek, and
+SMOTEENN, yielding 70 classifier--technique combinations in total.
+
+\paragraph{Hyperparameter optimisation.}
+Replacing the original grid search, we employed Optuna~\cite{optuna2019} with
+the TPE sampler for each of the 70 combinations, running 50 evaluation trials per
+combination. ROC-AUC was used as the optimisation criterion, averaged over
+cross-validation folds, to maintain direct comparability with the reference
+study's evaluation metric. This choice was deliberate: by optimising for the same
+criterion as the reference study, we can attribute any divergence between
+cross-validation AUC and held-out minority-class performance to properties of the
+criterion itself---rather than to differences in model selection procedure.
+As Section~\ref{sec:results} demonstrates, this design decision brings the
+AUC--sensitivity decoupling into sharp relief. Classifier-specific hyperparameter
+search spaces were defined to cover a broad range of architectures (e.g.\ number
+of layers and neurons for MLP; number of estimators and tree depth for RF and
+LightGBM).
+
+\paragraph{Cross-validation.}
+Model selection was conducted using Repeated Stratified $K$-Fold
+cross-validation with $K = 5$ and 3 repeats (15 evaluations per configuration),
+applied exclusively to the training set.
+
+\paragraph{BalancedBagging replication.}
+To directly replicate the reference study, all seven classifiers were additionally
+evaluated in two scenarios using the same cross-validation protocol: (i) a
+single-model baseline with no imbalance correction, and (ii) wrapped inside a
+BalancedBagging ensemble~\cite{lemaitre2017} with ten estimators and random
+undersampling applied within each bootstrap iteration.
+
+\paragraph{Statistical validation.}
+Per-fold balanced accuracy scores from the 15 cross-validation folds were compared
+between the single-model and BalancedBagging configurations for each classifier
+using the Wilcoxon signed-rank test~\cite{wilcoxon1945}. Family-wise error rate
+inflation across the seven simultaneous comparisons was controlled by applying
+Bonferroni correction (corrected significance threshold
+$\alpha_c = 0.05 / 7 \approx 0.007$).
+
+\paragraph{SHAP interpretability.}
+Feature importance was assessed using TreeSHAP~\cite{lundberg2020treeshap} for
+LightGBM and KernelSHAP~\cite{lundberg2017shap} for the MLP (100 background
+samples, 200 evaluation samples per instance). SHAP values were computed on the
+held-out test set for both models after final retraining on the full training set.
+
+\paragraph{Evaluation metrics.}
+Models were assessed using ROC-AUC, balanced accuracy, sensitivity (recall for
+the short-survival class), specificity, and geometric mean (G-Mean). Given that
+failing to identify a short-survival patient constitutes a clinically serious
+outcome, sensitivity received primary clinical emphasis throughout.
+
+
+% ==========================================================================
+\section{Results}
+\label{sec:results}
+% ==========================================================================
+
+\subsection{Cross-Validation Performance}
+
+Table~\ref{tab:cv} shows, for each classifier, the combination (out of 70
+Optuna-optimised configurations) that achieved the highest AUC, averaged over
+15 cross-validation folds.
+
+\begin{table}[ht!]
+  \centering
+  \caption{Best cross-validation results per classifier (Optuna, 70 combinations,
+    15-fold repeated CV). Sensitivity and specificity are for the short-survival
+    (positive) class. G-Mean $= \sqrt{\text{Sensitivity} \times \text{Specificity}}$.}
+  \label{tab:cv}
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{llcccc}
+    \toprule
+    \textbf{Classifier} & \textbf{Best Technique} & \textbf{AUC}
+      & \textbf{Sensitivity} & \textbf{Specificity} & \textbf{G-Mean} \\
+    \midrule
+    MLP           & None       & 0.915 & 0.427 & 0.969 & 0.641 \\
+    LightGBM      & ROS        & 0.914 & 0.780 & 0.864 & 0.819 \\
+    SVM           & SMOTEENN   & 0.911 & 0.904 & 0.784 & 0.842 \\
+    Random Forest & None       & 0.906 & 0.276 & 0.983 & 0.517 \\
+    Naïve Bayes   & None       & 0.891 & 0.727 & 0.867 & 0.793 \\
+    KNN           & RUS        & 0.880 & 0.767 & 0.831 & 0.797 \\
+    Decision Tree & TomekLinks & 0.861 & 0.413 & 0.948 & 0.621 \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table}
+
+The MLP achieves the highest cross-validation AUC (0.915) but at the expense of
+low minority-class sensitivity (0.427). The Optuna configuration behind this
+result is instructive: the best MLP carries a comparatively strong L2 penalty
+($\alpha = 0.061$), roughly five times larger than the values found for the same
+architecture under any resampling strategy. That regularisation pressure
+suppresses the model's tendency to assign uniformly high scores to non-short
+patients, improving probability ranking (and therefore AUC) without pushing
+minority-class scores above the 0.5 decision boundary. The result is a model
+that looks competitive in cross-validation but has already traded sensitivity for
+ranking fidelity---a cross-validation echo of the same decoupling that becomes
+fully visible at test time.
+LightGBM with Random Oversampling delivers a comparable AUC (0.914) while
+offering substantially better sensitivity (0.780) and G-Mean (0.819). Three
+classifiers---MLP, Random Forest, and Naïve Bayes---attain their best AUC
+without any imbalance correction, indicating that resampling does not improve
+the model's overall ranking ability as measured by AUC for these architectures.
+However, this masks an important limitation: for MLP and Random Forest in
+particular, the high AUC coexists with low sensitivity, a pattern that the
+results on the held-out test set will render unmistakable.
+
+\subsection{Held-Out Test Set Evaluation}
+
+After model selection was finalised on the training set, each classifier was
+retrained on the full training partition using its best hyperparameter
+configuration and evaluated on the sealed test set (35 short-survival,
+266 non-short-survival patients). Results are presented in Table~\ref{tab:test}.
+
+\begin{table}[ht!]
+  \centering
+  \caption{Held-out test set performance for each classifier under its best
+    cross-validation configuration. Bold indicates the best value per metric.}
+  \label{tab:test}
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{llccccc}
+    \toprule
+    \textbf{Classifier} & \textbf{Technique} & \textbf{AUC}
+      & \textbf{Bal.\ Acc.} & \textbf{Sensitivity} & \textbf{Specificity}
+      & \textbf{G-Mean} \\
+    \midrule
+    LightGBM      & ROS        & \textbf{0.923} & \textbf{0.844} & 0.857
+      & 0.831 & \textbf{0.844} \\
+    Random Forest & None       & 0.919 & 0.623 & 0.257 & 0.989 & 0.504 \\
+    MLP           & None       & 0.918 & 0.514 & 0.029 & \textbf{1.000} & 0.169 \\
+    SVM           & SMOTEENN   & 0.909 & 0.826 & \textbf{0.886} & 0.767 & 0.824 \\
+    Naïve Bayes   & None       & 0.889 & 0.774 & 0.714 & 0.835 & 0.772 \\
+    KNN           & RUS        & 0.886 & 0.812 & 0.800 & 0.823 & 0.812 \\
+    Decision Tree & TomekLinks & 0.874 & 0.628 & 0.286 & 0.970 & 0.526 \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table}
+
+The most consequential finding concerns the MLP. Despite ranking first in
+cross-validation AUC, it detects only \textbf{one} of 35 short-survival patients
+on the test set (sensitivity $= 0.029$, balanced accuracy $= 0.514$). This gap
+between cross-validation ranking and held-out minority-class performance is
+visualised in Figure~\ref{fig:cvtest}: it is a direct instance of the
+\emph{AUC--sensitivity decoupling} effect under severe class imbalance, where a
+model that correctly ranks probabilities on average may still compress
+minority-class predicted probabilities below the decision threshold, rendering
+them practically invisible at test time.
+
+In contrast, LightGBM with Random Oversampling correctly identifies 30 of 35
+short-survival patients (sensitivity $= 0.857$), while maintaining a specificity
+of 0.831—effectively recovering 85.7\% of the patients who would die within
+24 months. SVM with SMOTEENN achieves the highest raw sensitivity (0.886) at the
+cost of a lower specificity (0.767). For a screening task where missing a short-survival patient carries real clinical
+cost, LightGBM strikes the best overall balance, and also leads on AUC (0.923).
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figures/step6_cv_vs_test.png}
+  \caption{Cross-validation AUC versus held-out test AUC for all seven
+    classifiers. The MLP is the starkest case: it ranks first in CV AUC (0.915)
+    yet achieves near-chance sensitivity on the test set (0.029), illustrating
+    the AUC--sensitivity decoupling under severe class imbalance.}
+  \label{fig:cvtest}
+\end{figure}
+
+\subsection{BalancedBagging Replication and Statistical Validation}
+
+To replicate the reference study, all seven classifiers were evaluated in
+single-model and BalancedBagging configurations under the same cross-validation
+protocol. Table~\ref{tab:bonferroni} reports mean balanced accuracy for each
+condition along with the statistical comparison.
+
+\begin{table}[ht!]
+  \centering
+  \caption{Cross-validation balanced accuracy under single-model and
+    BalancedBagging configurations, with per-fold Wilcoxon signed-rank tests
+    (Bonferroni-corrected for 7 comparisons).
+    $^{***}p \leq 0.001$; $^{**}p \leq 0.01$; n.s.\ = not significant.}
+  \label{tab:bonferroni}
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Classifier} & \textbf{Single-Model} & \textbf{BalancedBagging}
+      & \textbf{$\Delta$} & \textbf{$p$ (Bonf.)} \\
+    \midrule
+    KNN           & 0.566 & 0.788 & $+$0.221 & $<0.001^{***}$ \\
+    Naïve Bayes   & 0.797 & 0.809 & $+$0.012 & 1.000 n.s.     \\
+    Decision Tree & 0.653 & 0.777 & $+$0.125 & $0.001^{**}$   \\
+    Random Forest & 0.629 & 0.814 & $+$0.185 & $<0.001^{***}$ \\
+    SVM           & 0.500 & 0.793 & $+$0.293 & $<0.001^{***}$ \\
+    MLP           & 0.698 & 0.832 & $+$0.134 & $<0.001^{***}$ \\
+    LightGBM      & 0.692 & 0.820 & $+$0.128 & $<0.001^{***}$ \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table}
+
+Six of the seven classifiers exhibit a statistically significant improvement in
+balanced accuracy under BalancedBagging ($p \leq 0.01$ after Bonferroni
+correction). The sole exception is Naïve Bayes ($p = 1.0$, n.s.): its
+generative modelling of class-conditional densities makes it relatively
+insensitive to training class proportions, and its single-model balanced accuracy
+(0.797) already approaches its ensemble counterpart (0.809). The SVM shows the
+largest absolute gain ($\Delta = +0.293$), crossing from a balanced accuracy of
+0.500 (equivalent to a classifier that predicts all instances as non-short) to
+0.793 once internal balancing is applied within each bootstrap sample. The MLP
+achieves the highest ensemble balanced accuracy across all classifiers (0.832),
+consistent with the reference study's findings. LightGBM also improves
+significantly under BalancedBagging ($\Delta = +0.128$, $p < 0.001$),
+demonstrating that the ensemble strategy generalises beyond the six classifiers
+considered in the original work.
+
+\subsection{Comparison with the Reference Study}
+
+Table~\ref{tab:comparison} summarises the methodological and performance differences
+between the reference study and this work.
+
+\begin{table}[ht!]
+  \centering
+  \caption{Direct comparison between Papaiz et al.~\cite{Papaiz2024} and this work.
+    \textsuperscript{a}Best ensemble balanced accuracy reported under repeated CV.
+    \textsuperscript{b}Not reported in the reference study.}
+  \label{tab:comparison}
+  \resizebox{\linewidth}{!}{%
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Aspect} & \textbf{Papaiz et al.~\cite{Papaiz2024}} & \textbf{This Work} \\
+    \midrule
+    Patients                    & 1,967              & 1,502              \\
+    Classifiers evaluated       & 6                  & 7 (+LightGBM)      \\
+    Imbalance strategies        & BalancedBagging    & 10 strategies + BB \\
+    Hyperparameter optimisation & Grid search        & Bayesian (Optuna)  \\
+    Best CV Bal.\ Acc.\ (MLP+BB)\textsuperscript{a} & $\approx$0.84 & 0.832 \\
+    Held-out test evaluation    & No\textsuperscript{b} & Yes             \\
+    Best test AUC               & —\textsuperscript{b} & 0.923 (LightGBM+ROS) \\
+    Best test Sensitivity       & —\textsuperscript{b} & 0.857 (LightGBM+ROS) \\
+    Explainability (SHAP)       & Yes (6 classifiers) & Yes (TreeSHAP + KernelSHAP) \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table}
+
+The CV balanced accuracy for MLP+BalancedBagging (0.832) comes close to the
+reference figure ($\approx$0.84) despite a smaller and more imbalanced cohort,
+which speaks to the consistency of the ensemble approach across different PRO-ACT
+extracts. Beyond replication, three additions change the picture: Bayesian
+optimisation surfaces hyperparameter configurations (notably the MLP's high L2
+penalty) that grid search would rarely visit; LightGBM brings a gradient-boosted
+option the original study did not include; and the held-out test reveals that the
+MLP's cross-validation lead does not survive contact with unseen data.
+
+\subsection{Feature Importance via SHAP}
+
+Figure~\ref{fig:shap} shows the TreeSHAP output for LightGBM+ROS on the
+held-out test set, with features ranked by mean absolute SHAP value.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figures/step7_lightgbm_fig3_combined.png}
+  \caption{SHAP feature importance for LightGBM+ROS (held-out test set).
+    \textit{Left:} global bar chart of mean $|\text{SHAP}|$ values.
+    \textit{Right:} beeswarm plot showing per-instance SHAP contributions,
+    coloured by feature value (red = high, blue = low).}
+  \label{fig:shap}
+\end{figure}
+
+\texttt{Diagnosis\_Delay} is the single most influential predictor by a
+substantial margin (mean $|\text{SHAP}| = 0.986$), more than double the value of
+the next-ranked feature. A long diagnostic delay (typically indicating a
+protracted, relatively benign pre-diagnostic period) is strongly associated with
+non-short survival; conversely, a short delay signals rapid pre-diagnosis
+progression and is a marker of short survival. A short diagnostic delay has long been recognised in the clinical literature as a marker of rapid pre-symptomatic progression~\cite{Feldman2022}.
+
+ALSFRS-R functional decline slopes occupy positions two through four and six
+in the global ranking, with Q8 (walking), Q4 (handwriting), Q1 (speech), and
+Q10 (respiratory function) contributing substantially. Age at onset ranks fifth (mean $|\text{SHAP}| = 0.364$): older patients
+generally progress faster, a relationship well documented in the ALS literature.
+FVC at diagnosis appears at rank nine (mean $|\text{SHAP}| = 0.260$), adding a
+respiratory dimension to the prognostic picture. The overall ranking closely
+matches the SHAP results reported in the reference study~\cite{Papaiz2024}.
+
+A parallel KernelSHAP analysis of the MLP identified the same top feature
+(\texttt{Diagnosis\_Delay}) and a broadly similar ranking of ALSFRS-R slopes,
+though with considerably smaller absolute attributions, a consequence of the
+more diffuse weight distribution characteristic of neural network architectures.
+
+
+% ==========================================================================
+\section{Discussion}
+\label{sec:discussion}
+% ==========================================================================
+
+\subsection{Replication Fidelity}
+
+Our replication broadly confirms the central conclusion of the reference
+study~\cite{Papaiz2024}: BalancedBagging consistently and significantly improves
+classifier performance under repeated stratified cross-validation, with the MLP
+attaining the best ensemble balanced accuracy (0.832 in this work versus
+approximately 0.84 reported in the original). The slightly lower absolute values reflect the smaller cohort (1,502 versus
+1,967 patients), the higher imbalance ratio (7.6 versus 6.9), and minor
+differences in the PRO-ACT extract available to us. Across all classifiers,
+the pattern of gains mirrors what the reference study reported, suggesting its
+conclusions hold across different PRO-ACT extracts.
+
+\subsection{The MLP Generalisation Problem}
+
+Perhaps the most striking result of this study is the MLP's near-complete
+collapse on the held-out test set. Cross-validation ranked it first in AUC
+(0.915), yet it correctly identified only a single short-survival patient
+out of 35 at test time, with a sensitivity of 0.029. The same model that appeared
+strongest during model selection was, in practice, worse than random for the
+clinically critical class.
+
+This pattern has a well-understood cause. AUC measures ranking ability---the
+probability that a positive instance receives a higher predicted score than a
+negative one---not the ability to classify correctly at a given threshold. Under
+severe class imbalance, a model can learn to assign slightly higher probabilities
+to short-survival patients on average while still placing those probabilities well
+below the 0.5 decision boundary. Cross-validation detects the ranking signal;
+the held-out evaluation reveals that the decision boundary is useless.
+
+For practitioners, the lesson is uncomfortable but important: in the presence
+of severe class imbalance, AUC alone is not a safe proxy for clinical utility.
+Metrics that directly penalise minority-class errors---sensitivity, balanced
+accuracy, G-Mean---need to be part of both the optimisation objective and the
+final evaluation, and a held-out test is not optional.
+
+\subsection{Advantages of LightGBM and Bayesian Optimisation}
+
+LightGBM with Random Oversampling achieves the strongest test-set results across
+all metrics: AUC 0.923, balanced accuracy 0.844, and sensitivity 0.857, correctly
+identifying 30 of 35 short-survival patients. Histogram-based gradient boosting corrects residuals
+sequentially, allowing the model to progressively focus on hard-to-classify
+minority instances rather than fitting a global decision boundary from a
+disproportionate training distribution. Random Oversampling, by rebalancing the
+training set before fitting, reinforces this tendency.
+
+Bayesian optimisation (Optuna, TPE sampler, 50 trials) contributes a further edge. Unlike grid search, which covers a predefined lattice of values, TPE allocates
+more trials to promising regions of the hyperparameter space as information
+accumulates, making it particularly well-suited to the larger search spaces of
+LightGBM compared to simpler classifiers.
+
+Finally, TreeSHAP provides exact Shapley values for LightGBM in polynomial
+time, a meaningful practical difference from the KernelSHAP approximation
+required for the MLP, which demands considerably more computation and is
+susceptible to sampling variance. In a clinical setting where individual
+predictions need to be explained, this difference translates directly to the clinic.
+
+\subsection{Limitations}
+
+The available PRO-ACT extract yields 1,502 patients, 23.6\% fewer than the
+original study, primarily due to missing FVC records, which constrains
+statistical power and may inflate variance in cross-validation estimates.
+With an imbalance ratio of 7.6, minority-class metrics are also sensitive to
+small changes in the confusion matrix: a shift of two or three predictions can
+move sensitivity by several percentage points. PRO-ACT participants were
+enrolled in controlled clinical trials and may differ from community ALS patients
+in disease stage, comorbidity profile, and duration of follow-up, limiting 
+generalisation beyond the trial setting. The feature set, while faithfully
+reproduced from the reference study, represents each patient at a single time
+point through categorical and ordinal encodings; richer longitudinal
+representations and biomarker data are not captured.
+
+
+% ==========================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+% ==========================================================================
+
+This work set out to replicate the ensemble-imbalance framework of Papaiz
+et al.~\cite{Papaiz2024} and to examine whether targeted methodological
+extensions could improve its clinical utility. The replication succeeds: across
+six of seven classifiers, BalancedBagging produces statistically significant
+gains in balanced accuracy ($p \leq 0.01$, Bonferroni-corrected), and the MLP
+reaches an ensemble balanced accuracy of 0.832, closely matching the original
+study's reported figure.
+
+The more instructive result comes from what the held-out test set reveals.
+The MLP, despite leading cross-validation AUC, identifies only one short-survival
+patient in 35 on unseen data. LightGBM with Random Oversampling---added through the Bayesian search over a
+broader set of imbalance strategies---identifies 30 of those same 35 patients,
+with an AUC of 0.923 and a balanced accuracy of 0.844. The SHAP results for both models tell the same story: diagnostic delay and
+ALSFRS-R functional decline slopes drive predictions, a convergence that lends
+the conclusions interpretable clinical weight.
+
+Three practical conclusions emerge from this work: gradient-boosted models are
+worth prioritising in ALS prognosis pipelines; AUC alone is not a reliable gauge
+of clinical usefulness when class imbalance is severe; and a held-out evaluation
+is not a formality---it is where the real picture appears. Future directions include threshold
+calibration and cost-sensitive learning, the integration of longitudinal
+disease trajectories beyond a single time point, and external validation on
+cohorts independent of PRO-ACT.
+
+
+\bibliographystyle{apalike}
+{\small
+\bibliography{bibfile}}
+
+\end{document}

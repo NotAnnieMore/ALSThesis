@@ -1,0 +1,4 @@
+column,dtype,non_null,null_count,null_pct,n_unique
+subject_id,int64,4243,0,0.0,4243
+el_escorial,str,4243,0,0.0,5
+delta_days,float64,4242,1,0.0,19

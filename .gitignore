@@ -1,5 +1,9 @@
 # Raw data (large files, not versioned)
 01_data/raw/
+replication/01_data/raw/
+
+# Context files (internal, not versioned)
+contexts/
 
 # Python
 __pycache__/

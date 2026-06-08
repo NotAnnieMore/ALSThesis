@@ -1,0 +1,4 @@
+column,dtype,non_null,null_count,null_pct,n_unique
+subject_id,int64,5043,0,0.0,5038
+Subject_Died,str,5043,0,0.0,2
+Death_Days,float64,3536,1507,29.9,722

@@ -1,4 +1,8 @@
-\chapter{Methods}
+\chapter{Functional Progression Prediction: Methods}
+\label{ch:study1_methods}
+
+This chapter describes the methodology for Study~I, which develops an original leakage-free pipeline for predicting short-term functional progression in \gls{ALS}.
+Study~II, which replicates and extends a published survival prognosis framework, is described in Chapter~\ref{ch:study2_methods}.
 
 \section{Overview of the Pipeline}
 \label{sec:methods_overview}
@@ -148,7 +152,7 @@ Figure~\ref{fig:pipeline_overview} provides a high-level overview of the pipelin
     {TEST};
 
   \end{tikzpicture}
-  \caption{End-to-end pipeline for explainable ALS progression classification.
+  \caption[Study I end-to-end pipeline overview]{End-to-end pipeline for explainable ALS progression classification.
   Stages~1--4 prepare and partition the data under a leakage-free protocol;
   stages~5--6 perform model development exclusively on the DEV set
   (5-fold subject-wise GroupKFold);
@@ -282,7 +286,7 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
   \draw[arr] (sp6) -| (test6.north);
 
   \end{tikzpicture}
-  \caption{CONSORT-style flowchart of cohort derivation.
+  \caption[CONSORT cohort derivation flowchart]{CONSORT-style flowchart of cohort derivation.
   Starting from the full PRO-ACT database, an eligibility filter retains subjects with valid ALSFRS-R data, which are then split into horizon-specific cohorts, each partitioned into development (DEV, 80\%) and held-out test (TEST, 20\%) sets.
   Red boxes indicate exclusion criteria.}
   \label{fig:consort_flowchart}
@@ -469,7 +473,7 @@ Figure~\ref{fig:temporal_separation} illustrates this temporal separation for bo
   };
 
   \end{tikzpicture}
-  \caption{Temporal separation between feature extraction and target construction.
+  \caption[Feature--target temporal separation diagram]{Temporal separation between feature extraction and target construction.
   For each subject, features are derived exclusively from data available up to the baseline timepoint~$t_0$ (blue zone), while the target slope is computed from ALSFRS-R measurements after~$t_0$ within the horizon window (orange/teal zone).
   The dashed red line marks the leakage barrier; no information may cross from right to left.
   The $\pm 7$-day tolerance band (red shading) accommodates real-world visit variability.
@@ -522,7 +526,7 @@ Figure~\ref{fig:slope_histogram_6m} illustrates the resulting distribution.
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.85\linewidth]{images/figures/slope_histogram_6m.png}
-  \caption{Distribution of ALSFRS-R slopes (points/30\,days) for the 6-month cohort ($N\!=\!1{,}392$).
+  \caption[ALSFRS-R slope distribution, 6-month cohort]{Distribution of ALSFRS-R slopes (points/30\,days) for the 6-month cohort ($N\!=\!1{,}392$).
   The dashed line marks the 30th-percentile cutoff ($-1.25$\,points/month); subjects to the left (red) are labelled \textit{rapid}, those to the right (blue) \textit{slow}.
   The cutoff shown is computed on the full dataset for illustration; in practice it is recomputed within each cross-validation fold.}
   \label{fig:slope_histogram_6m}
@@ -689,7 +693,7 @@ Table~\ref{tab:metrics} formalises the measures referenced throughout this work,
 
 \begin{table}[ht!]
 \centering
-\caption{Evaluation metrics used in this work. All metrics are computed with respect to the positive class (\textit{rapid} progression) unless stated otherwise.}
+\caption[Evaluation metrics definitions]{Evaluation metrics used in this work. All metrics are computed with respect to the positive class (\textit{rapid} progression) unless stated otherwise.}
 \label{tab:metrics}
 \small
 \renewcommand{\arraystretch}{1.8}
@@ -804,7 +808,7 @@ Following model selection, we retrain the tuned XGBoost pipeline on the \textit{
 The resulting artifact comprises:
 (i)~the complete \texttt{scikit-learn} \texttt{Pipeline}---imputer, encoder, optional scaler, and classifier---serialised with \texttt{joblib}, so that new patients can be scored without any external preprocessing steps; and
 (ii)~a \gls{JSON} metadata file recording the ordered feature list, the 30th-percentile slope cutoff ($-1.25$\,points/month), and the decision threshold ($t\!=\!0.21$).
-This self-contained package feeds the downstream explainability analyses in Chapter~\ref{ch:results}.
+This self-contained package feeds the downstream explainability analyses in Chapter~\ref{ch:study1_results}.
 
 In addition, a final \textbf{balanced Logistic Regression} model is trained on the same full cohort using the Optuna-tuned hyperparameters from the LR\_balanced configuration (loaded from the persisted \gls{JSON} file), with the identical preprocessing pipeline (median imputation, one-hot encoding, $z$-score scaling).
 The \gls{LR} pipeline is serialised separately (\texttt{final\_lr\_6m.joblib}) together with its own metadata file.
@@ -951,5 +955,6 @@ This design ensures that generated patients are statistically plausible without 
 
 \bigskip
 \noindent
-The results of all analyses described in this chapter are presented in Chapter~\ref{ch:results}.
+The results of all analyses described in this chapter are presented in Chapter~\ref{ch:study1_results}.
+The second study, addressing survival prognosis through replication and extension of Papaiz et al., is described in Chapter~\ref{ch:study2_methods}.
 

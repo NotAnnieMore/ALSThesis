@@ -1,0 +1,341 @@
+\documentclass[a4paper,twoside]{article}
+
+\usepackage{epsfig}
+\usepackage{subcaption}
+\usepackage{calc}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{multicol}
+\usepackage{pslatex}
+\usepackage{apalike}
+\usepackage{algorithm2e}
+\usepackage[bottom]{footmisc}
+\usepackage{stfloats}
+\usepackage{SCITEPRESS}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{graphicx}
+
+\begin{document}
+
+\title{Customer Churn Prediction in the Telecommunications Sector Using Explainable Artificial Intelligence}
+
+\author{\authorname{David Veríssimo\sup{1}\orcidAuthor{0000-0000-0000-0000},  Joana Leite\sup{1,3}\orcidAuthor{0000-0001-6828-9486} and Maryam Abbasi\sup{2}\orcidAuthor{0000-0002-9011-0734}}
+\affiliation{\sup{1}Polytechnic University of Coimbra, Rua da Misericórdia, Lagar dos Cortiços, S. Martinho do Bispo, 3045-093 Coimbra, Portugal}
+\affiliation{\sup{2}Department of Computing, Main University, MySecondTown, MyCountry}
+\affiliation{\sup{3}CEOS.PP Coimbra, Polytechnic University of Coimbra, Bencanta, 3045-601 Coimbra, Portugal}
+\email{iscac14461@alumni.iscac.pt, second\_author@ips.xyz.edu, jleite@iscac.pt}
+}
+
+\keywords{Customer Churn Prediction and Telecommunications and Gradient Boosting and Class Imbalance and Explainable AI (XAI) and SHAP.}
+
+\abstract{ Customer churn poses a significant threat to profitability in the saturated telecommunications industry, yet accurately predicting churn remains challenging due to high-dimensional data and class imbalance where churners represent a small minority. While complex ensemble methods achieve high accuracy, their "black-box" nature limits business adoption, as practitioners require transparent insights to design effective retention campaigns. This paper proposes a comprehensive Machine Learning (ML) pipeline that bridges the gap between predictive performance and model interpretability. We implement and compare five classifiers—Logistic Regression, Random Forest, Extreme Gradient Boosting (XGBoost), Light Gradient Boosting Machine (LightGBM), and Categorical Boosting (CatBoost)—optimized via Bayesian hyperparameter tuning and evaluated using the recall-focused F2-score to address class imbalance. Our results demonstrate that gradient boosting models, particularly LightGBM, outperform aggregation-based ensemble strategies, achieving the highest F2-score of 0.7553 with a recall of 0.9358. Crucially, we integrate SHapley Additive exPlanations (SHAP)-based Explainable Artificial Intelligence (XAI) to provide both global and local interpretability, revealing that contract type, tenure, and technical support subscriptions are the primary churn drivers. This dual-layer transparency enables targeted retention strategies while preserving high recall in imbalanced telecom data. \url{https://data.scitevents.org/Home.aspx} .}
+
+\onecolumn \maketitle \normalsize \setcounter{footnote}{0} \vfill
+
+\newpage
+
+\section{Introduction}
+
+The telecommunications industry has evolved into a highly competitive and saturated global market, where the cost of acquiring a new customer significantly outweighs the expense of retaining an existing one \cite{Manzoor2024}. In this landscape, customer churn, the phenomenon of subscribers switching to a competitor or terminating their service, represents a direct threat to long-term profitability and sustainable growth \cite{Jain2021}. Recent trends indicate that the proliferation of mobile services and the deregulation of markets have further empowered consumers, making the ability to proactively identify potential churners a critical strategic asset for service providers \cite{Amin2023}. Consequently, businesses are increasingly shifting from reactive service models to data-driven proactive retention strategies that leverage large-scale customer usage patterns and behavioral data \cite{Ahmad2019}.
+
+Although this field is important, accurately predicting churn remains a complex challenge. Current research highlights that telecommunications datasets are often characterized by high dimensionality, nonlinear patterns, and a significant class imbalance, where churners represent only a small percentage of the total subscriber base \cite{Haddadi2024}. While various techniques such as Logistic Regression and standard Decision Trees have been explored, they often struggle to capture the intricate behavioral nuances of modern consumers \cite{Jain2020}. Furthermore, interpretability is often sacrificed for predictive power; while advanced ensemble methods and deep learning models have demonstrated superior accuracy \cite{Saha2024}, they are frequently criticized for being "black-box" models. This lack of transparency poses a significant barrier to business adoption, as decision-makers require clear insights into the drivers of churn to design effective, targeted marketing campaigns \cite{DeBock2021}.
+
+This paper proposes an end-to-end ML pipeline that simultaneously optimizes predictive performance and model interpretability. Our approach implements five classification models, namely, Logistic Regression, Random Forest, XGBoost, LightGBM, and CatBoost, to perform a performance comparison across different algorithmic architectures. By integrating ensemble classification with specialized evaluation metrics for imbalanced data and SHAP-based explainability, we provide a transparent framework for understanding churn drivers. The main contributions of this research are as follows:
+
+    - The implementation of a multi-model comparative framework that identifies the optimal classifier for imbalanced telecommunications data;
+
+    - Evaluation using the recall-oriented F2-score for imbalanced churn detection;
+
+    - The integration of SHAP-based XAI to provide both global and local interpretability, ensuring that model predictions are actionable for business practitioners.
+
+The remainder of this paper is structured as follows: Section 2 covers related work; Section 3 details the methodology; Section 4 and Section 5 present and discuss the results, respectively; and Section 6 concludes.
+
+\section{Related Work}
+
+The domain of customer churn prediction has received significant attention in the literature, evolving from statistical baselines to complex ML architectures. This section reviews existing contributions, categorized into three distinct thematic clusters: algorithmic evolution, data-centric challenges, and the interpretability-performance trade-off.
+
+Early approaches to churn prediction primarily relied on statistical techniques, such as the use of Logistic Regression and Logit Boost to establish baselines for interpretability and computational efficiency \cite{Jain2020}. However, these studies often acknowledged limitations in capturing the non-linear dependencies inherent in large-scale telecom data. To address these complexity issues, recent studies have pivoted toward Deep Learning and big data frameworks. A churn prediction system utilizing Random Forests and Deep Learning was proposed to handle massive feature sets within big data platforms \cite{Ahmad2019}; yet, while this approach improved processing speed, it lacked a mechanism for explaining specific predictions to business stakeholders. More recently, the "ChurnNet" architecture was introduced as a Deep Learning enhanced model to achieve superior accuracy metrics compared to traditional classifiers \cite{Saha2024}. Despite these gains, such architectures often operate as "black boxes," making it difficult for telecom operators to derive actionable retention strategies from the model outputs.
+
+A persistent challenge in telecom datasets is the "curse of dimensionality" and class imbalance. Feature redundancy has been addressed through novel prediction models utilizing advanced feature selection and data transformation methods, as reducing dimensionality is often viewed as a prerequisite for model stability \cite{Sana2022}. Parallel to feature selection, the issue of class imbalance—where non-churners vastly outnumber churners—has prompted extensive research into resampling techniques. Comparative studies of resampling methods on imbalanced datasets suggest that while oversampling techniques like Synthetic Minority Over-sampling Technique (SMOTE) can improve minority class detection, they must be carefully tuned to avoid overfitting \cite{Haddadi2024}. This suggests that predictive performance often depends more on preprocessing and hyperparameter optimization than on algorithm selection alone.
+
+The most recent research emphasizes the transition from purely accurate models to profit-centric and interpretable systems. Some researchers have argued for "profit-driven" decision trees, shifting the evaluation metric from accuracy to maximum profit generation \cite{Hppner2020}. While this aligns modeling with business goals, decision trees often lack the predictive power of gradient boosting methods. To balance accuracy with transparency, new classifier techniques have been introduced to demonstrate that high predictive performance is possible without losing explainability \cite{DeBock2021}. Furthermore, a survey of current ML methods for churn found that while many solutions address individual problems, there is a lack of unified frameworks that can simultaneously handle class imbalance, model tuning, and post-hoc explainability \cite{Manzoor2024}.
+
+The literature reveals a clear trajectory: while Deep Learning offers accuracy \cite{Saha2024} and feature selection solves dimensionality \cite{Sana2022}, few studies integrate these with robust interpretability measures tailored for imbalanced data. Existing works often treat optimization and explainability as separate or secondary steps. Consequently, there is a critical gap for a unified pipeline that addresses both model tuning and "black-box" opacity. Specifically, while traditional Grid Search methods differ in computational cost and coverage, they lack the adaptive efficiency required for modern ensemble architectures. This motivates the implementation of Optuna \cite{akiba2019optuna}, which utilizes a Tree-structured Parzen Estimator (TPE) \cite{watanabe2023tree} to perform Bayesian optimization.
+
+Furthermore, relying solely on global feature importance (e.g., Gini impurity or information gain) is insufficient for actionable business retention. To bridge this, the proposed framework integrates SHAP \cite{lundberg2017unified}. By decomposing predictions into additive feature contributions via Shapley values, this implementation quantifies how each feature influences individual churn probabilities. This enables dual-layer interpretation: Global Interpretability to identify macro-level churn drivers, and Local Interpretability to explain why a specific subscriber was flagged, providing granular insights that standard ensemble methods fail to offer.
+
+\section{Methodology}
+
+The proposed methodology establishes an end-to-end ML pipeline tailored for high-dimensional, imbalanced telecommunications data. This research framework was designed to address the trade-off between algorithmic complexity and interpretability. Figure \ref{fig:workflow} shows the details of this workflow.
+
+\begin{figure*}[ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/davidwf.png} 
+    \caption{End-to-End Machine Learning Workflow for Telecommunications Data}
+    \label{fig:workflow}
+\end{figure*}
+
+The workflow proceeds through data preprocessing, feature engineering, and stratified partitioning, followed by the deployment of ensemble classification architectures. Finally, to ensure that the resulting models provide actionable business intelligence, the pipeline integrates a transparent explainability layer.
+
+\subsection{Dataset Overview}
+
+This study utilizes the Telco Customer Churn dataset, a benchmark collection comprising 7,043 subscriber records.\footnote{\url{https://www.kaggle.com/datasets/blastchar/telco-customer-churn}} Each record is defined by 21 distinct attributes, categorized into demographic information, account specifications, and service usage metrics. A detailed breakdown of these features is presented in Table \ref{tab:dataset_variables}.
+
+The target variable, ``Churn", represented a binary classification problem indicating whether a customer terminated their service (Yes) or not (No). Through statistical analysis, a significant class imbalance was confirmed: only 1,869 customers (26.5\%) were identified as churners, compared to 5,174 non-churners (73.5\%). This disparity—a characteristic common in churn domains—necessitated the specific balancing strategies discussed in subsequent sections.
+
+\begin{table}[H]
+\caption{Description of Dataset Attributes}
+\label{tab:dataset_variables}
+\centering
+\footnotesize
+\begin{tabularx}{\columnwidth}{l X r} 
+\hline
+\textbf{Cat.} & \textbf{Attributes} & \textbf{Type} \\
+\hline
+\multicolumn{3}{l}{\textit{Target}} \\
+Target & Churn & Bin. \\
+\hline
+\multicolumn{3}{l}{\textit{Demographics}} \\
+Demo & Gender, SeniorCitizen & Cat. \\
+ & Partner, Dependents & Cat. \\
+\hline
+\multicolumn{3}{l}{\textit{Services}} \\
+Svcs & PhoneService, MultipleLines & Cat. \\
+ & InternetService & Cat. \\
+ & OnlineSecurity, OnlineBackup & Cat. \\
+ & DeviceProtection, TechSupport & Cat. \\
+ & StreamingTV, StreamingMovies & Cat. \\
+\hline
+\multicolumn{3}{l}{\textit{Account Info}} \\
+Acct & Tenure & Num. \\
+ & Contract & Cat. \\
+ & PaperlessBilling & Cat. \\
+ & PaymentMethod & Cat. \\
+ & MonthlyCharges & Num. \\
+ & TotalCharges & Num. \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Data Preprocessing}
+
+\subsubsection{Data Cleaning}
+
+To ensure the integrity of predictive modeling, the dataset went through a cleaning phase. An initial inspection identified eleven records containing missing values in the TotalCharges column, which corresponded to customers with a tenure of zero months. Given the negligible proportion of these records relative to the total dataset size, they were removed to prevent numerical instability. Furthermore, variables such as TotalCharges, initially read as objects, were coerced into numeric types to facilitate mathematical operations.
+
+\subsubsection{Data Encoding and Scaling}
+
+Following the cleaning process, the dataset was transformed to meet the specific input requirements of the selected algorithms. A hybrid encoding strategy was adopted for categorical variables. One-Hot Encoding was applied to the majority of classifiers to prevent the inference of artificial ordinal relationships. Conversely, Label Encoding was utilized for architectures capable of leveraging native optimization for categorical splits, while internal processing statistics were employed where external encoding was redundant.
+
+In parallel with encoding, feature scaling was selectively applied based on algorithmic sensitivity. Numerical features for distance-based and gradient-descent algorithms were Standardized (scaled to zero mean and unit variance). This ensured stable convergence and prevented scale-dominant features. In contrast, raw numerical values were preserved for scaling-invariant architectures to maintain interpretability.
+
+To ensure full reproducibility and methodological clarity, the preprocessing pipeline was explicitly aligned with each classifier's architectural requirements. Both CatBoost and LightGBM were trained using their respective native categorical handling mechanisms, bypassing the need for external encoding or feature standardization. XGBoost and Random Forest were trained using One-Hot Encoding without feature scaling, as tree-based models are largely insensitive to feature scaling. Logistic Regression, due to its gradient-based optimization and sensitivity to feature magnitude, was trained using One-Hot Encoding combined with Standardization of numerical features.
+
+\subsection{Feature Engineering and Selection}
+
+In order to maximize the predictive capability of the models, we created new attributes capable of capturing patterns that the raw data alone could not. The newly engineered features include Customer Lifetime Value (CLV), the average monthly spent, and a count of total subscribed services. These features provided the models with aggregated behavioral patterns that individual features could not express. Furthermore, to address the right-skewed distribution observed in monetary features like TotalCharges, logarithmic transformations were applied.
+
+\subsection{Data Partitioning}
+
+\subsubsection{Data Splitting}
+
+To validate the model and prevent performance estimation bias, the dataset was partitioned using a Stratified k-Fold Cross-Validation approach, with k=5. Unlike random splitting, stratification ensured that the proportion of churners to non-churners remained consistent across all five training and validation folds. This was essential to prevent scenarios where a validation fold might lack sufficient minority class examples, which would otherwise lead to misleading evaluation metrics.
+
+\subsubsection{Data Balancing}
+
+To address class imbalance, where the minority class (churners) is significantly underrepresented, this study implemented model-specific strategies to ensure a positive predictive performance.
+
+For the Random Forest and Logistic Regression classifiers, we employed SMOTE combined with Edited Nearest Neighbours (SMOTEENN). Unlike standard SMOTE, which can generate noisy examples by interpolating indiscriminately, SMOTEENN applies a dual approach: it first synthesizes new minority instances and subsequently applies the Edited Nearest Neighbours rule to remove samples from both classes that are misclassified by their neighbors. This cleaning step clarifies the decision boundary and reduces the overfitting often associated with raw oversampling.
+
+In contrast, for the gradient boosting architectures—XGBoost, CatBoost, and LightGBM—we opted for an algorithmic Class Weighting approach. By assigning a higher penalty to misclassifications of the minority class directly within the loss function, these models effectively learned the imbalanced distribution without the computational overhead of synthetic data generation.
+
+It is important to note that all balancing techniques were applied exclusively to the training partitions within the cross-validation loop to prevent data leakage.
+
+\subsection{Proposed Classification Architectures}
+
+\subsubsection{Base Classifiers and Optimization}
+
+The classification framework leveraged an array of algorithmic architectures to identify the optimal predictor. Five base models were trained, ranging from linear and distance-based baselines (Logistic Regression) to ensemble trees (Random Forest) and gradient boosting machines (XGBoost, CatBoost, LightGBM). This selection was driven by the need to benchmark interpretable models against high-performance ''black-box'' estimators. To optimize these architectures, hyperparameter tuning was conducted using Optuna, a Bayesian optimization framework utilizing Tree-structured Parzen Estimators (TPE). This approach allowed for a more efficient navigation of the hyperparameter search space compared to traditional grid search methods.
+
+\subsubsection{Stacking Ensemble Strategy and Threshold Optimization}
+
+To evaluate whether combining classifiers could mitigate individual model biases, four distinct ensemble strategies were arranged. We implemented Hard Voting (majority rule), Soft Voting, and Weighted Averaging (weighted by individual model F2 performance) to combine predictions, thereby reducing the variance associated with single models. Furthermore, a Stacking architecture was deployed, utilizing a two-level hierarchy where the probability predictions of all five base classifiers served as meta-features for a Logistic Regression meta-learner. This stacking approach allowed the system to learn the optimal combination of base model outputs, effectively correcting the biases of individual algorithms. Finally, to address the asymmetric costs of churn, we replaced the default decision boundary (tau = 0.5) with an optimized threshold derived from a grid search. Thresholds were optimized to maximize the F2-score.
+
+\subsection{XAI Framework}
+
+\subsubsection{SHAP}
+
+To reconcile the trade-off between high predictive accuracy and the business need for transparency, this study utilized SHAP. Based on mathematical feature attribution, SHAP assigns an importance value to each feature, measuring its impact on the model's decision. This provides two layers of interpretation: a global view that identifies the primary churn drivers across the entire customer base, and a local view that explains why a specific individual was flagged as high-risk. This approach ensures the "black-box" models remain interpretable, converting raw probabilities into actionable business insights. To provide a comprehensive analysis, SHAP values were calculated for both the individual base classifiers and the final ensemble architecture.
+
+\section{Results}
+
+Table \ref{tab:model_results} presents the comparative performance of the evaluated base classifiers and ensemble strategies across imbalance-aware metrics, including F2-score, Precision, Recall, Receiver Operating Characteristic Area Under the Curve (ROC AUC), and Precision--Recall Area Under the Curve (PR AUC).
+
+\begin{table}[H]
+\caption{Comparative Performance Analysis of Classifiers using Imbalance-Robust Metrics} 
+\label{tab:model_results} 
+\centering 
+\resizebox{\columnwidth}{!}{ 
+\begin{tabular}{lcccccccc} 
+\toprule 
+\textbf{Model} & \textbf{Type} & \textbf{F2} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Recall} & \textbf{ROC AUC} & \textbf{PR AUC} \\ 
+\midrule 
+XGBoost & Base & 0.7500 & 0.6333 & 0.4159 & 0.9385 & 0.8411 & 0.6541 \\ 
+LightGBM & Base & 0.7489 & 0.6375 & 0.4185 & 0.9332 & 0.8406 & 0.6529 \\ 
+Hard Voting & Ensemble & 0.7488 & 0.6340 & 0.4162 & 0.9358 & 0.7929 & 0.4817 \\ 
+CatBoost & Base & 0.7463 & 0.6418 & 0.4209 & 0.9251 & 0.8404 & 0.6566 \\ 
+Random Forest & Base & 0.7335 & 0.5856 & 0.3860 & 0.9465 & 0.8115 & 0.5866 \\ 
+Logistic Regression & Base & 0.6903 & 0.6013 & 0.3872 & 0.8583 & 0.7719 & 0.5689 \\ 
+Weighted Average & Ensemble & 0.6732 & 0.7676 & 0.5483 & 0.7139 & 0.8374 & 0.6462 \\ 
+Soft Voting & Ensemble & 0.6690 & 0.7626 & 0.5407 & 0.7112 & 0.8368 & 0.6456 \\ 
+Stacking & Ensemble & 0.5806 & 0.8060 & 0.6573 & 0.5642 & 0.8417 & 0.6556 \\ 
+\bottomrule 
+\end{tabular} 
+} 
+\end{table}
+
+Among the base classifiers, gradient boosting architectures demonstrated the strongest performance under recall-weighted optimization. XGBoost achieved the highest F2-score (0.7500), accompanied by a recall of 0.9385 and a PR AUC of 0.6541. LightGBM followed closely with an F2-score of 0.7489 and recall of 0.9332, while CatBoost produced an F2-score of 0.7463 and the highest PR AUC among the boosting models (0.6566). All three boosting approaches exhibited highly similar ROC AUC values (approximately 0.84), indicating comparable overall discriminatory capacity across probability thresholds.
+
+Random Forest achieved the highest recall (0.9465) among all models, though this sensitivity was accompanied by comparatively lower precision (0.3860), resulting in a slightly reduced F2-score (0.7335). Logistic Regression demonstrated moderate performance, with an F2-score of 0.6903 and recall of 0.8583.
+
+Ensemble aggregation strategies did not surpass the strongest standalone boosting learner in terms of F2-score. The Hard Voting ensemble achieved an F2-score of 0.7488 and recall of 0.9358, closely approximating boosting performance. However, its PR AUC (0.4817) was substantially lower than those of the gradient boosting models, indicating reduced ranking effectiveness. Weighted Average and Soft Voting ensembles demonstrated moderate F2 performance (0.6732 and 0.6690 respectively), while the Stacking architecture achieved the highest precision (0.6573) but lower recall (0.5642), resulting in the lowest F2-score among the evaluated approaches.
+
+Optimal probability thresholds varied across architectures. Boosting classifiers converged toward lower decision boundaries (e.g., 0.29 for XGBoost and 0.14 for LightGBM), whereas linear and aggregation-based ensembles required comparatively higher cut-offs to optimize the F2 objective. These variations highlight differences in probability calibration behavior across models.
+
+\subsection{Precision--Recall Performance Comparison}
+
+To further assess model ranking performance under class imbalance, Precision--Recall curves were generated for the strongest base models and the best-performing ensemble configuration (Figure \ref{fig:pr_curve_models}). PR AUC was selected as a complementary metric due to its robustness in minority-class evaluation.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\linewidth]{figures/pr_curve_6_models.png}
+    \caption{Precision--Recall curves for the strongest base models and the best-performing ensemble}
+    \label{fig:pr_curve_models}
+\end{figure}
+
+The PR curves for CatBoost (AP = 0.6566), XGBoost (AP = 0.6541), and LightGBM (AP = 0.6529) exhibit closely aligned trajectories, indicating similar ranking quality among boosting implementations. In contrast, the Hard Voting ensemble demonstrates a visibly reduced precision envelope across recall levels, reflected in its lower PR AUC value.
+
+\subsection{Model Explainability: SHAP Analysis}
+
+The resulting feature attributions across the five base models are summarized in Table \ref{tab:shap_comparison}, which ranks the top five predictors by their mean absolute SHAP values.
+
+\begin{table}[H]
+\caption{Top 5 Global SHAP Features Across Base Models}
+\label{tab:shap_comparison}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Rank} & \textbf{Random Forest} & \textbf{XGBoost} & \textbf{LightGBM} & \textbf{CatBoost} & \textbf{Logistic Reg.} \\
+\midrule
+1 & tenure (0.0658) & Contract\_Two year (0.5129) & Contract (0.7510) & Contract (0.6572) & TotalCharges (2.2014) \\
+2 & InternetService\_Fiber optic (0.0390) & tenure (0.4399) & tenure (0.2630) & tenure (0.3942) & MonthlyCharges (1.0604) \\
+3 & Contract\_Two year (0.0387) & InternetService\_Fiber optic (0.3243) & OnlineSecurity (0.2489) & InternetService (0.3194) & Avg\_monthly\_spend (0.0186) \\
+4 & TotalCharges (0.0220) & Contract\_One year (0.2319) & InternetService (0.1776) & OnlineSecurity (0.2607) & MonthlyCharges\_log (0.0182) \\
+5 & TotalCharges\_log (0.0202) & PaymentMethod\_Electronic check (0.1786) & TechSupport (0.1751) & TechSupport (0.1829) & CLV\_proxy (0.0159) \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Tree-based models consistently ranked Contract and tenure as the most influential predictors, followed by service-related variables such as OnlineSecurity and TechSupport. Logistic Regression instead assigned greater importance to monetary magnitude variables.
+
+The LightGBM SHAP beeswarm visualization (Figure \ref{fig:beeswarm_lightgbm}) illustrates the directional impact of the top-ranked features.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.90\linewidth]{figures/beeswarm_lightgbm.png}
+    \caption{LightGBM SHAP beeswarm plot showing the top 20 most influential features}
+    \label{fig:beeswarm_lightgbm}
+\end{figure}
+
+Additionally, Table \ref{tab:ensemble_shap} quantifies the contribution of base learners to ensemble predictions using mean absolute SHAP values.
+
+\begin{table}[H]
+\caption{Base Model Contribution to Ensemble Predictions (Mean $|SHAP|$)}
+\label{tab:ensemble_shap}
+\centering
+\resizebox{\columnwidth}{!}{
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Base Model} & \textbf{Hard Voting} & \textbf{Mean Ens.} & \textbf{Stacking} & \textbf{Weighted Ens.} \\
+\midrule
+CatBoost & 0.1474 & 0.1828 & 0.0236 & 0.1865 \\
+LightGBM & 0.1300 & 0.1712 & 0.1084 & 0.1752 \\
+Logistic Regression & 0.1976 & 0.2409 & 0.2976 & 0.2273 \\
+Random Forest & 0.2447 & 0.1861 & 0.0764 & 0.1866 \\
+XGBoost & 0.2803 & 0.2189 & 0.4939 & 0.2244 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\section{Discussion}
+
+The empirical findings indicate that recall-optimized gradient boosting architectures provide the most effective solution for churn detection under class imbalance. The consistent performance across XGBoost, LightGBM, and CatBoost suggests that predictive gains are less attributable to specific implementation differences and more dependent on shared architectural properties, including sequential error correction, adaptive residual fitting, and integrated class-weight handling.
+
+In contrast, ensemble aggregation strategies did not produce performance improvements beyond the strongest standalone boosting learner. The Hard Voting approach preserved sensitivity but exhibited reduced ranking quality, as reflected in its lower PR AUC. This behavior suggests that majority-based aggregation may obscure calibrated probability information generated by individual boosting models. When classifiers produce differently distributed probability estimates, binary aggregation can discard informative confidence magnitudes, effectively compressing nuanced risk signals into uniform class labels.
+
+Similarly, the Weighted and Soft Voting ensembles demonstrated moderate improvements in precision but did not enhance recall-weighted outcomes. These findings indicate that probability averaging may dilute high-confidence minority predictions, particularly when base learners exhibit correlated error structures.
+
+The stacking configuration presents a complementary perspective. Although it achieved the highest precision, its reduced recall indicates that the meta-learner prioritized consensus stability over minority sensitivity. SHAP attribution analysis of the stacking model revealed a dominant contribution from XGBoost, with comparatively limited influence from other base learners. This concentration implies limited diversity among ensemble components. When base learners share similar inductive biases and error patterns, stacking may fail to extract orthogonal predictive information, thereby constraining performance gains.
+
+From a modeling standpoint, these results reinforce the importance of diversity in ensemble construction. Effective stacking requires heterogeneity not only in algorithmic design but also in feature representation and error distribution. Without sufficient diversity, ensemble learning may introduce additional complexity without corresponding improvements in minority-class detection.
+
+The SHAP analysis further provides insight into structural churn drivers. Contract type and tenure consistently emerge as dominant predictors across tree-based models, indicating that subscription commitment length is a primary determinant of churn behavior. Service-related features such as OnlineSecurity and TechSupport exhibit protective effects, suggesting that perceived service value and support accessibility contribute to customer retention.
+
+Interestingly, Logistic Regression emphasized financial magnitude variables, including TotalCharges and MonthlyCharges. This divergence highlights the influence of model inductive bias: linear models capture monotonic financial effects, whereas boosting architectures detect higher-order interactions between contract structure, service subscriptions, and tenure duration.
+
+From a business perspective, these findings have direct operational implications. The prominence of contract type suggests that encouraging long-term contractual engagement may serve as a structural churn mitigation mechanism. Additionally, the protective effect of service add-ons implies that bundling technical support and security services could enhance customer stickiness. The strong influence of short tenure further indicates that early-life customer monitoring is critical, reinforcing the value of proactive onboarding strategies and targeted early-retention campaigns.
+
+More broadly, the results illustrate that high-recall optimization can be achieved without sacrificing interpretability. The SHAP-derived insights confirm that the model is not merely 'guessing' based on noise, but is accurately capturing the protective effect of technical support and the high-risk profile of short-tenure contracts.
+
+Overall, the study demonstrates that carefully optimized gradient boosting models, combined with threshold calibration and explainability integration, offer a balanced and operationally viable solution for churn risk identification in imbalanced telecommunications environments.
+
+\section{Conclusion}
+
+This research presented a comprehensive ML pipeline for customer churn prediction in telecommunications, designed to balance predictive sensitivity and interpretability. Through Bayesian hyperparameter optimization and imbalance-aware training strategies, the proposed framework effectively addressed high-dimensional and skewed data characteristics.
+
+The experimental results demonstrate that gradient boosting architectures consistently outperform aggregation-based ensemble strategies under recall-prioritized evaluation. The minimal performance gap between XGBoost, LightGBM, and CatBoost further indicates that performance improvements are primarily driven by optimization design rather than algorithmic brand selection.
+
+These findings suggest that telecom operators should prioritize early-stage monitoring, incentivize longer contractual commitments, and promote high-engagement service bundles to reduce defection risk.
+
+While the study relies on a static dataset and recall-weighted optimization, future work may incorporate cost-sensitive objectives and temporal modeling approaches to further align predictive performance with real-world retention economics.
+
+\section*{Acronyms}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Acronym} & \textbf{Definition} \\
+\midrule
+AI       & Artificial Intelligence \\
+AUC      & Area Under the Curve \\
+CatBoost & Categorical Boosting \\
+CLV      & Customer Lifetime Value \\
+LightGBM & Light Gradient Boosting Machine \\
+ML       & Machine Learning \\
+PR       & Precision--Recall \\
+ROC      & Receiver Operating Characteristic \\
+SHAP     & SHapley Additive exPlanations \\
+SMOTE    & Synthetic Minority Over-sampling Technique \\
+SMOTEENN & SMOTE combined with Edited Nearest Neighbours \\
+TPE      & Tree-structured Parzen Estimator \\
+XAI      & Explainable Artificial Intelligence \\
+XGBoost  & Extreme Gradient Boosting \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\bibliographystyle{apalike}
+{\small
+\bibliography{bibfile}}
+
+\end{document}

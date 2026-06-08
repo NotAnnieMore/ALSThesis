@@ -11,7 +11,7 @@ Together, these staging systems illustrate the wide variability in disease progr
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.65\linewidth]{./images/figures/figura1.jpg}
-  \caption{A: King’s staging system, showing typical times to progress between stages and corresponding median survival estimates. B: ALS-MiToS staging based on functional decline across four ALSFRS-R domains. C: Overview of clinical, demographic, genetic and environmental factors influencing ALS risk and prognosis. D: ENCALS prediction model illustrating five survival groups with distinct median survival profiles. Adapted from Feldman et al.~\cite{Feldman2022}.}
+  \caption[ALS staging systems and survival groups]{A: King's staging system, showing typical times to progress between stages and corresponding median survival estimates. B: ALS-MiToS staging based on functional decline across four ALSFRS-R domains. C: Overview of clinical, demographic, genetic and environmental factors influencing ALS risk and prognosis. D: ENCALS prediction model illustrating five survival groups with distinct median survival profiles. Adapted from Feldman et al.~\cite{Feldman2022}.}
   \label{fig:soa_figura1}
 \end{figure}
 
@@ -27,7 +27,7 @@ The heterogeneity of ALSFRS-R decline across patients is particularly relevant f
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.45\linewidth]{./images/figures/figura2.png}
-  \caption{The histogram shows the empirical distribution of functional decline in the PRO-ACT cohort, with more negative slopes indicating faster deterioration. The threshold used to distinguish fast progressors (orange) from medium–slow progressors (blue) is commonly adopted in supervised ML studies as a clinically meaningful target label. Adapted from Pancotti et al.~\cite{Pancotti2022}.}
+  \caption[ALSFRS-R slope distribution in PRO-ACT]{The histogram shows the empirical distribution of functional decline in the PRO-ACT cohort, with more negative slopes indicating faster deterioration. The threshold used to distinguish fast progressors (orange) from medium–slow progressors (blue) is commonly adopted in supervised ML studies as a clinically meaningful target label. Adapted from Pancotti et al.~\cite{Pancotti2022}.}
   \label{fig:soa_figura2}
 \end{figure}
 
@@ -55,7 +55,7 @@ The effect of model choice and hyperparameter optimization on supervised learnin
 \begin{figure}[ht]
   \centering
   \includegraphics[width=0.85\linewidth]{./images/figures/figura3.png}
-  \caption{The figure shows R² and RMSE values for XGBoost (XGB), LightGBM (LGB) and a Deep Neural Network (DNN) after hyperparameter optimization, highlighting the performance gains achieved through model tuning. Adapted from Qin et al.~\cite{Qin2025}.}
+  \caption[XGBoost, LightGBM and DNN performance comparison]{The figure shows R² and RMSE values for XGBoost (XGB), LightGBM (LGB) and a Deep Neural Network (DNN) after hyperparameter optimization, highlighting the performance gains achieved through model tuning. Adapted from Qin et al.~\cite{Qin2025}.}
   \label{fig:soa_figura3}
 \end{figure}
 
@@ -66,10 +66,41 @@ More recently, Anani et al. combined multiple ALS datasets (PRO-ACT, ExonHit, PU
 Complementary work by Qin et al. optimizes deep learning, XGBoost and LightGBM models on PRO-ACT to predict ALS progression and classify onset type (bulbar vs limb). After extensive preprocessing and hyperparameter tuning, a 1D convolutional neural network (CNN) achieved R² values above 0.7 and competitive RMSE for ALSFRS-based progression, while an optimized XGBoost model reached AUC 0.955 and accuracy 0.98 for onset-type classification~\cite{Qin2025}. These results illustrate the power of modern ML and deep learning in capturing complex relationships in multi-dimensional clinical datasets.
 Beyond clinical trial data, Imamura et al. propose a different perspective by using deep learning on images of induced pluripotent stem cell (iPSC)-derived motor neurons. A CNN (VGG-16-based) trained to distinguish ALS versus control motor neurons achieved AUC 0.97, demonstrating proof-of-concept for cell-level diagnostic support, even though generalizability and clinical integration remain open issues~\cite{Imamura2022}.
 
+A more directly replicable contribution to survival prognosis is provided by Papaiz et al.\ \cite{Papaiz2024}, who trained seven classifiers --- KNN, Naive Bayes, Decision Tree, Random Forest, \gls{SVM}, MLP, and LightGBM --- on 23 ordinal and binary \gls{PRO-ACT} features to classify patients as Short Survivors (death within 24 months of symptom onset) or Standard Survival. The central design choice was BalancedBagging: each base classifier was wrapped in a bagging ensemble that resampled with equal class proportions at each bootstrap iteration, and the resulting improvement in balanced accuracy was validated with Wilcoxon signed-rank tests. The study reported statistically significant gains for five of six originally tested classifiers, with \gls{MLP} achieving the highest balanced accuracy (approximately 0.84) under the BalancedBagging wrapper. However, Papaiz et al.\ did not include Bayesian hyperparameter optimisation, a held-out test set reserved from all training decisions, individual resampling strategy evaluation, or post-hoc feature attribution. These methodological gaps motivated the replication and extension study reported in Chapter~\ref{ch:study2_methods}.
+
 \subsection{Unsupervised and longitudinal pattern discovery}
 
 ALS heterogeneity has also motivated unsupervised approaches to identify progression patterns. Ramamoorthy et al.~\cite{Ramamoorthy2022} apply a mixture of Gaussian processes to sparse longitudinal ALSFRS-R data from multiple cohorts, identifying distinct non-linear progression trajectories associated with meaningful differences in survival. Their work demonstrates that clinically relevant stratification can emerge directly from temporal patterns, even when patient follow-up is irregular or incomplete. Time-series clustering, principal component analysis and UMAP have also been used to reveal subgroups with similar trajectories, often feeding back into supervised models as data-driven stratification. Anani et al. use Kaplan–Meier analysis on model-derived risk scores to derive five survival clusters with distinct profiles, while earlier UMAP-based analyses on the same datasets showed that manifold learning can uncover clinically meaningful subgroups~\cite{Anani2023}. Segura et al.’s NLP study similarly identifies patterns in symptom timelines that differentiate spinal and bulbar ALS, supporting ML-based phenotype clustering from real-world data~\cite{Paganoni2023}.
 
+
+\section{Class imbalance, validation, and reproducibility in ALS prognosis}
+\label{sec:soa_imbalance}
+
+\subsection{Class imbalance and metric choice}
+
+Clinical prognosis targets in ALS are inherently imbalanced. In functional progression studies, rapid progressors represent approximately 20--30\% of the cohort, depending on the threshold used and the follow-up window. In survival prognosis, short survivors may account for 10--15\% of patients; Papaiz et al.\ \cite{Papaiz2024} report an 11.6\% minority-class rate in their \gls{PRO-ACT} extract, corresponding to a 7.6:1 class ratio. These two imbalance levels require different modelling responses.
+
+For moderate imbalance (30/70), class-weight adjustment applied to the classifier's loss function is often sufficient to prevent the model from ignoring the minority class. \gls{PR-AUC} is the preferred ranking metric in this regime because it focuses exclusively on the positive class and is more sensitive than \gls{ROC-AUC} to changes in precision and recall when the minority class is clinically important~\cite{Grollemund2019}.
+
+For severe imbalance (7--10:1), resampling strategies that modify the training set itself are commonly applied. Oversampling techniques such as \gls{SMOTE} \cite{chawla2002smote} and its variants (BorderlineSMOTE, ADASYN) generate synthetic minority examples; undersampling techniques such as \gls{RUS} and NearMiss reduce the majority class; hybrid methods such as SMOTEENN and SMOTETomek combine both. The Python imbalanced-learn library~\cite{lemaitre2017} provides a standardised implementation of ten such strategies and is widely used in clinical ML studies. BalancedBagging, applied by Papaiz et al.\ \cite{Papaiz2024}, is an ensemble-level variant that combines resampling with bagging and has been shown to improve balanced accuracy for several classifier families in the ALS survival prediction task.
+
+A critical and underreported consequence of severe imbalance is the decoupling between \gls{ROC-AUC} and minority-class recall at the default 0.5 decision threshold. A classifier can rank minority examples above majority examples in aggregate --- yielding high \gls{ROC-AUC} --- whilst simultaneously assigning posterior probabilities below 0.5 to those same examples, causing near-zero recall. This occurs because \gls{ROC-AUC} reflects the relative ordering of predicted scores but does not constrain the absolute probability values. The consequence is a model that appears to perform well by ranking metrics but fails almost entirely at the binary classification task used in practice. Reporting \gls{ROC-AUC} alone, without recall or confusion matrices at the operating threshold, therefore provides an incomplete picture of clinical usefulness under severe imbalance. This motivates the threshold analysis carried out in Study~II.
+
+\subsection{Validation protocol and data leakage}
+
+Multiple reviews of ALS prognosis literature identify leakage-prone evaluation designs as a source of optimistic performance estimates~\cite{Grollemund2019, Papaiz2022}. The most common form occurs when patient records from the same individual are assigned to different partitions: because an ALS patient's observations at different time points are correlated, a model trained on early visits and tested on later visits from the same subject learns patterns that are not available at the time of prediction in a real deployment. Subject-level holdout splits, where all records from a given patient appear in exactly one partition, are necessary to prevent this form of leakage.
+
+A second, less discussed form of leakage arises when the label threshold is computed on the full dataset before splitting. In functional progression studies that classify patients as rapid or slow progressors based on a percentile cutoff of the slope distribution, computing that cutoff on the combined training and test data encodes information about the test partition into the training labels. Computing the percentile threshold fold-wise on the training partition only is required to prevent this.
+
+A third validation concern is the absence of a held-out test set that is sealed from all training and tuning decisions. Many published ALS prognosis studies report only cross-validation performance, without reserving a fixed test partition~\cite{Papaiz2022, Halbersberg2023}. Cross-validation estimates generalisation error over the development set but does not provide an independent estimate of how the final model behaves on data it has never influenced. Both studies in this dissertation apply an 80/20 subject-level holdout split before any modelling, and the test set is not used until the final model has been selected.
+
+\subsection{Replication and reproducibility}
+
+Replication of published machine learning pipelines is rare in clinical ML research. Most published ALS prognosis studies report performance on a single dataset split, without independent re-implementation or external evaluation. Where external validation is attempted, it typically tests whether a model trained on one cohort generalises to another cohort, but it does not test whether the original modelling conclusions survive changes in validation design, imbalance handling, or threshold selection within the same data source.
+
+For clinical ML, replication is not only a check of numerical agreement; it tests whether the original modelling conclusions survive changes in data availability, validation design, imbalance handling, and deployment-relevant decision thresholds. A pipeline that achieves high performance under one validation design may rank classifiers differently under another, and a model selected on the basis of cross-validation \gls{ROC-AUC} may show a very different sensitivity when evaluated on a held-out test set at the default decision threshold.
+
+Papaiz et al.\ \cite{Papaiz2024} provide an example of a published ALS survival prognosis pipeline with clearly documented methodology, using a public dataset (\gls{PRO-ACT}), a fixed feature set (23 ordinal and binary features), and a specific evaluation protocol (Wilcoxon signed-rank comparison of balanced accuracy). These characteristics make the study amenable to independent replication, and the existence of documented gaps --- no Bayesian optimisation, no held-out test set, no individual resampling evaluation, no \gls{SHAP} attribution --- provides a concrete extension agenda. Study~II of this dissertation carries out this replication and extension.
 
 \section{Explainable and interpretable AI in ALS and neurodegenerative disease}
 Although many ALS prognostic models use complex ML techniques, explicit attention to interpretability has historically been limited. Grollemund et al. warned that “black-box” models, small cohorts and lack of transparent validation hinder clinical adoption and trust~\cite{Grollemund2019}. Papaiz et al. further highlight practical issues such as missing data, imbalanced classes and over-reliance on PRO-ACT, which may lead to biased or non-generalizable models unless carefully addressed~\cite{Papaiz2022}.
@@ -89,7 +120,7 @@ A representative example of SHAP-based global interpretability in ALS prognosis 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=0.80\linewidth]{./images/figures/figura4.png}
-  \caption{Each point represents an individual patient, with color indicating the feature value (red = high, blue = low). Features are ordered by overall importance, showing how variables such as ALSFRS subscores, FVC metrics, creatinine and symptom onset deltas influence model predictions. Adapted from Pancotti et al.~\cite{Pancotti2022}.}
+  \caption[SHAP global feature importance (Pancotti et al.)]{Each point represents an individual patient, with color indicating the feature value (red = high, blue = low). Features are ordered by overall importance, showing how variables such as ALSFRS subscores, FVC metrics, creatinine and symptom onset deltas influence model predictions. Adapted from Pancotti et al.~\cite{Pancotti2022}.}
   \label{fig:soa_figura4}
 \end{figure}
 
@@ -110,15 +141,15 @@ Across the reviewed literature, several consistent limitations and open challeng
 \end{enumerate}
 
 
-\section{Synthesis and implications for future work}
-Overall, the state of the art in ALS prognosis has progressed from simple regression models on small cohorts to sophisticated ML and deep learning approaches trained on large clinical-trial datasets and real-world registries. Reviews by Grollemund et al. and Papaiz et al. document major advances---particularly in survival prediction and functional-decline modelling---while also repeatedly emphasizing issues of dataset bias, missingness and validation quality~\cite{Grollemund2019,Papaiz2022}. Methodologically, recent studies demonstrate that combining rigorous preprocessing, feature selection and advanced ML learners (e.g., deep neural networks, gradient boosting) can yield accurate models for ALSFRS slope, short-term survival, and phenotype classification~\cite{Pancotti2022,Anani2023,Qin2025}. At the same time, explainability and clinical usability remain underdeveloped. Feature-selection pipelines using metaheuristics or interpretable models~\cite{Anani2023} provide one route, while SHAP-based analysis and broader XAI frameworks offer post-hoc interpretability for complex models~\cite{Qin2025}. The wider XAI-in-NDDs literature highlights the importance of integrating interpretability, multimodal fusion, ethical standards and user-centered design into future diagnostic and prognostic systems~\cite{Wang2025}.
+\section{Synthesis and implications for this dissertation}
+\label{sec:soa_synthesis}
 
-Within this landscape, there is significant opportunity for research that:
-\begin{enumerate}
-    \item Builds prognostic models on clinically representative cohorts, reducing bias and improving generalizability.
-    \item Balances predictive performance with interpretability, for example through hybrid ML/XAI approaches.
-    \item Focuses on clinically actionable outcomes, such as progression phenotypes, risk-group stratification, and decision-support thresholds aligned with care pathways.
-    \item Employs robust internal and external validation, aligning modelling choices with clinical workflows and intended use.
-\end{enumerate}
+The literature reviewed in this chapter establishes that \gls{ALS} prognosis modelling has become technically feasible at scale, but that methodological quality varies substantially across published studies. Three consistent gaps emerge.
 
-Such contributions would directly address the limitations highlighted across current ALS and XAI research and support more personalized care, improved clinical decision-support systems and enhanced trial design for this highly heterogeneous disease.
+First, functional progression and survival are treated as separate modelling targets in the literature but have rarely been studied under a unified evaluation framework. Most functional progression studies use \gls{ALSFRS-R} slope as a continuous or dichotomised outcome and prioritise \gls{PR-AUC} or balanced accuracy; most survival prognosis studies use fixed-horizon binary survival and prioritise \gls{ROC-AUC} or balanced accuracy. The implications of these metric choices for minority-class detection --- particularly under severe imbalance --- are rarely discussed explicitly, and threshold-aware metrics such as recall, precision, and confusion matrices at a specific operating threshold are reported inconsistently.
+
+Second, validation designs across the reviewed literature range from adequate (subject-level holdout splits, independent test sets) to leakage-prone (record-level random splits, cross-validation without a held-out test partition). The correlation between validation design and reported performance makes it difficult to compare results across studies~\cite{Grollemund2019, Papaiz2022}. Leakage-free evaluation requires deliberate choices that are not yet standard in the field.
+
+Third, replication of published pipelines is absent from the ALS ML literature. Papaiz et al.\ \cite{Papaiz2024} provide a documented and reproducible survival prognosis pipeline using \gls{PRO-ACT}, but their study did not include Bayesian hyperparameter optimisation, individual resampling strategy evaluation, a held-out test set, or \gls{SHAP}-based feature attribution. These are not minor omissions: Bayesian optimisation changes the model ranking within a classifier family; held-out test evaluation changes the performance estimate; and \gls{SHAP} attribution connects predictions to clinical variables that clinicians can evaluate against domain knowledge.
+
+The literature therefore leaves two linked gaps that this dissertation addresses. Study~I develops a leakage-free, explainable pipeline for predicting short-term \gls{ALSFRS-R} functional progression, with subject-level holdout splits, fold-wise target definition, Bayesian optimisation with Optuna, and dual \gls{SHAP}/\gls{LIME} attribution. Study~II replicates and extends the Papaiz et al.\ survival prognosis framework, adding Bayesian optimisation, individual resampling evaluation across ten strategies and seven classifiers, a held-out test set with bootstrap confidence intervals, and \gls{SHAP}-based interpretation for both a tree-based and a neural network classifier. Together, the two studies address functional decline and survival across different imbalance regimes, validation protocols, and metric objectives, and they demonstrate that rigorous, reproducible, explainable machine learning for \gls{ALS} prognosis is achievable with publicly available data and standard open-source software.

@@ -23,7 +23,7 @@ Table~\ref{tab:search_spaces} lists the hyperparameter ranges explored for each 
 
 \begin{table}[htbp]
 \centering
-\caption{Hyperparameter search spaces used in Optuna TPE optimisation.}
+\caption[Optuna hyperparameter search spaces]{Hyperparameter search spaces used in Optuna TPE optimisation.}
 \label{tab:search_spaces}
 \small
 \begin{tabular}{l l l l}
@@ -92,7 +92,7 @@ For models evaluated in both balanced and unbalanced modes, the configuration wi
 
 \begin{table}[htbp]
 \centering
-\caption{Best hyperparameters --- simple models (6-month horizon).}
+\caption[Best hyperparameters: simple models]{Best hyperparameters --- simple models (6-month horizon).}
 \label{tab:best_simple}
 \small
 \begin{tabular}{l l c c}
@@ -137,7 +137,7 @@ For models evaluated in both balanced and unbalanced modes, the configuration wi
 
 \begin{table}[htbp]
 \centering
-\caption{Best hyperparameters --- gradient boosting models (6-month horizon).}
+\caption[Best hyperparameters: gradient boosting models]{Best hyperparameters --- gradient boosting models (6-month horizon).}
 \label{tab:best_boosting}
 \small
 \begin{tabular}{l l c c}
@@ -182,7 +182,7 @@ Starting from a baseline of 15 demographic and ALSFRS-R features, successive blo
 
 \begin{table}[htbp]
 \centering
-\caption{Feature block ablation (6-month, DEV set). PR-AUC with Optuna-tuned hyperparameters. Blocks are cumulative: each row adds new features to the previous.}
+\caption[Feature block ablation PR-AUC, DEV set]{Feature block ablation (6-month, DEV set). PR-AUC with Optuna-tuned hyperparameters. Blocks are cumulative: each row adds new features to the previous.}
 \label{tab:app_ablation}
 \small
 \begin{tabular}{lccccc}
@@ -205,7 +205,7 @@ The full v2 feature set (block~F, 35~features) maximises XGBoost performance at 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.85\linewidth]{./images/figures/step5v2_ablation_prauc.png}
-  \caption{PR-AUC progression across cumulative feature blocks for four model families. FVC features (block~C) yield the largest marginal improvement.}
+  \caption[PR-AUC across cumulative feature blocks]{PR-AUC progression across cumulative feature blocks for four model families. FVC features (block~C) yield the largest marginal improvement.}
   \label{fig:app_ablation}
 \end{figure}
 
@@ -225,7 +225,7 @@ Table~\ref{tab:app_test_metrics} presents the performance of all seven models on
 
 \begin{table}[htbp]
 \centering
-\caption{Held-out TEST set metrics (6-month horizon, $n{=}279$). PR-AUC and ROC-AUC are threshold-free; F$_1$ and F$_2$ use default $t{=}0.50$; Brier score measures calibration (lower is better).}
+\caption[TEST set metrics, all 7 models (appendix)]{Held-out TEST set metrics (6-month horizon, $n{=}279$). PR-AUC and ROC-AUC are threshold-free; F$_1$ and F$_2$ use default $t{=}0.50$; Brier score measures calibration (lower is better).}
 \label{tab:app_test_metrics}
 \small
 \begin{tabular}{l c c c c c c}
@@ -251,28 +251,28 @@ Model & Mode & PR-AUC & ROC-AUC & F$_1$ & F$_2$ & Brier \\
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.85\linewidth]{./images/figures/step6_pr_curves.png}
-  \caption{Precision--Recall curves on the held-out TEST set for all seven models.}
+  \caption[Precision--Recall curves, all 7 models]{Precision--Recall curves on the held-out TEST set for all seven models.}
   \label{fig:app_pr}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.85\linewidth]{./images/figures/step6_roc_curves.png}
-  \caption{ROC curves on the held-out TEST set.}
+  \caption[ROC curves, all 7 models]{ROC curves on the held-out TEST set.}
   \label{fig:app_roc}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.85\linewidth]{./images/figures/step6_calibration.png}
-  \caption{Calibration plots (reliability diagrams) for all seven models on the TEST set.}
+  \caption[Calibration plots, all 7 models]{Calibration plots (reliability diagrams) for all seven models on the TEST set.}
   \label{fig:app_calibration}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.85\linewidth]{./images/figures/step6_confusion_matrix.png}
-  \caption{Confusion matrices at the default threshold ($t{=}0.50$) on the TEST set.}
+  \caption[Confusion matrices at default threshold, all models]{Confusion matrices at the default threshold ($t{=}0.50$) on the TEST set.}
   \label{fig:app_cm}
 \end{figure}
 
@@ -285,7 +285,7 @@ To assess whether the observed performance differences among models are statisti
 
 \begin{table}[htbp]
   \centering
-  \caption{Pairwise Wilcoxon signed-rank tests with Bonferroni correction (Friedman $\chi^2 = 12.43$, $p = 0.0531$).}
+  \caption[Pairwise Wilcoxon tests with Bonferroni correction]{Pairwise Wilcoxon signed-rank tests with Bonferroni correction (Friedman $\chi^2 = 12.43$, $p = 0.0531$).}
   \label{tab:app_pairwise}
   \small
   \begin{tabular}{llccc}
