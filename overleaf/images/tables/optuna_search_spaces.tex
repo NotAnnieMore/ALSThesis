@@ -1,6 +1,6 @@
 \begin{table}[ht!]
 \centering
-\caption{Optuna hyperparameter search spaces for the seven model families.
+\caption[Optuna search spaces by model family]{Optuna hyperparameter search spaces for the seven model families.
 All searches use 60 TPE trials with seed 42.
 ``Log'' denotes log-uniform sampling; ``Step'' denotes uniform with fixed step size; all other integer/float ranges are sampled uniformly.
 Fixed parameters (\texttt{random\_state}, \texttt{n\_jobs}, \texttt{solver}) are omitted for brevity.}
@@ -43,7 +43,7 @@ Model & Hyperparameter & Range & Scale \\
   & \texttt{num\_leaves}         & $[15,\ 127]$    & Uniform \\
   & \texttt{max\_depth}          & $[-1,\ 12]$     & Uniform \\
   & \texttt{min\_child\_samples} & $[5,\ 50]$      & Uniform \\
-  & \texttt{subsample}           & $[0.6,\ 1.0]$   & Uniform \\
+  & \texttt{subsample}\textsuperscript{b} & $[0.6,\ 1.0]$   & Uniform \\
   & \texttt{colsample\_bytree}   & $[0.6,\ 1.0]$   & Uniform \\
   & \texttt{reg\_lambda}         & $[10^{-3},\ 10]$ & Log \\
   & \texttt{reg\_alpha}          & $[10^{-6},\ 1.0]$ & Log \\
@@ -61,5 +61,6 @@ Model & Hyperparameter & Range & Scale \\
 \bottomrule
 \end{tabular}
 \par\smallskip
-{\scriptsize \textsuperscript{a}Sampled only when \texttt{kernel\,=\,rbf}.}
+{\scriptsize \textsuperscript{a}Sampled only when \texttt{kernel\,=\,rbf}.
+\textsuperscript{b}Sampled in the recorded runs but inactive because LightGBM \texttt{subsample\_freq} remained at its default value of 0.}
 \end{table}

@@ -4,7 +4,7 @@ Patient Risk Report Generator — ALS Rapid-Progression Screening.
 Loads the trained XGBoost pipeline and generates a textual report for a
 single patient, including:
   1. Probability of rapid progression (6-month horizon)
-  2. Binary classification at F1-optimal and F2-optimal thresholds
+  2. Binary classification at the F1- and F2-optimal DEV thresholds
   3. Top-5 contributing features (SHAP local explanation)
   4. Monitoring suggestions based on population percentile comparison
 
@@ -48,7 +48,7 @@ OUT_DIR    = os.path.join("04_outputs", "reports")
 
 # Thresholds from DEV OOF sweep (evaluate_holdout.py)
 THR_F1 = 0.21   # F1-optimal
-THR_F2 = 0.21   # F2-optimal (≈ same in this dataset; F2 curve is flat 0.15–0.21)
+THR_F2 = 0.05   # F2-optimal; degenerate all-positive operating point on DEV
 
 N_TOP = 5       # number of SHAP features to show
 

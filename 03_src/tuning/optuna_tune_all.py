@@ -227,6 +227,7 @@ def suggest_lgbm(trial: optuna.Trial) -> dict:
         "num_leaves": trial.suggest_int("num_leaves", 15, 127),
         "max_depth": trial.suggest_int("max_depth", -1, 12),
         "min_child_samples": trial.suggest_int("min_child_samples", 5, 50),
+        # Historical runs left subsample_freq=0, so this sampled value was inactive.
         "subsample": trial.suggest_float("subsample", 0.6, 1.0),
         "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
         "reg_lambda": trial.suggest_float("reg_lambda", 1e-3, 10.0, log=True),

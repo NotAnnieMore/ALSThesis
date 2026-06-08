@@ -1,7 +1,7 @@
 horizon,variable,type,n_with_fvc,n_without_fvc,mean_with,mean_without,test,statistic,p_value,effect_size,effect_type,significant_005
 6m,ALSFRS-R at baseline,continuous,784,608,38.107,38.257,Mann-Whitney U,231323.5,0.344988,0.027,Cohen d,False
 6m,Age,continuous,609,603,56.322,56.682,Mann-Whitney U,179101.5,0.458842,0.031,Cohen d,False
-6m,Slope (target),continuous,361,359,-0.792,-0.86,Mann-Whitney U,68474.5,0.187905,0.061,Cohen d,False
+6m,Slope (target),continuous,784,608,-0.913,-1.001,Mann-Whitney U,252912.5,0.050055,0.098,Cohen d,False
 6m,Creatinine,continuous,602,298,70.753,67.802,Mann-Whitney U,95881.0,0.091529,0.158,Cohen d,False
 6m,ALT,continuous,553,408,37.141,35.346,Mann-Whitney U,119858.5,0.097488,0.09,Cohen d,False
 6m,BMI,continuous,252,365,28.261,25.97,Mann-Whitney U,57375.0,0.0,0.468,Cohen d,True

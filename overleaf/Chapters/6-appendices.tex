@@ -63,7 +63,7 @@ Table~\ref{tab:search_spaces} lists the hyperparameter ranges explored for each 
   & \texttt{num\_leaves}       & $[15,\,127]$             & linear \\
   & \texttt{max\_depth}        & $[-1,\,12]$              & linear \\
   & \texttt{min\_child\_samples} & $[5,\,50]$             & linear \\
-  & \texttt{subsample}         & $[0.6,\,1.0]$            & linear \\
+  & \texttt{subsample}\textsuperscript{a} & $[0.6,\,1.0]$            & linear \\
   & \texttt{colsample\_bytree} & $[0.6,\,1.0]$            & linear \\
   & \texttt{reg\_lambda}       & $[10^{-3},\,10]$         & log \\
   & \texttt{reg\_alpha}        & $[10^{-6},\,1]$          & log \\
@@ -80,6 +80,8 @@ Table~\ref{tab:search_spaces} lists the hyperparameter ranges explored for each 
   & \texttt{reg\_alpha}        & $[10^{-6},\,1]$          & log \\
 \bottomrule
 \end{tabular}
+\par\smallskip
+{\scriptsize \textsuperscript{a}Sampled in the recorded LightGBM runs but inactive because \texttt{subsample\_freq} remained at its default value of 0.}
 \end{table}
 
 
@@ -89,6 +91,7 @@ Table~\ref{tab:search_spaces} lists the hyperparameter ranges explored for each 
 
 Tables~\ref{tab:best_simple}--\ref{tab:best_boosting} report the best configuration found for each model on the 6-month DEV set.
 For models evaluated in both balanced and unbalanced modes, the configuration with the higher PR-AUC is indicated in bold.
+The LightGBM \texttt{subsample} values are retained to reproduce the stored trial records, but were inactive because \texttt{subsample\_freq=0}.
 
 \begin{table}[htbp]
 \centering
@@ -319,4 +322,3 @@ To assess whether the observed performance differences among models are statisti
 
 The Friedman test yields $\chi^2 = 12.43$ ($p = 0.053$), marginally above the significance threshold at $\alpha = 0.05$.
 No pairwise comparison reaches significance after Bonferroni correction ($p_\text{Bonf.} = 1.000$ for all 21 pairs), confirming that the performance differences among the seven models are not statistically distinguishable given 5 cross-validation folds.
-

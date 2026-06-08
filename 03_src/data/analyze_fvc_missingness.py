@@ -48,7 +48,7 @@ def cramers_v(contingency_table):
     return np.sqrt(chi2 / (n * min_dim))
 
 
-def analyze_horizon(dataset_path, horizon_label):
+def analyze_horizon(dataset_path, horizon_label, slope_col):
     """Run missingness analysis for one horizon."""
     df = pd.read_csv(dataset_path)
     df["has_fvc"] = df["FVC_Liters_best_t0"].notna().astype(int)
@@ -69,8 +69,7 @@ def analyze_horizon(dataset_path, horizon_label):
     cont_vars = [
         ("ALSFRS_R_t0", "ALSFRS-R at baseline"),
         ("Age", "Age"),
-        ("slope_180d_per_30d" if "180" in horizon_label else "slope_90d_per_30d",
-         "Slope (target)"),
+        (slope_col, "Slope (target)"),
         ("creatinine_t0", "Creatinine"),
         ("alt_t0", "ALT"),
         ("BMI_t0", "BMI"),
@@ -154,11 +153,11 @@ def analyze_horizon(dataset_path, horizon_label):
 if __name__ == "__main__":
     results_all = []
 
-    for ds, label in [
-        (os.path.join(PROCESSED, "dataset_6m_v2.csv"), "6m"),
-        (os.path.join(PROCESSED, "dataset_3m_v2.csv"), "3m"),
+    for ds, label, slope_col in [
+        (os.path.join(PROCESSED, "dataset_6m_v2.csv"), "6m", "slope_180d_per_30d"),
+        (os.path.join(PROCESSED, "dataset_3m_v2.csv"), "3m", "slope_90d_per_30d"),
     ]:
-        res = analyze_horizon(ds, label)
+        res = analyze_horizon(ds, label, slope_col)
         res.insert(0, "horizon", label)
         results_all.append(res)
 

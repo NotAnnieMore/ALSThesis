@@ -8,7 +8,7 @@
   "rapid_prevalence": 0.30028735632183906,
   "slope_col": "slope_180d_per_30d",
   "slope_cutoff_30pct": -1.247521138711234,
-  "decision_threshold": null,
+  "decision_threshold": 0.21,
   "feature_cols": [
     "ALSFRS_R_t0",
     "Age",

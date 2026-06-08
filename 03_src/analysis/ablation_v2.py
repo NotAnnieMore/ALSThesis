@@ -5,7 +5,7 @@ Uses the best hyperparameters from the Optuna tuning (step5_tuning/*.json)
 and evaluates them with progressively larger feature sets via GroupKFold CV
 (no re-tuning — just feature ablation on pre-tuned params).
 
-Feature blocks (cumulative):
+Feature configurations:
   A : Baseline only     (demographics + ALSFRS-R items)
   B : A + Vitals
   C : A + FVC
@@ -84,7 +84,7 @@ LABS_COLS = {
     "alt_t0", "creatinine_t0",
 }
 
-# Block configs (cumulative)
+# Block configurations; B and C are parallel extensions of A.
 BLOCKS = {
     "A: Baseline":               lambda all_c: [c for c in all_c if c not in META_COLS | VITALS_COLS | FVC_COLS | TREATMENT_COLS | LABS_COLS],
     "B: +Vitals":                lambda all_c: [c for c in all_c if c not in META_COLS | FVC_COLS | TREATMENT_COLS | LABS_COLS],
@@ -266,8 +266,9 @@ def main():
     lines = []
     lines.append(r"\begin{table}[ht]")
     lines.append(r"\centering")
-    lines.append(r"\caption{Feature block ablation (6m, DEV). PR-AUC with Optuna-tuned hyperparameters. "
-                 r"Blocks are cumulative: each row adds new features to the previous.}")
+    lines.append(r"\caption[Feature block ablation, 6-month horizon]{Feature-block analysis on the six-month DEV set "
+                 r"using hyperparameters tuned on the full feature set. B and C are alternative extensions of A; "
+                 r"D combines both, followed by the addition of treatment and laboratory variables in E and F.}")
     lines.append(r"\label{tab:ablation_v2}")
     lines.append(r"\small")
     lines.append(r"\begin{tabular}{lccccc}")

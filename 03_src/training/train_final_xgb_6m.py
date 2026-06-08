@@ -63,6 +63,7 @@ MODEL_FILENAME = "final_xgb_6m.joblib"
 META_FILENAME = "final_xgb_6m_metadata.json"
 
 SEED = 42
+DECISION_THRESHOLD = 0.21
 
 
 @dataclass
@@ -80,7 +81,6 @@ class TrainMeta:
     slope_col: str
     slope_cutoff_30pct: float
 
-    # threshold chosen later in sanity-check step
     decision_threshold: Optional[float]
 
     feature_cols: List[str]
@@ -229,7 +229,7 @@ def main() -> None:
         rapid_prevalence=float(y.mean()),
         slope_col=SLOPE_COL,
         slope_cutoff_30pct=float(slope_cutoff),
-        decision_threshold=None,
+        decision_threshold=DECISION_THRESHOLD,
         feature_cols=feat_cols,
         num_cols=num_cols,
         cat_cols=cat_cols,

@@ -58,7 +58,7 @@ The 180 subjects without recorded age correspond to clinical trials in which age
 Vital signs are available for 80.6\% of subjects at a block level ($n\!=\!1{,}122$), with individual features ranging from 44.9\% (height) to 79.2\% (weight).
 FVC data are available for 56.3\% (litres) to 54.5\% (percent of normal), motivating the missingness analysis in Section~\ref{sec:results_fvc_missingness}.
 At block level, 60.7\% of subjects ($n\!=\!845$) have at least one non-missing FVC feature.
-Treatment features have high coverage (riluzole: 100\%, study arm: 91.1\%, concomitant medication count: 100\%).
+Study arm is recorded for 91.1\% of subjects. The derived riluzole indicator and concomitant-medication count contain no missing values because subjects without a qualifying pre-baseline record are coded as zero.
 Labs are moderately available (creatinine: 64.7\%, ALT: 69.0\%).
 
 \begin{table}[ht]
@@ -108,13 +108,12 @@ The target slope approaches borderline significance ($p\!=\!0.050$, $d\!=\!0.098
 In substantive terms, mean slopes are $-0.91$ (with FVC) vs $-1.00$ (without FVC)~pts/30d---a difference of $0.09$~pts/30d that is clinically negligible relative to the overall slope standard deviation ($\sigma\!=\!0.89$).
 Similarly, lab values (creatinine $p\!=\!0.092$, ALT $p\!=\!0.097$) show no significant difference.
 
-The variables that \emph{do} differ significantly are related to study design rather than disease severity: study arm ($V\!=\!0.357$, $p < 0.001$) and number of concomitant medications ($d\!=\!0.332$, $p < 0.001$) reflect the fact that certain clinical trials systematically collected FVC while others did not.
-Riluzole shows a nominally significant association ($p\!=\!0.015$, $V\!=\!0.065$), but the effect is negligible and does not survive Bonferroni correction ($p > 0.0045$), suggesting a weak confound with trial protocol rather than a clinically meaningful difference.
-Weight ($d\!=\!0.146$, $p\!=\!0.003$) and BMI ($d\!=\!0.468$, $p < 0.001$) also differ between groups, which is expected because FVC testing often occurs in the same visit as anthropometric measurement, creating correlated availability.
+The clearest differences involve study arm ($V\!=\!0.357$, $p < 0.001$) and number of concomitant medications ($d\!=\!0.332$, $p < 0.001$). These associations are compatible with variation in measurement protocols across the pooled trials, although the available variables do not establish the reason for the missing records.
+Riluzole shows a nominally significant association ($p\!=\!0.015$, $V\!=\!0.065$), but the effect is negligible and does not survive Bonferroni correction ($p > 0.0045$).
+Weight ($d\!=\!0.146$, $p\!=\!0.003$) and BMI ($d\!=\!0.468$, $p < 0.001$) also differ between groups. Their availability may be correlated with FVC collection, but this explanation was not tested directly.
 
-Since the outcome (slope) and the most clinically relevant baselines (ALSFRS-R, age) are unrelated to FVC availability---the borderline slope result ($p\!=\!0.050$) has a trivial effect size and does not survive multiple-comparison correction---the missingness mechanism is classified as \emph{Missing at Random} (MAR), driven by study-protocol factors rather than by the patient's disease trajectory.
-This supports the use of median imputation for FVC features without introducing outcome-dependent bias.
-The Bonferroni-adjusted threshold ($\alpha/11\!=\!0.0045$) further narrows the significant variables to study arm, BMI, weight, and concomitant medication count---all of which reflect trial-level data-collection practices rather than individual disease severity.
+FVC availability shows no clear association with baseline ALSFRS-R, age, sex, or the six-month slope after accounting for effect size and multiple comparisons. Together with the association observed for study arm, this pattern is compatible with missingness related partly to trial-level collection practices. It does not prove that the data are \emph{Missing at Random}, and an \gls{MNAR} component cannot be excluded from the available observations.
+Median imputation is therefore retained as a pragmatic preprocessing choice rather than as a consequence of a confirmed missing-data mechanism. The Bonferroni threshold ($\alpha/11\!=\!0.0045$) leaves study arm, BMI, weight, and concomitant-medication count as the clearest observed differences between the groups.
 
 
 % ============================================================
@@ -141,19 +140,16 @@ All datasets (used in tuning, ablation, and all subsequent analyses) were regene
 % ============================================================
 
 Three treatment-related features are available in the dataset: clinical trial arm (\texttt{study\_arm}), pre-baseline riluzole use (\texttt{riluzole\_pre\_t0}), and the number of concomitant medications (\texttt{n\_conmeds\_pre\_t0}).
-Before incorporating these features into the predictive pipeline, we investigate their descriptive association with the \gls{ALSFRS-R} slope and the binary rapid-progression label (global rate: 30.0\%, $N=418/1{,}392$).
+Their distributions are examined against the six-month \gls{ALSFRS-R} slope and a descriptive rapid-progression label based on the global 30th percentile (418 of 1,392 subjects, 30.0\%). This global label is used only in this exploratory section and not for model validation.
 
 \textbf{Important caveat.}
-This analysis is strictly \emph{descriptive} (observational).
-PRO-ACT aggregates data from multiple clinical trials, so ``Active'' denotes the experimental arm of different studies (lithium, dexpramipexole, ceftriaxone, among others), most of which did not demonstrate efficacy.
-Riluzole use is not randomised and is subject to indication bias.
-No causal claims can be drawn without dedicated causal-inference methods (e.g.\ propensity score matching, \gls{IPTW}).
+This analysis is observational and does not estimate treatment effects. PRO-ACT aggregates multiple trials, so ``Active'' denotes exposure to different experimental interventions rather than a single treatment. Riluzole use and concomitant medication burden may also be associated with patient characteristics, trial procedures, and recording practices. The comparisons below are therefore descriptive.
 
 \subsection{Study Arm: Active vs Placebo}
 \label{subsec:results_eda_arm}
 
 Of the 1{,}392 subjects in the 6-month cohort, 506 belong to the Active arm, 762 to Placebo, and 124 have no arm information.
-The Active group shows a lower rapid-progression rate ($26.5$\%) compared to Placebo ($31.6$\%), with the NaN group at $34.7$\% (Table~\ref{tab:eda_treat_arm}).
+The observed rapid-progression rates are 26.5\% in Active, 31.6\% in Placebo, and 34.7\% among subjects with missing arm information (Table~\ref{tab:eda_treat_arm}).
 Median slopes are similar: $-0.791$ (Active) vs $-0.819$ (Placebo) points/30\,d.
 
 \begin{table}[ht!]
@@ -167,7 +163,7 @@ Group & $N$ & Rapid (\%) & Slope mean & Slope median \\
 \midrule
 Active   & 506 & 26.5 & $-0.901$ & $-0.791$ \\
 Placebo  & 762 & 31.6 & $-0.973$ & $-0.819$ \\
-NaN      & 124 & 34.7 & $-1.022$ & $-0.689$ \\
+Missing  & 124 & 34.7 & $-1.022$ & $-0.689$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -190,17 +186,15 @@ Figure~\ref{fig:eda_arm_rapid} displays the rapid-progression rates with numeric
 \end{figure}
 
 \clearpage
-A $\chi^2$ test of independence between study arm and rapid-progression status yields $\chi^2 = 3.62$, $p = 0.057$ (marginally non-significant at $\alpha = 0.05$).
+A $\chi^2$ test of independence between study arm and rapid-progression status, restricted to the 1,268 subjects with known arm information, yields $\chi^2 = 3.62$, $p = 0.057$.
 A Mann-Whitney~$U$ test comparing the slope distributions of Active vs Placebo gives $U = 200{,}472$, $p = 0.229$, confirming no statistically significant difference.
-The 5-percentage-point gap in rapid rates is therefore likely attributable to the heterogeneity of the ``Active'' arm and chance variation.
+The observed difference in rapid-progression rates does not meet the predefined significance level, and the pooled arm labels do not support treatment-specific interpretation.
 
 \subsection{Riluzole}
 \label{subsec:results_eda_riluzole}
 
-Riluzole---the only disease-modifying therapy approved for \gls{ALS} at the time of the PRO-ACT trials---was used pre-baseline by 902 subjects (64.8\%).
-Patients with and without riluzole show nearly identical rapid-progression rates ($30.8$\% vs $28.6$\%), a difference of just 2.2 percentage points.
-This is consistent with the established literature reporting a modest survival benefit but no significant impact on \gls{ALSFRS-R} functional decline~\cite{Miller2012}.
-Figure~\ref{fig:eda_riluzole} shows the slope distributions and rapid-progression rates by riluzole status, confirming the absence of a meaningful difference.
+Documented pre-baseline riluzole use is present for 902 subjects (64.8\%); the remaining 490 have no qualifying use record. Rapid-progression rates are 30.8\% and 28.6\%, respectively. Median slopes are also close ($-0.807$ vs $-0.777$ points/30\,d). These comparisons describe the coded exposure groups and should not be read as an estimate of riluzole efficacy~\cite{Miller2012}.
+Figure~\ref{fig:eda_riluzole} shows both distributions.
 
 \begin{figure}[ht!]
   \centering
@@ -209,14 +203,12 @@ Figure~\ref{fig:eda_riluzole} shows the slope distributions and rapid-progressio
   \label{fig:eda_riluzole}
 \end{figure}
 
-A $\chi^2$ test confirms no significant association ($\chi^2 = 0.66$, $p = 0.416$).
+The binary label is not associated with documented riluzole use ($\chi^2 = 0.66$, $p = 0.416$), and the continuous slope comparison gives the same conclusion (Mann--Whitney $U = 216{,}535$, $p = 0.534$).
 
 \subsection{Interaction: Study Arm $\times$ Riluzole}
 \label{subsec:results_eda_interaction}
 
-Crossing both treatment variables reveals a noteworthy pattern (Figure~\ref{fig:eda_interaction}): the Placebo + riluzole subgroup has the highest rapid-progression rate ($33.5$\%, $n\!=\!526$), while Active + riluzole has the lowest ($25.7$\%, $n\!=\!315$).
-In contrast, both ``no riluzole'' subgroups cluster near $27.5$\%, suggesting that the signal concentrates among riluzole users rather than across both strata.
-No formal test of interaction was performed, as the subgroup sizes (especially Active + no riluzole, $n\!=\!191$) limit statistical power, and the analysis remains exploratory.\\\\
+The cross-tabulation in Figure~\ref{fig:eda_interaction} shows rates ranging from 25.7\% in Active subjects with documented riluzole use ($n\!=\!315$) to 33.5\% in the corresponding Placebo subgroup ($n\!=\!526$). The two groups without documented use have similar rates: 27.7\% for Active ($n\!=\!191$) and 27.5\% for Placebo ($n\!=\!236$). No formal interaction test was performed, so these differences are presented without an interaction claim.\\\\
 
 \begin{figure}[ht!]
   \centering
@@ -225,18 +217,15 @@ No formal test of interaction was performed, as the subgroup sizes (especially A
   \label{fig:eda_interaction}
 \end{figure}
 
-This pattern may reflect confounders: riluzole-taking patients in the Placebo arm may have been prescribed riluzole precisely because of perceived faster decline (indication bias), whereas in the Active arm, the experimental treatment may partially offset progression in the same at-risk subgroup.
-Without causal-inference methods, this remains a hypothesis.
+The subgroup pattern may reflect differences between trials or patient groups that are not represented in this cross-tabulation. It does not establish that either riluzole or assignment to an experimental arm altered functional progression.
 
 \subsection{Concomitant Medications and Top Drugs}
 \label{subsec:results_eda_conmeds}
 
 The number of pre-baseline concomitant medications (\texttt{n\_conmeds\_pre\_t0}) shows a non-linear relationship with rapid-progression rate: patients with 1--2 medications have the lowest rate ($22.8$\%, $n\!=\!149$), while those with 6--9 medications have the highest ($34.2$\%, $n\!=\!310$).
-This may reflect disease severity or comorbidity burden rather than a direct pharmacological effect.
+Medication count may capture several factors, including comorbidity, symptom management, trial procedures, and record density; the grouped rates do not separate these explanations.
 
-We further analysed the 15 most frequently prescribed pre-baseline medications by linking back to the raw \texttt{PROACT\_CONMEDS} table (Figure~\ref{fig:eda_top_meds}).
-Riluzole is the most common (48.2\% of the cohort), followed by Vitamin~E (25.4\%) and Ascorbic Acid (22.1\%).
-Two supplements---Betacarotene ($25.4$\%) and Nutrasense Createam ($26.9$\%)---are associated with below-average rapid rates, while Colecalciferol ($37.3$\%) and Sertraline ($35.3$\%) show the highest rates, although subgroup sizes are small ($n < 80$) and no corrections for multiple testing are applied.
+The 15 most frequently recorded medications are then identified from \texttt{PROACT\_CONMEDS} using subject-specific baseline dates (Figure~\ref{fig:eda_top_meds}). Riluzole is the most common entry in this table (673 subjects, 48.3\%), followed by Vitamin~E (355, 25.5\%) and ascorbic acid (311, 22.3\%). The rapid-progression rates range from 25.4\% for Betacarotene to 37.3\% for Colecalciferol. These are unadjusted descriptive rates; no medication-specific hypothesis tests are performed, and the raw concomitant-medication entry for riluzole is distinct from the dedicated riluzole-use feature described above.
 
 \begin{figure}[ht!]
   \centering
@@ -249,12 +238,9 @@ Two supplements---Betacarotene ($25.4$\%) and Nutrasense Createam ($26.9$\%)---a
 \subsection{Summary}
 \label{subsec:results_eda_treat_summary}
 
-None of the treatment variables show a statistically significant association with rapid progression at the conventional $\alpha = 0.05$ level.
-The Active arm exhibits a marginally lower rapid rate ($p = 0.057$), but this is confounded by the heterogeneity of the experimental arms across trials---``Active'' subsumes mechanistically distinct compounds, diluting any per-drug effect.
-Riluzole use shows no detectable effect on \gls{ALSFRS-R} decline ($p = 0.416$), consistent with its known mechanism of action: a modest survival benefit without measurable slowing of functional loss~\cite{Miller2012}.
-Concomitant medication count displays a non-linear pattern that most likely proxies disease severity or comorbidity burden rather than a pharmacological effect.
+Neither study arm nor documented riluzole use is significantly associated with the descriptive rapid-progression label at $\alpha=0.05$. Their continuous slope distributions also overlap. Medication count and individual medication rates show variation, but these comparisons are unadjusted and were not designed to identify pharmacological effects.
 
-Taken together, these results justify the inclusion of treatment features in the predictive model as \emph{covariates} that capture patient heterogeneity, while reinforcing that no causal interpretation of their coefficients or \gls{SHAP} values should be made.
+The three treatment features are retained as candidate predictors of patient and trial heterogeneity. Their incremental predictive contribution is assessed through ablation rather than inferred from this EDA, and subsequent coefficients or \gls{SHAP} values are interpreted as model associations rather than causal effects.
 
 
 % ============================================================
@@ -262,12 +248,12 @@ Taken together, these results justify the inclusion of treatment features in the
 \label{sec:results_optuna_v2}
 % ============================================================
 
-Seven model families were tuned with Optuna (60 trials per configuration, \gls{TPE} sampler, seed~42) under the full leakage-free protocol: subject-wise GroupKFold ($K\!=\!5$), fold-wise binary label definition, and evaluation exclusively on the \gls{DEV} partition ($n\!=\!1{,}113$).
+Seven model families were tuned with Optuna (60 trials per configuration, \gls{TPE} sampler, seed~42) using subject-wise GroupKFold ($K\!=\!5$), fold-wise binary label definition, and the \gls{DEV} partition only ($n\!=\!1{,}113$).
 The seven families---Logistic Regression, Decision Tree, \gls{KNN}, \gls{SVM}, Random Forest, \gls{LGBM}, and \gls{XGB}---were chosen to span linear, distance-based, kernel-based, single-tree, and ensemble paradigms, allowing a systematic comparison across model complexity levels.
 Each model was evaluated in both \textbf{unbalanced} and \textbf{balanced} modes---except \gls{KNN}, which lacks native class-weight support, yielding 13 configurations in total.
-The objective metric was \gls{PR-AUC} (average precision); \gls{ROC-AUC} and threshold-dependent metrics ($F_1$, $F_2$ at threshold~0.5) were additionally recorded.
-Sixty trials per configuration were used, which is sufficient for \gls{TPE} to converge on low-dimensional hyperparameter spaces (2--6 hyperparameters per model); preliminary experiments confirmed that \gls{PR-AUC} stabilised within the first 40 trials for all families.
-The full tuning required approximately 35 minutes of wall-clock time on a single machine, with per-configuration times ranging from 8\,s (Logistic Regression) to 768\,s (\gls{SVM} unbalanced).
+The objective metric was \gls{PR-AUC} (average precision). After each search, \gls{ROC-AUC} and threshold-dependent metrics ($F_1$, $F_2$ at threshold~0.5) were collected for the selected configuration.
+Sixty trials were used as a common computational budget rather than as a formal convergence criterion. All 780 trials completed successfully. Nine of the 13 searches found their final best value between trials 41 and 60, including both XGBoost modes, so the histories do not support truncating the budget at 40 trials. The searched spaces ranged from two parameters for Logistic Regression to nine for LightGBM and XGBoost, although the sampled LightGBM \texttt{subsample} parameter was inactive under the default \texttt{subsample\_freq=0}.
+The full tuning required approximately 34 minutes of recorded optimisation time on a single machine, with per-configuration times ranging from 8\,s (Decision Tree) to 768\,s (\gls{SVM} unbalanced).
 
 Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the results.
 
@@ -284,12 +270,9 @@ Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the
 \noindent\textbf{Key observations.}
 \begin{enumerate}
   \item \textbf{Top-ranked model.} XGBoost (unbalanced) achieves the highest PR-AUC ($0.434 \pm 0.049$), closely followed by Random Forest (unbalanced, $0.431 \pm 0.042$) and SVM (balanced, $0.425 \pm 0.049$).
-    The narrow spread ($\Delta\!<\!0.05$) among the top five models indicates that some of the discriminative ceiling is dictated by the available features rather than by model choice.
-  \item \textbf{Effect of class balancing on PR-AUC.} Balanced mode yields a small PR-AUC decrease for ensemble models (RF: $0.431 \to 0.425$; LGBM: $0.415 \to 0.418$; XGB: $0.434 \to 0.424$), suggesting that, for these models, cost-sensitive weighting provides no additional discriminative benefit at the ranking level.
-    For SVM, balanced mode \emph{improves} PR-AUC ($0.389 \to 0.425$), likely because the RBF kernel is more sensitive to class density.
-  \item \textbf{Threshold-dependent metrics.} $F_1$ and $F_2$ at the default threshold of 0.5 are near-zero for all unbalanced models, because the predicted-probability distribution is concentrated below~0.5 in the presence of 70\% negative examples.
-    Balanced mode shifts this distribution upward, yielding much higher $F_1$/$F_2$ (e.g.\ LR balanced: $F_2\!=\!0.527$ vs $0.028$ unbalanced).
-    This behaviour is expected and does \emph{not} indicate a difference in discriminative quality; it merely reflects the choice of decision threshold (see Section~\ref{sec:results_threshold_xgb}).
+    The small differences among the leading configurations show that several model families achieve similar internal validation performance; they do not, by themselves, establish a performance ceiling.
+  \item \textbf{Effect of class balancing on PR-AUC.} Weighting produces small changes for Random Forest ($0.431 \to 0.425$), LightGBM ($0.415 \to 0.418$), and XGBoost ($0.434 \to 0.424$). The largest change occurs for SVM, whose PR-AUC increases from $0.389$ to $0.425$. The effect is therefore model-dependent rather than uniformly beneficial or detrimental.
+  \item \textbf{Threshold-dependent metrics.} At the default threshold of 0.5, $F_1$ and $F_2$ are low for most unbalanced models, although Decision Tree is a clear exception. Weighting substantially increases these scores for Decision Tree, Random Forest, Logistic Regression, LightGBM, and XGBoost; for example, Logistic Regression $F_2$ increases from $0.028$ to $0.527$. Balanced SVM remains near zero at this cutoff despite its improved PR-AUC. These results show that performance at a fixed threshold depends on the probability scale as well as on ranking ability (Section~\ref{sec:results_threshold_xgb}).
   \item \textbf{Interpretable baselines.} Logistic Regression balanced ($\text{PR-AUC} = 0.407$) performs only $0.027$ below XGBoost unbalanced, making it a competitive interpretable alternative.
     Its coefficients can be directly analysed to understand feature directionality.
 \end{enumerate}
@@ -301,12 +284,9 @@ Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the
 % ────────────────────────────────────────────────────────────
 
 Figure~\ref{fig:bal_vs_unbal} presents a paired (dumbbell) comparison of PR-AUC and ROC-AUC for each model family across the two class-weighting modes.
-The key insight is that the gap between modes is consistently small ($< 0.02$ PR-AUC) for all ensemble and boosted models, indicating that the 30/70 class imbalance is moderate enough to be addressed equally well by either class weighting or post-hoc threshold adjustment.
+The differences between modes are below 0.01 PR-AUC for Random Forest, LightGBM, and XGBoost. Decision Tree improves by 0.016 with weighting, while Logistic Regression changes by 0.006. SVM shows the largest difference, increasing by 0.036 in balanced mode. Thus, class weighting has little effect on ranking performance for most model families in this experiment, but the SVM result shows that this cannot be assumed for every classifier.
 
-The only model for which balanced mode provides a substantial ranking improvement is SVM ($\Delta\text{PR-AUC} = +0.036$), likely because the RBF kernel's decision boundary is more sensitive to class density in the feature space.
-For Decision Tree, balanced mode slightly improves PR-AUC ($0.388 \to 0.404$), consistent with the known tendency of single trees to over-fit to the majority class when unconstrained.
-
-This analysis supports the conclusion that the choice between balanced and unbalanced mode is less important than model selection and threshold optimisation for this level of class imbalance.
+The much larger differences in $F_1$ and $F_2$ at threshold 0.5 reflect changes in the scale and distribution of predicted probabilities. They should not be interpreted as equivalent changes in threshold-free discrimination. This distinction motivates selecting the model by PR-AUC and choosing its operating threshold separately on development data.
 
 \begin{figure}[ht!]
   \centering
@@ -321,18 +301,18 @@ This analysis supports the conclusion that the choice between balanced and unbal
 \label{subsec:results_metric_correlation}
 % ────────────────────────────────────────────────────────────
 
-To justify the choice of PR-AUC as the primary ranking metric, we computed Spearman rank correlations between all pairs of cross-validated evaluation metrics across the 13 model $\times$ mode configurations.
+We computed Spearman rank correlations between all pairs of cross-validated evaluation metrics across the 13 model $\times$ mode configurations to compare the resulting model rankings.
 If two metrics produce highly correlated model rankings, they provide redundant information; if uncorrelated, they capture different aspects of model behaviour.
 
-The results reveal two distinct metric clusters:
+The correlations quantify agreement between rankings but do not make the metrics interchangeable, since each captures a different aspect of performance. Two patterns are visible:
 \begin{itemize}
-  \item \textbf{Threshold-free metrics:} PR-AUC and ROC-AUC are strongly correlated ($\rho\!=\!0.758$, $p\!=\!0.003$), confirming that models which rank probability predictions well under one curve also rank well under the other.
-    This is reassuring because it means our findings are not an artefact of a particular metric choice.
-  \item \textbf{Threshold-dependent metrics at fixed cutoff:} $F_1$ and $F_2$ at threshold~0.5 are almost perfectly correlated with each other ($\rho\!=\!0.984$, $p < 0.001$) but are \emph{uncorrelated} with PR-AUC ($\rho \approx 0$, $p > 0.8$).
-    This confirms that threshold-dependent metrics at a fixed cutoff do not reflect discriminative quality in an imbalanced setting---they primarily capture whether the model's predicted probabilities happen to be centred around 0.5, which depends on the class-weighting mode rather than on the model's ranking quality.
+  \item \textbf{Threshold-free metrics:} PR-AUC and ROC-AUC are strongly correlated ($\rho\!=\!0.758$, $p\!=\!0.003$), indicating that models which rank probability predictions well under one curve generally rank well under the other.
+    The two measures therefore produce broadly similar, although not identical, model rankings.
+  \item \textbf{Threshold-dependent metrics at fixed cutoff:} $F_1$ and $F_2$ at threshold~0.5 are almost perfectly correlated with each other ($\rho\!=\!0.984$, $p < 0.001$), while neither shows evidence of a monotonic association with PR-AUC ($|\rho| < 0.08$, $p > 0.8$).
+    In these configurations, the fixed-threshold metrics are strongly influenced by whether predicted probabilities cross 0.5 and do not reproduce the ranking obtained from the full probability curves.
 \end{itemize}
 
-These findings validate PR-AUC as an appropriate primary metric for model selection in our imbalanced classification setting, while highlighting that $F_1$/$F_2$ should only be evaluated after threshold optimisation (Section~\ref{sec:results_threshold_xgb}).
+These findings support the use of PR-AUC as the primary model-selection metric in this imbalanced classification setting. $F_1$ and $F_2$ become informative for the intended operating point only after the threshold has been selected on development data (Section~\ref{sec:results_threshold_xgb}).
 Figure~\ref{fig:metric_heatmap} visualises the cross-validation metric values for all 13 configurations, sorted by PR-AUC; the disconnection between threshold-free and threshold-dependent metrics is clearly visible.
 
 \begin{figure}[ht!]
@@ -349,49 +329,43 @@ Figure~\ref{fig:metric_heatmap} visualises the cross-validation metric values fo
 \label{sec:results_ablation_v2}
 % ============================================================
 
-To quantify the marginal contribution of each feature block, we conducted a cumulative ablation study using the Optuna-tuned hyperparameters from the full-feature (F) configuration applied to all subsets.
-This design isolates the effect of feature availability from the confound of hyperparameter re-tuning, providing a fair comparison of how much predictive signal each block adds.
+The feature-block analysis applies the hyperparameters tuned on the full feature set to each reduced configuration. It therefore describes the sensitivity of each fitted model family to the available feature blocks without re-optimising the model for every subset.
 
-The four top-ranked models were evaluated across six cumulative feature configurations:
-\textbf{A}~(baseline demographics + ALSFRS-R items, $n\!=\!15$),
+Four selected model configurations were evaluated across six feature configurations:
+\textbf{A}~(core baseline variables, $n\!=\!15$),
 \textbf{B}~(A + vitals, $n\!=\!27$),
 \textbf{C}~(A + FVC, $n\!=\!18$),
 \textbf{D}~(A + vitals + FVC, $n\!=\!30$),
 \textbf{E}~(D + treatment, $n\!=\!33$),
 \textbf{F}~(full set with labs, $n\!=\!35$).
-Blocks C and D are designed to disentangle the independent contribution of FVC (C) from the joint effect of FVC and vitals (D).
+Blocks B and C are parallel extensions of A rather than consecutive steps. D combines both blocks, while E and F then add treatment and laboratory variables sequentially.
 
 \input{images/tables/step5v2_ablation.tex}
 
-Figure~\ref{fig:ablation_v2} plots the cumulative PR-AUC trajectories for each model.
+Figure~\ref{fig:ablation_v2} compares the PR-AUC profile across feature configurations for each model.
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.85\linewidth]{images/figures/step5v2_ablation_prauc.png}
-  \caption[Feature block ablation PR-AUC curves]{Cumulative feature block ablation (6-month, DEV). PR-AUC with Optuna-tuned hyperparameters. Each line represents one model; each point adds a feature block.}
+  \caption[Feature block ablation PR-AUC curves]{Feature-block analysis on the six-month DEV set using hyperparameters tuned on the full feature configuration. Points show mean PR-AUC and error bars show the standard deviation across five folds. B and C are alternative extensions of A; D combines both before treatment and laboratory variables are added in E and F.}
   \label{fig:ablation_v2}
 \end{figure}
 
-\noindent\textbf{Key findings.}
+\noindent\textbf{Key observations.}
 \begin{enumerate}
-  \item \textbf{FVC provides the single largest marginal gain.}
-    Adding FVC alone to the baseline block (A~$\to$~C) increases PR-AUC by $+0.025$ for Random Forest and $+0.010$ for XGBoost, confirming the clinical importance of baseline respiratory function as a predictor of subsequent functional decline.
-    This is consistent with prior ALS literature identifying FVC as one of the strongest prognostic markers~\cite{Papaiz2022}.
-  \item \textbf{Vitals alone contribute little additional signal.}
-    Block B (baseline + vitals) shows $\Delta\text{PR-AUC} \approx 0$ relative to block A for most models.
-    However, vitals combined with FVC (block D) stabilise variance across folds, suggesting that some vital-sign features (e.g.\ BMI, blood pressure) play a supporting role in the presence of respiratory data.
-  \item \textbf{Treatment and labs add small incremental value.}
-    For XGBoost, the net gain from D to F is only $+0.002$ PR-AUC; for Random Forest the gain is $+0.013$.
-    These modest increments are consistent with treatment and laboratory features capturing secondary disease-management signals (e.g.\ riluzole use, polypharmacy) rather than direct disease-severity indicators.
-  \item \textbf{LGBM balanced exhibits mild overfitting to additional features.}
-    Uniquely among the models tested, LightGBM balanced shows a \emph{decrease} in PR-AUC from A ($0.434$) to F ($0.418$), a drop of $-0.016$.
-    This suggests that, with the hyperparameters tuned on the full feature set, LGBM overfits to the additional categorical variables (treatment, labs) when applied to a richer feature space---a known behaviour of boosting methods with insufficient regularisation relative to the number of features.
-  \item \textbf{Logistic Regression shows the most stable ablation profile.}
-    LR balanced increases monotonically from A ($0.395$) to F ($0.407$), with no block causing a performance drop.
-    This is consistent with the lower capacity and implicit regularisation of a linear model.
+  \item \textbf{The core baseline block contains most of the observed performance.}
+    PR-AUC with configuration A ranges from 0.395 for Logistic Regression to 0.434 for LightGBM. Across models, the best configuration improves on A by between 0.000 and 0.025, indicating that the additional blocks produce relatively small changes compared with the information already present at baseline.
+  \item \textbf{The effect of FVC is model-dependent.}
+    Adding FVC without vital signs (A~$\to$~C) increases PR-AUC from 0.409 to 0.434 for Random Forest and from 0.420 to 0.430 for XGBoost. The corresponding changes are smaller for Logistic Regression ($+0.005$) and slightly negative for LightGBM ($-0.002$). FVC therefore provides the clearest gain for the two unbalanced tree ensembles in this comparison, consistent with its established prognostic relevance in ALS~\cite{Papaiz2022}.
+  \item \textbf{Vital signs do not produce a consistent improvement.}
+    From A to B, PR-AUC is essentially unchanged for XGBoost and Random Forest, increases by 0.010 for Logistic Regression, and decreases by 0.014 for LightGBM. Combining vital signs with FVC in D reduces the fold-to-fold standard deviation relative to C for all four models, but does not consistently increase the mean.
+  \item \textbf{Treatment and laboratory blocks have small and variable effects.}
+    Treatment variables change PR-AUC by between $-0.009$ and $+0.001$ from D to E. Adding the two laboratory variables from E to F increases PR-AUC by 0.011 for XGBoost and 0.014 for Random Forest, is nearly neutral for Logistic Regression, and decreases it by 0.007 for LightGBM. From D to F, the net changes are $+0.002$, $+0.013$, $+0.001$, and $-0.006$, respectively.
+  \item \textbf{No feature configuration is best for every model.}
+    The full set F gives the highest mean PR-AUC for XGBoost (0.434) and Logistic Regression (0.407). Random Forest reaches its maximum with A + FVC (C: 0.434), while LightGBM performs best with the core block alone (A: 0.434). These differences are small relative to the fold standard deviations and were not subjected to separate significance tests.
 \end{enumerate}
 
-Overall, the ablation confirms that the baseline ALSFRS-R items and demographics carry the majority of the predictive signal, FVC provides structurally significant additional value, and the remaining blocks (vitals, treatment, labs) contribute marginal refinements.
+Overall, the analysis suggests that the core baseline variables account for most of the attainable discrimination in these four configurations. Additional blocks alter performance modestly and differently across model families; among them, FVC shows the clearest improvement for Random Forest and XGBoost.
 
 
 % ============================================================
@@ -500,18 +474,16 @@ The decision to select \gls{XGB} is therefore based on consistent rank ordering 
 \label{sec:results_threshold_xgb}
 % ============================================================
 
-In imbalanced classification, the default decision threshold of $t\!=\!0.50$ is typically sub-optimal because the predicted-probability distribution is skewed towards the majority class.
-Rather than accepting this default, we optimise the operating threshold using out-of-fold (OOF) predictions from 5-fold GroupKFold cross-validation on the DEV set.
+The default threshold of $t\!=\!0.50$ produces very few positive predictions for the selected unbalanced XGBoost model. We therefore compare alternative thresholds using out-of-fold (OOF) predictions from five-fold GroupKFold on the DEV set. Labels for this analysis use the fixed DEV 30th-percentile slope cutoff ($-1.243$ points per 30 days).
 
 Three optimality criteria are evaluated:
 \begin{enumerate}
-  \item \textbf{$F_2$-optimal} ($t\!=\!0.05$): maximises $F_2$, which places quadruple weight on recall.  However, this threshold trivially classifies nearly all patients as \textit{rapid}, yielding recall $\approx 1.0$ but precision equal to the prevalence ($\sim$0.30)---clinically uninformative.
-  \item \textbf{$F_1$-optimal} ($t\!=\!0.21$): maximises the harmonic mean of precision and recall, producing $F_1\!=\!0.479$ on OOF predictions, with recall $\approx 0.86$ and precision $\approx 0.35$.
-  \item \textbf{Youden's~$J$} ($t\!=\!0.35$): maximises TPR~$-$~FPR, balancing sensitivity against specificity.
+  \item \textbf{$F_2$-optimal} ($t\!=\!0.05$): $F_2=0.682$. At this threshold all 1,113 DEV participants are classified as rapid, giving recall 1.00 and precision 0.300. The optimum is therefore driven by the strong weighting of recall and provides no separation into predicted classes.
+  \item \textbf{$F_1$-optimal} ($t\!=\!0.21$): $F_1=0.479$, with recall 0.874 and precision 0.330. This threshold classifies 79.6\% of DEV as rapid.
+  \item \textbf{Youden's~$J$} ($t\!=\!0.35$): $J=0.171$, with recall 0.410 and precision 0.424. This criterion gives equal importance to sensitivity and specificity.
 \end{enumerate}
 
-The $F_1$-optimal threshold at $t\!=\!0.21$ is adopted as the primary operating point.
-It achieves the best balance between sensitivity and positive predictive value: the model captures 86\% of rapid progressors while maintaining precision above the baseline prevalence.
+$t=0.21$ is retained as the primary operating point because it maximises $F_1$ without collapsing to an all-positive classification. It nevertheless represents an aggressive classification rule: almost four in five development participants are flagged, and precision is only three percentage points above the rapid-progression prevalence. The threshold is therefore used to evaluate a sensitivity-oriented prototype, not presented as a clinically established cutoff.
 Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sweep.
 
 \begin{figure}[H]
@@ -528,7 +500,7 @@ Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sw
 \label{sec:results_test_eval}
 % ============================================================
 
-The seven best-per-family models are evaluated once on the held-out TEST partition ($n\!=\!279$, rapid prevalence $30.1$\%) to produce unbiased performance estimates.
+The seven configurations selected within each model family are evaluated once on the held-out TEST partition ($n\!=\!279$, rapid prevalence $30.1$\%) to obtain performance estimates on data not used during model development.
 Labels are defined using the 30th-percentile slope cutoff computed on the DEV set ($-1.243$~points per 30 days), ensuring no information leaks from the test set into the labelling process.
 
 \subsection{Discrimination Metrics}
@@ -537,7 +509,7 @@ Table~\ref{tab:step6_test_metrics} reports threshold-free metrics (PR-AUC, ROC-A
 
 \begin{table}[ht!]
 \centering
-\caption[Held-out TEST set metrics, 6-month]{Held-out TEST set metrics (6-month horizon, $n\!=\!279$). PR-AUC and ROC-AUC are threshold-free; $F_1$, $F_2$ evaluated at the default $t\!=\!0.50$; Brier score measures calibration (lower is better).}
+\caption[Held-out TEST set metrics, 6-month]{Held-out TEST set metrics (6-month horizon, $n\!=\!279$). PR-AUC and ROC-AUC are threshold-free; $F_1$ and $F_2$ are evaluated at the default $t\!=\!0.50$; the Brier score measures probabilistic error (lower is better).}
 \label{tab:step6_test_metrics}
 \small
 \begin{tabular}{l c c c c c c}
@@ -557,10 +529,8 @@ Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
 
 \noindent\textbf{Key observations:}
 \begin{enumerate}
-  \item \textbf{PR-AUC generalises well.}
-    RandomForest (PR-AUC\,$=\!0.459$) and XGBoost ($0.456$) both exceed their cross-validated estimates ($0.431$ and $0.434$, respectively), indicating no overfitting.
-    The narrow gap between the two confirms that the performance ceiling is driven by features, not by the choice of model.
-    That TEST-set estimates slightly exceed \gls{DEV} cross-validated means is not unusual: fold-wise cutoff recalculation during \gls{CV} introduces additional noise, whereas the single held-out cutoff is more stable.
+  \item \textbf{PR-AUC on held-out data.}
+    Random Forest (PR-AUC\,$=\!0.459$) and XGBoost ($0.456$) both score slightly above their cross-validated development means ($0.431$ and $0.434$, respectively). This provides no evidence of a marked performance drop on the TEST partition, although a single held-out estimate cannot establish the absence of overfitting.
   \item \textbf{SVM achieves the highest ROC-AUC} ($0.675$) among all models, suggesting strong discriminative power across all operating points.
     However, its lower PR-AUC and inability to produce positive predictions at $t\!=\!0.50$ limits its practical utility without threshold adjustment.
   \item \textbf{Default threshold is unsuitable for unbalanced models.}
@@ -570,12 +540,8 @@ Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
     LogisticRegression balanced achieves $F_1\!=\!0.484$ and $F_2\!=\!0.520$ at $t\!=\!0.50$, making it the best model under the default operating point.
 \end{enumerate}
 
-\noindent\textbf{Model selection rationale.}
-Although RandomForest achieves the highest TEST PR-AUC ($0.459$ vs $0.456$ for XGBoost), we retain XGBoost (unbalanced) as the final model for several reasons:
-(i)~the difference is negligible ($\Delta\!=\!0.003$, well within bootstrap confidence intervals);
-(ii)~XGBoost consistently ranks first in both Optuna tuning (PR-AUC $0.434$) and cross-validation re-evaluation, whereas RF only overtakes on the single TEST evaluation;
-(iii)~XGBoost achieves the lowest Brier score ($0.197$), indicating superior probabilistic calibration;
-and (iv)~tree-based gradient boosting is natively supported by TreeSHAP, enabling exact and efficient Shapley-value computation for the explainability analysis in Section~\ref{sec:results_shap}.
+\noindent\textbf{Relation to model selection.}
+XGBoost (unbalanced) had already been selected as the final model from the \gls{DEV} results, where it achieved the highest cross-validated PR-AUC. Random Forest obtains the highest TEST PR-AUC by a margin of 0.003, but the held-out results are not used to repeat model selection. XGBoost therefore remains the prespecified final model. Its Brier score ($0.197$) is also the lowest of the seven TEST evaluations, although it differs only slightly from SVM ($0.198$) and Random Forest ($0.199$). The fitted tree ensemble additionally permits exact TreeSHAP analysis in Section~\ref{sec:results_shap}.
 Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC across all models.
 
 \begin{figure}[H]
@@ -605,9 +571,9 @@ Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the pre
 \end{figure}
 
 
-\subsection{Threshold Validation on TEST}
+\subsection{Threshold Evaluation on TEST}
 
-The $F_1$-optimal threshold $t\!=\!0.21$, selected on DEV OOF predictions (Section~\ref{sec:results_threshold_xgb}), is validated on the TEST set.
+$t=0.21$, selected from DEV OOF predictions (Section~\ref{sec:results_threshold_xgb}), is applied unchanged to the TEST set.
 Table~\ref{tab:step6_threshold_test} compares XGBoost performance at multiple thresholds.
 
 \begin{table}[ht!]
@@ -630,21 +596,16 @@ $t$ & Precision & Recall & $F_1$ & $F_2$ & TP & FP & FN & TN \\
 \noindent At the chosen threshold $t\!=\!0.21$:
 \begin{itemize}
   \item The model identifies 72 of 84 rapid progressors (\textbf{recall\,$=\!85.7$\%}), missing only 12.
-  \item Precision is $35.1$\%, producing 133 false alarms among 195 slow progressors.
-  \item $F_1\!=\!0.498$ and $F_2\!=\!0.665$ confirm that the threshold trade-off transfers from DEV to TEST.
+  \item It classifies 205 of 279 participants (73.5\%) as rapid. Of these, 133 are false positives, giving precision of 35.1\%.
+  \item $F_1\!=\!0.498$ and $F_2\!=\!0.665$. Recall and precision are close to the corresponding DEV values, although this is a single held-out evaluation.
 \end{itemize}
 
-\noindent The Youden threshold ($t\!=\!0.35$) provides a higher-precision alternative:
-precision rises to $50.0$\% but recall drops to $40.5$\%, missing over half of the rapid progressors.
-The choice between the two depends on the clinical cost model; for screening purposes, the $F_1$-optimal threshold ($t\!=\!0.21$) is preferred.
-In a clinical screening workflow, missing a rapid progressor (false negative) carries a higher cost than triggering unnecessary follow-up (false positive), because early identification enables timely intervention planning---e.g., respiratory support, nutritional counselling, or enrolment in clinical trials.
-The 133~false alarms at $t\!=\!0.21$ represent a manageable caseload (48\% of the TEST set) that would undergo additional assessment but would not be harmed by the screening itself.
+\noindent At the DEV-derived Youden threshold ($t\!=\!0.35$), TEST precision rises to 50.0\%, but recall falls to 40.5\%. The comparison illustrates the consequence of the selected operating point: $t=0.21$ retains substantially more rapid progressors at the cost of many additional false positives. Whether this trade-off is acceptable would require an externally defined clinical use case and prospective assessment; those conditions are not established in the present retrospective study.
 
 
 \subsection{Calibration Analysis}
 
-The calibration of the final XGBoost model is assessed using a reliability diagram and the Brier score (Figure~\ref{fig:step6_calibration}).
-XGBoost achieves a Brier score of \textbf{0.197}, the lowest among all models, indicating good probabilistic calibration.
+The probabilistic predictions of the final XGBoost model are examined using a reliability diagram and the Brier score (Figure~\ref{fig:step6_calibration}). Its Brier score is \textbf{0.197}, compared with approximately 0.210 for a constant prediction equal to the TEST-set prevalence. The reliability curve is close to the diagonal in the lower probability bins but departs from it at higher predicted probabilities. Together, these results suggest modest probabilistic improvement over the prevalence-only reference, while leaving some calibration error in the upper part of the observed probability range.
 
 \begin{figure}[ht!]
   \centering
@@ -1196,27 +1157,24 @@ The main findings are:
   \item \textbf{Cohort viability.} Leakage-free, subject-wise evaluation is feasible using PRO-ACT baseline features and future ALSFRS-R slopes.
     The 6-month cohort ($N\!=\!1{,}392$) yields slope estimates of high quality (99.8\% based on $\geq 3$ data points).
   \item \textbf{Data quality.} A systematic BMI data-quality issue (147 mis-labelled height records) was identified and corrected.
-    FVC missingness was confirmed as MAR (driven by study design, not by the outcome), supporting median imputation without outcome-dependent bias.
-  \item \textbf{Treatment features.} Descriptive analysis reveals no statistically significant association between treatment variables and rapid progression.
-    The Active arm shows a marginally lower rapid rate than Placebo ($26.5$\% vs $31.6$\%, $\chi^2$ $p = 0.057$), but this is confounded by inter-trial heterogeneity.
-    Riluzole use has no detectable association with ALSFRS-R decline ($p = 0.416$), consistent with its known mechanism of action.
-    These features are retained as covariates capturing patient heterogeneity, not as causal predictors.
+    Associations with FVC availability were compatible with a contribution from trial-level collection practices, although the missing-data mechanism could not be confirmed and an MNAR component remains possible.
+  \item \textbf{Treatment features.} Neither study arm nor documented riluzole use is significantly associated with the descriptive rapid-progression label.
+    Active and Placebo rates are 26.5\% and 31.6\%, respectively ($p=0.057$), while riluzole groups show similar label rates ($p=0.416$) and slope distributions ($p=0.534$).
+    These variables remain candidate predictors of patient and trial heterogeneity, without a causal interpretation.
   \item \textbf{Model selection.} Unified Optuna tuning of 7 model families across 13 configurations identifies XGBoost (unbalanced) as the top-ranked model by PR-AUC ($0.434 \pm 0.049$), followed by RF~unbalanced ($0.431$) and SVM~balanced ($0.425$).
-    The narrow performance spread ($\Delta\!<\!0.05$) among the top models suggests a feature-driven, rather than model-driven, performance ceiling.
-  \item \textbf{Class balancing.} Balanced vs unbalanced mode has minimal impact on the threshold-free PR-AUC but dramatically affects threshold-dependent metrics at $t\!=\!0.5$, confirming that threshold optimisation---not class weighting---is the appropriate strategy for this level of imbalance.
-  \item \textbf{Feature importance.} Feature block ablation confirms that baseline ALSFRS-R items carry the majority of predictive signal.
-    FVC provides the largest single-block marginal gain ($+0.025$ for RF, $+0.010$ for XGB), consistent with its established clinical role as a respiratory prognostic marker.
-    Treatment and lab features add small incremental value.
-  \item \textbf{Metric consistency.} PR-AUC and ROC-AUC produce strongly correlated model rankings ($\rho\!=\!0.758$), validating the use of PR-AUC as the primary metric.
-    Threshold-dependent metrics at a fixed cutoff are unreliable for model comparison in this imbalanced setting.
+    Several model families obtain similar internal validation performance, with less than 0.01 PR-AUC separating the two leading configurations.
+  \item \textbf{Class balancing.} Balanced and unbalanced modes produce similar PR-AUC values for most model families, although SVM improves by 0.036 with weighting. The larger differences in $F_1$ and $F_2$ at $t\!=\!0.5$ mainly reflect shifts in predicted probabilities and reinforce the need to separate model ranking from operating-threshold selection.
+  \item \textbf{Feature-block analysis.} The core baseline block retains most of the cross-validated performance. Adding FVC produces the clearest gains for Random Forest ($+0.025$) and XGBoost ($+0.009$), while the effects of vital signs, treatment variables, and laboratory measurements are smaller and vary by model.
+  \item \textbf{Metric consistency.} PR-AUC and ROC-AUC produce strongly correlated model rankings ($\rho\!=\!0.758$), supporting the use of PR-AUC as the primary metric.
+    Fixed-cutoff $F_1$ and $F_2$ do not reproduce this ranking and are reserved for operating-point assessment.
   \item \textbf{Cross-horizon robustness.} The 3-month horizon ($N\!=\!2{,}407$) produces comparable results (top PR-AUC $0.426$, $\Delta \leq 0.021$ vs 6-month), with the same model ranking.
     The 6-month horizon is retained as the primary analysis due to higher slope quality and greater clinical actionability.
   \item \textbf{Held-out generalisation.}
-    Test-set PR-AUC (RF\,$=\!0.459$, XGB\,$=\!0.456$) slightly exceeds cross-validated estimates, confirming that the pipeline does not overfit.
-    The narrow gap between the two best models ($\Delta\!=\!0.002$) reaffirms the feature-driven performance ceiling.
+    Test-set PR-AUC (RF\,$=\!0.459$, XGB\,$=\!0.456$) is slightly above the corresponding cross-validated development means, with no marked loss of discrimination on the held-out partition.
+    Random Forest and XGBoost remain closely matched, but the TEST results are not used to repeat model selection.
   \item \textbf{Threshold optimisation.}
-    The $F_1$-optimal threshold ($t\!=\!0.21$) achieves recall\,$=\!85.7$\% with 133 false alarms on the TEST set ($F_1\!=\!0.498$, $F_2\!=\!0.665$), offering a practical screening operating point.
-    XGBoost achieves the lowest Brier score ($0.197$) among all models, indicating good probabilistic calibration.
+    The $F_1$-optimal threshold ($t\!=\!0.21$) achieves recall\,$=\!85.7$\% on TEST, but classifies 73.5\% of participants as rapid and produces 133 false positives ($F_1\!=\!0.498$, $F_2\!=\!0.665$).
+    XGBoost achieves the lowest Brier score ($0.197$) among the compared models, with some deviation from ideal calibration at higher predicted probabilities.
   \item \textbf{Explainability.}
     SHAP, LIME, and LR coefficient analysis converge on the same clinical drivers: baseline ALSFRS-R total score is the dominant predictor, followed by respiratory markers (FVC, respiratory rate) and vital signs.
     SHAP--LIME concordance of 40--50\% across case studies, combined with LR coefficient alignment, confirms that the identified features are robust across fundamentally different attribution methods.
