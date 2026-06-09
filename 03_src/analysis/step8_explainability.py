@@ -3,11 +3,11 @@ Step 8 — Explainability: SHAP (global + local) + LIME (local) + LR coefficient
 
 Protocol
 --------
-1. Load final XGBoost model and TEST set (holdout_split_6m)
+1. Fit the selected XGBoost configuration on DEV only
 2. SHAP global: mean-|SHAP| bar plot + beeswarm (summary) plot
 3. SHAP local:  waterfall plots for 4 representative patients (TP, FP, FN, TN)
 4. LIME local:  explanations for the same 4 patients (side-by-side with SHAP)
-5. LR coefficients: bar chart of standardised coefficients from final LR model
+5. LR coefficients: bar chart from the balanced LR fitted on DEV only
 6. SHAP vs LIME concordance table (top-N feature overlap)
 
 Usage
@@ -41,19 +41,24 @@ import os
 import time
 import warnings
 
-import joblib
 import numpy as np
 import pandas as pd
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
 
 import shap
+import sklearn
 from lime.lime_tabular import LimeTabularExplainer
 
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import average_precision_score, confusion_matrix, roc_auc_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from xgboost import XGBClassifier
 
 
 # ─────────────────────────────────────────────────────────────
@@ -64,11 +69,7 @@ OUT_FIG      = os.path.join("04_outputs", "figures", "step8_xai")
 OUT_TAB      = os.path.join("04_outputs", "tables", "step8_xai")
 OVERLEAF_FIG = os.path.join("overleaf", "images", "figures")
 OVERLEAF_TAB = os.path.join("overleaf", "images", "tables")
-
-MODEL_XGB_PATH = os.path.join("models", "final_xgb_6m.joblib")
-MODEL_LR_PATH  = os.path.join("models", "final_lr_6m.joblib")
-META_XGB_PATH  = os.path.join("models", "final_xgb_6m_metadata.json")
-META_LR_PATH   = os.path.join("models", "final_lr_6m_metadata.json")
+TUNING_DIR    = os.path.join("04_outputs", "tables", "step5_tuning")
 
 HORIZON    = "6m"
 SEED       = 42
@@ -150,8 +151,8 @@ def readable(name):
     return FEATURE_LABELS.get(name, name)
 
 
-def load_test_data():
-    """Load TEST partition with features and labels."""
+def load_data():
+    """Load the fixed DEV and TEST partitions with features and labels."""
     ds_path = os.path.join(PROCESSED, f"dataset_{HORIZON}_v2.csv")
     hs_path = os.path.join(PROCESSED, f"holdout_split_{HORIZON}.csv")
 
@@ -173,16 +174,74 @@ def load_test_data():
 
     feat_cols = [c for c in df.columns if c not in DROP_COLS]
 
-    X_test  = df_test[feat_cols].reset_index(drop=True)
-    y_test  = (df_test[slope_col] <= cutoff).astype(int).reset_index(drop=True)
+    X_dev = df_dev[feat_cols].reset_index(drop=True)
+    y_dev = (df_dev[slope_col] <= cutoff).astype(int).reset_index(drop=True)
+    X_test = df_test[feat_cols].reset_index(drop=True)
+    y_test = (df_test[slope_col] <= cutoff).astype(int).reset_index(drop=True)
     ids_test = df_test["subject_id"].reset_index(drop=True)
 
-    # Also return DEV features for LIME background
-    X_dev = df_dev[feat_cols].reset_index(drop=True)
-
+    print(f"  DEV n={len(X_dev)}, Rapid prevalence={y_dev.mean():.3f}")
     print(f"  TEST n={len(X_test)}, Rapid prevalence={y_test.mean():.3f}")
     print(f"  Slope cutoff (DEV P30): {cutoff:.4f}")
-    return X_test, y_test, ids_test, X_dev, feat_cols, cutoff
+    return X_dev, y_dev, X_test, y_test, ids_test, feat_cols, cutoff
+
+
+def load_params(model_key, mode):
+    """Load the selected hyperparameters saved during Step 5."""
+    path = os.path.join(TUNING_DIR, f"{model_key}_{mode}_{HORIZON}_best.json")
+    with open(path, "r", encoding="utf-8") as handle:
+        return json.load(handle)["full_params"], path
+
+
+def build_preprocessor(X, scale_numeric=False):
+    """Build the same numeric/categorical preprocessing used for evaluation."""
+    numeric_cols = X.select_dtypes(include=[np.number, "bool"]).columns.tolist()
+    categorical_cols = [col for col in X.columns if col not in numeric_cols]
+
+    numeric_steps = [("imp", SimpleImputer(strategy="median"))]
+    if scale_numeric:
+        numeric_steps.append(("sc", StandardScaler()))
+
+    numeric_pipe = Pipeline(numeric_steps)
+    categorical_pipe = Pipeline([
+        ("imp", SimpleImputer(strategy="most_frequent")),
+        ("oh", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+    ])
+
+    return ColumnTransformer([
+        ("num", numeric_pipe, numeric_cols),
+        ("cat", categorical_pipe, categorical_cols),
+    ])
+
+
+def train_dev_models(X_dev, y_dev):
+    """Fit the selected XGB and balanced LR configurations on DEV only."""
+    xgb_params, xgb_path = load_params("XGB", "unbalanced")
+    lr_params, lr_path = load_params("LR", "balanced")
+    sklearn_version = tuple(
+        int(part) for part in sklearn.__version__.split(".")[:2]
+    )
+    if sklearn_version >= (1, 8):
+        penalty = lr_params.pop("penalty", None)
+        if penalty == "l1":
+            lr_params["l1_ratio"] = 1
+        elif penalty == "l2":
+            lr_params["l1_ratio"] = 0
+
+    pipe_xgb = Pipeline([
+        ("prep", build_preprocessor(X_dev)),
+        ("clf", XGBClassifier(**xgb_params)),
+    ])
+    pipe_lr = Pipeline([
+        ("prep", build_preprocessor(X_dev, scale_numeric=True)),
+        ("clf", LogisticRegression(**lr_params, class_weight="balanced")),
+    ])
+
+    print("  Fitting selected XGBoost configuration on DEV...")
+    pipe_xgb.fit(X_dev, y_dev)
+    print("  Fitting balanced Logistic Regression configuration on DEV...")
+    pipe_lr.fit(X_dev, y_dev)
+    return pipe_xgb, pipe_lr, xgb_path, lr_path
 
 
 def pick_case_studies(y_true, y_pred, proba):
@@ -201,7 +260,7 @@ def pick_case_studies(y_true, y_pred, proba):
         mask = mask_fn(y_true, y_pred)
         idxs = np.where(mask)[0]
         if len(idxs) == 0:
-            print(f"  [WARN] No {label} cases found — skipping")
+            print(f"  [WARN] No {label} cases found - skipping")
             continue
         # pick patient closest to quadrant median probability
         med = np.median(proba[idxs])
@@ -215,7 +274,7 @@ def pick_case_studies(y_true, y_pred, proba):
 # ─────────────────────────────────────────────────────────────
 def run_shap(pipe, X_test, feat_cols, case_indices):
     """Compute SHAP values using TreeExplainer on the XGBoost model."""
-    print("\n── SHAP analysis ──")
+    print("\n-- SHAP analysis --")
 
     # Extract the preprocessor and the XGBoost booster from the pipeline
     preproc = pipe.named_steps["prep"]
@@ -296,15 +355,14 @@ def run_shap(pipe, X_test, feat_cols, case_indices):
 # ─────────────────────────────────────────────────────────────
 # LIME analysis
 # ─────────────────────────────────────────────────────────────
-def run_lime(pipe, X_test, X_dev, feat_cols, case_indices, y_test,
-             transformed_names):
+def run_lime(pipe, X_test, X_dev, case_indices, transformed_names):
     """Generate LIME explanations for the same 4 case-study patients.
 
     LIME requires numeric input, so we operate on the preprocessed
     (imputed + encoded) feature space and wrap only the classifier
     for predictions.
     """
-    print("\n── LIME analysis ──")
+    print("\n-- LIME analysis --")
 
     preproc = pipe.named_steps["prep"]
     clf     = pipe.named_steps["clf"]
@@ -347,8 +405,11 @@ def run_lime(pipe, X_test, X_dev, feat_cols, case_indices, y_test,
         )
 
         # Get the explanation for the positive class (Rapid = 1)
-        exp_list = explanation.as_list(label=1)
-        lime_rankings[label] = [feat for feat, _ in exp_list]
+        exp_map = explanation.as_map()[1]
+        lime_rankings[label] = [
+            transformed_names[feature_idx]
+            for feature_idx, _ in exp_map[:N_TOP_FEATURES]
+        ]
 
         # Generate LIME figure
         fig = explanation.as_pyplot_figure(label=1)
@@ -364,39 +425,30 @@ def run_lime(pipe, X_test, X_dev, feat_cols, case_indices, y_test,
 # ─────────────────────────────────────────────────────────────
 # Concordance: SHAP vs LIME
 # ─────────────────────────────────────────────────────────────
-def concordance_table(shap_importance_df, lime_rankings, case_indices,
-                      shap_values, top_k=10):
-    """Compare top-K feature rankings from SHAP (global) vs LIME (local)."""
-    print("\n── SHAP vs LIME concordance ──")
-
-    shap_top = shap_importance_df.head(top_k)["feature"].tolist()
+def concordance_table(lime_rankings, case_indices, shap_values,
+                      transformed_names, top_k=10):
+    """Compare local top-K feature rankings from SHAP and LIME."""
+    print("\n-- SHAP vs LIME concordance --")
 
     rows = []
-    for label in case_indices:
+    for label, idx in case_indices.items():
         if label not in lime_rankings:
             continue
-        # LIME feature names are readable; convert SHAP to readable for comparison
-        shap_readable = [readable(f) for f in shap_top]
 
-        # Extract the feature name from LIME's compound expressions (e.g. "BMI > 25.3")
-        lime_feats_raw = lime_rankings[label][:top_k]
-        lime_feats_clean = []
-        for expr in lime_feats_raw:
-            # extract feature name (before <, >, <=, >=, =)
-            for op in [" <= ", " >= ", " < ", " > ", " = "]:
-                if op in expr:
-                    lime_feats_clean.append(expr.split(op)[0].strip())
-                    break
-            else:
-                lime_feats_clean.append(expr.strip())
+        local_abs = np.abs(shap_values.values[idx])
+        shap_indices = np.argsort(local_abs)[::-1][:top_k]
+        shap_features = [transformed_names[i] for i in shap_indices]
+        lime_features = lime_rankings[label][:top_k]
+        overlap = set(shap_features) & set(lime_features)
 
-        overlap = set(shap_readable) & set(lime_feats_clean)
         rows.append({
             "case": label,
-            "shap_top_k": ", ".join(shap_readable),
-            "lime_top_k": ", ".join(lime_feats_clean),
+            "shap_top_k": ", ".join(readable(f) for f in shap_features),
+            "lime_top_k": ", ".join(readable(f) for f in lime_features),
             "overlap_count": len(overlap),
-            "overlap_features": ", ".join(sorted(overlap)),
+            "overlap_features": ", ".join(
+                sorted(readable(f) for f in overlap)
+            ),
         })
 
     conc_df = pd.DataFrame(rows)
@@ -408,15 +460,10 @@ def concordance_table(shap_importance_df, lime_rankings, case_indices,
 # ─────────────────────────────────────────────────────────────
 # LR coefficient analysis
 # ─────────────────────────────────────────────────────────────
-def run_lr_coefficients():
-    """Extract and plot LR coefficients from the final LR model."""
-    print("\n── Logistic Regression coefficients ──")
+def run_lr_coefficients(pipe_lr):
+    """Extract and plot coefficients from the balanced LR fitted on DEV."""
+    print("\n-- Logistic Regression coefficients --")
 
-    if not os.path.exists(MODEL_LR_PATH):
-        print("  [SKIP] LR model not found — skipping coefficient analysis")
-        return
-
-    pipe_lr = joblib.load(MODEL_LR_PATH)
     preproc = pipe_lr.named_steps["prep"]
     clf     = pipe_lr.named_steps["clf"]
 
@@ -460,7 +507,7 @@ def run_lr_coefficients():
         ax.text(val + offset, bar.get_y() + bar.get_height() / 2,
                 f"{val:+.3f}", va="center", ha=ha, fontsize=8, color="black")
     ax.axvline(0, color="grey", lw=0.8, ls="--")
-    ax.set_xlabel("Standardised Coefficient", fontsize=11)
+    ax.set_xlabel("Model coefficient", fontsize=11)
     ax.set_title("Logistic Regression Coefficients — Top Features (6-month)",
                  fontsize=12, fontweight="bold")
 
@@ -482,15 +529,57 @@ def main():
     t_start = time.time()
     ensure_dirs()
 
-    # ── Load model & data ──
-    print("Loading model and data...")
-    pipe_xgb = joblib.load(MODEL_XGB_PATH)
-    X_test, y_test, ids_test, X_dev, feat_cols, cutoff = load_test_data()
+    # ── Load data and fit selected configurations on DEV only ──
+    print("Loading data and fitting DEV-only models...")
+    X_dev, y_dev, X_test, y_test, ids_test, feat_cols, cutoff = load_data()
+    pipe_xgb, pipe_lr, xgb_params_path, lr_params_path = train_dev_models(
+        X_dev, y_dev
+    )
 
     # ── Predictions on TEST ──
     proba = pipe_xgb.predict_proba(X_test)[:, 1]
     y_pred = (proba >= THRESHOLD).astype(int)
+    pr_auc = average_precision_score(y_test, proba)
+    roc_auc = roc_auc_score(y_test, proba)
+    tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
     print(f"  Predictions: Rapid={y_pred.sum()}, Slow={len(y_pred) - y_pred.sum()}")
+    print(f"  TEST PR-AUC={pr_auc:.6f}, ROC-AUC={roc_auc:.6f}")
+    print(f"  Confusion matrix: TP={tp}, FP={fp}, FN={fn}, TN={tn}")
+
+    predictions_df = pd.DataFrame({
+        "subject_id": ids_test,
+        "y_true": y_test,
+        "proba_rapid": proba,
+        "y_pred": y_pred,
+    })
+    predictions_df.to_csv(
+        os.path.join(OUT_TAB, "test_predictions.csv"), index=False
+    )
+
+    metadata = {
+        "training_partition": "DEV only",
+        "explanation_partition": "TEST",
+        "n_dev": len(X_dev),
+        "n_test": len(X_test),
+        "rapid_progression_cutoff": cutoff,
+        "classification_threshold": THRESHOLD,
+        "xgb_parameter_file": xgb_params_path,
+        "lr_parameter_file": lr_params_path,
+        "test_pr_auc": pr_auc,
+        "test_roc_auc": roc_auc,
+        "confusion_matrix": {
+            "true_positive": int(tp),
+            "false_positive": int(fp),
+            "false_negative": int(fn),
+            "true_negative": int(tn),
+        },
+    }
+    with open(
+        os.path.join(OUT_TAB, "xai_run_metadata.json"),
+        "w",
+        encoding="utf-8",
+    ) as handle:
+        json.dump(metadata, handle, indent=2)
 
     # ── Select case studies ──
     case_indices = pick_case_studies(y_test, y_pred, proba)
@@ -515,14 +604,16 @@ def main():
 
     # ── LIME ──
     lime_rankings = run_lime(
-        pipe_xgb, X_test, X_dev, feat_cols, case_indices, y_test,
-        transformed_names)
+        pipe_xgb, X_test, X_dev, case_indices, transformed_names
+    )
 
     # ── Concordance ──
-    concordance_table(shap_imp, lime_rankings, case_indices, shap_values)
+    concordance_table(
+        lime_rankings, case_indices, shap_values, transformed_names
+    )
 
     # ── LR coefficients ──
-    run_lr_coefficients()
+    run_lr_coefficients(pipe_lr)
 
     elapsed = time.time() - t_start
     print(f"\n{'='*50}")

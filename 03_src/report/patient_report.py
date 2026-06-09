@@ -4,15 +4,15 @@ Patient Risk Report Generator — ALS Rapid-Progression Screening.
 Loads the trained XGBoost pipeline and generates a textual report for a
 single patient, including:
   1. Probability of rapid progression (6-month horizon)
-  2. Binary classification at the F1- and F2-optimal DEV thresholds
+  2. Binary classification at the selected DEV threshold
   3. Top-5 contributing features (SHAP local explanation)
-  4. Monitoring suggestions based on population percentile comparison
+  4. Contextual review flags based on DEV percentile comparisons
 
 Usage
 -----
   # From workspace root:
   python 03_src/report/patient_report.py                       # demo patient
-  python 03_src/report/patient_report.py --patient-id 12345    # from TEST set
+  python 03_src/report/patient_report.py --patient-id 12345    # from dataset
   python 03_src/report/patient_report.py --json patient.json   # from JSON file
   python 03_src/report/patient_report.py --save                # also save to 04_outputs/reports/
 
@@ -43,12 +43,10 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 MODEL_PATH = os.path.join("models", "final_xgb_6m.joblib")
 META_PATH  = os.path.join("models", "final_xgb_6m_metadata.json")
 DATA_PATH  = os.path.join("01_data", "processed", "dataset_6m_v2.csv")
-SPLIT_PATH = os.path.join("01_data", "processed", "holdout_split_6m.csv")
 OUT_DIR    = os.path.join("04_outputs", "reports")
 
-# Thresholds from DEV OOF sweep (evaluate_holdout.py)
-THR_F1 = 0.21   # F1-optimal
-THR_F2 = 0.05   # F2-optimal; degenerate all-positive operating point on DEV
+# Selected operating threshold from the DEV OOF analysis.
+DECISION_THRESHOLD = 0.21
 
 N_TOP = 5       # number of SHAP features to show
 
@@ -93,74 +91,60 @@ FEATURE_LABELS = {
     "creatinine_t0":                   "Creatinine (µmol/L, baseline)",
 }
 
-# Clinical monitoring rules — keyed by feature name.
-# Each entry: (condition_description, suggestion)
-# Only triggered when the feature is in the top-N SHAP contributors.
-MONITORING_RULES = {
+# Descriptive review rules keyed by feature name. These cutoffs summarise
+# the DEV distribution; they are not clinical reference ranges.
+REVIEW_RULES = {
     "ALSFRS_R_t0": {
         "low_p25": 35.0,
-        "suggestion": "ALSFRS-R is below the 25th population percentile. "
-                      "Recommend monthly functional reassessment.",
+        "message": "Value is at or below the DEV 25th percentile.",
     },
     "FVC_Liters_best_t0": {
         "low_p25": 2.78,
-        "suggestion": "FVC is below the 25th population percentile (2.78 L). "
-                      "Recommend spirometry follow-up every 4 weeks.",
+        "message": "Value is at or below the DEV 25th percentile (2.78 L).",
     },
     "FVC_pctNormal_best_t0": {
         "low_p25": 77.0,
-        "suggestion": "FVC % predicted is below the 25th percentile (77%). "
-                      "Recommend respiratory function monitoring.",
+        "message": "Value is at or below the DEV 25th percentile (77%).",
     },
     "Respiratory_Rate": {
         "high_p75": 20.0,
-        "suggestion": "Respiratory rate above the 75th percentile (20). "
-                      "Monitor respiratory function; consider NIV evaluation.",
+        "message": "Value is at or above the DEV 75th percentile (20).",
     },
     "BMI_t0": {
         "low_p25": 23.3,
-        "suggestion": "BMI is below the 25th percentile (23.3). "
-                      "Recommend nutritional assessment and weight monitoring.",
+        "message": "Value is at or below the DEV 25th percentile (23.3).",
     },
     "Age": {
         "high_p75": 65.0,
-        "suggestion": "Patient age above the 75th percentile (65 years). "
-                      "Higher age is associated with faster decline.",
+        "message": "Value is at or above the DEV 75th percentile (65 years).",
     },
     "R_1_Dyspnea": {
         "low_p25": 3.0,
-        "suggestion": "Dyspnea sub-score at or below P25. "
-                      "Recommend respiratory symptom monitoring.",
+        "message": "Value is at or below the DEV 25th percentile.",
     },
     "R_2_Orthopnea": {
         "low_p25": 4.0,
-        "suggestion": "Orthopnea sub-score below baseline normative value. "
-                      "Monitor nocturnal respiratory support needs.",
+        "message": "Value is at or below the DEV 25th percentile.",
     },
     "R_3_Respiratory_Insufficiency": {
         "low_p25": 4.0,
-        "suggestion": "Respiratory insufficiency sub-score below baseline. "
-                      "Evaluate need for respiratory intervention.",
+        "message": "Value is at or below the DEV 25th percentile.",
     },
     "Weight_kg_t0": {
         "low_p25": 68.0,
-        "suggestion": "Weight below the 25th percentile (68 kg). "
-                      "Recommend nutritional support evaluation.",
+        "message": "Value is at or below the DEV 25th percentile (68 kg).",
     },
     "Pulse": {
         "high_p75": 83.0,
-        "suggestion": "Pulse above the 75th percentile. "
-                      "Monitor cardiovascular parameters.",
+        "message": "Value is at or above the DEV 75th percentile.",
     },
     "creatinine_t0": {
         "low_p25": 53.0,
-        "suggestion": "Low creatinine may reflect reduced muscle mass. "
-                      "Consider as a marker of disease burden.",
+        "message": "Value is at or below the DEV 25th percentile.",
     },
     "alt_t0": {
         "high_p75": 45.0,
-        "suggestion": "ALT above the 75th percentile (45 U/L). "
-                      "Monitor liver function; review concomitant medications.",
+        "message": "Value is at or above the DEV 75th percentile (45 U/L).",
     },
 }
 
@@ -254,13 +238,13 @@ def _map_to_original(trans_name: str, feat_cols: list[str]) -> str:
 
 
 # ─────────────────────────────────────────────────────────────
-# Monitoring suggestions
+# Contextual review flags
 # ─────────────────────────────────────────────────────────────
-def generate_suggestions(top_features: list[tuple], X: pd.DataFrame):
-    """Given top-N (feature, shap_value) pairs, generate monitoring text."""
-    suggestions = []
+def generate_review_flags(top_features: list[tuple], X: pd.DataFrame):
+    """Flag top contributors outside descriptive DEV percentile cutoffs."""
+    flags = []
     for feat, shap_val in top_features:
-        rule = MONITORING_RULES.get(feat)
+        rule = REVIEW_RULES.get(feat)
         if rule is None:
             continue
         val = X[feat].iloc[0] if feat in X.columns else None
@@ -274,14 +258,14 @@ def generate_suggestions(top_features: list[tuple], X: pd.DataFrame):
             triggered = True
 
         if triggered:
-            suggestions.append({
+            flags.append({
                 "feature": feat,
                 "readable": readable(feat),
                 "value": val,
                 "shap": shap_val,
-                "suggestion": rule["suggestion"],
+                "message": rule["message"],
             })
-    return suggestions
+    return flags
 
 
 # ─────────────────────────────────────────────────────────────
@@ -305,30 +289,16 @@ def format_report(patient_id, proba, shap_series, base_value, X,
     lines.append(f"  Patient ID:         {patient_id}")
     lines.append(f"  P(rapid, 6 months): {proba:.4f}  ({proba*100:.1f}%)")
 
-    # Risk tier
-    if proba >= 0.50:
-        tier = "HIGH"
-    elif proba >= THR_F1:
-        tier = "MODERATE"
-    else:
-        tier = "LOW"
-    lines.append(f"  Risk tier:          {tier}")
-    lines.append("")
-
-    # Classification at both thresholds
-    cls_f1 = "RAPID" if proba >= THR_F1 else "SLOW"
-    cls_f2 = "RAPID" if proba >= THR_F2 else "SLOW"
-    sym_f1 = "⚠" if cls_f1 == "RAPID" else "✓"
-    sym_f2 = "⚠" if cls_f2 == "RAPID" else "✓"
-    lines.append(f"  Classification (F1-optimal, t={THR_F1}):")
-    lines.append(f"    {sym_f1} {cls_f1} PROGRESSOR")
-    lines.append(f"  Classification (F2-optimal, t={THR_F2}):")
-    lines.append(f"    {sym_f2} {cls_f2} PROGRESSOR")
+    classification = "RAPID" if proba >= DECISION_THRESHOLD else "SLOW"
+    lines.append(f"  Classification (selected threshold, t={DECISION_THRESHOLD}):")
+    lines.append(f"    {classification} PROGRESSOR")
 
     if slope_val is not None:
         true_label = "RAPID" if slope_val <= slope_cutoff else "SLOW"
-        lines.append(f"  True label (known): {true_label}  "
+        lines.append(f"  Retrospective outcome: {true_label}  "
                      f"(slope={slope_val:.4f}, cutoff={slope_cutoff:.4f})")
+        lines.append("  Note: this record was included in the final full-cohort refit;")
+        lines.append("  the comparison above is descriptive, not out-of-sample evaluation.")
 
     lines.append("─" * W)
 
@@ -352,36 +322,23 @@ def format_report(patient_id, proba, shap_series, base_value, X,
 
     lines.append("─" * W)
 
-    # ── 3. Monitoring suggestions ──
+    # ── 3. Contextual review flags ──
     lines.append("")
-    lines.append("─── MONITORING SUGGESTIONS " + "─" * (W - 27))
+    lines.append("─── CONTEXTUAL REVIEW FLAGS " + "─" * (W - 28))
 
-    suggestions = generate_suggestions(top_feats, X)
-    if suggestions:
-        lines.append("  Based on the top risk drivers for this patient:")
+    flags = generate_review_flags(top_feats, X)
+    if flags:
+        lines.append("  Descriptive checks among the top model contributors:")
         lines.append("")
-        for s in suggestions:
+        for s in flags:
             val_str = f"{s['value']:.1f}" if isinstance(s['value'], (int, float, np.floating)) else str(s['value'])
             lines.append(f"  • {s['readable']} = {val_str}")
-            lines.append(f"    → {s['suggestion']}")
+            lines.append(f"    → {s['message']}")
             lines.append("")
     else:
-        lines.append("  No specific monitoring triggers activated.")
-        lines.append("  The top contributing features are within normal")
-        lines.append("  population ranges or do not have predefined rules.")
+        lines.append("  No predefined descriptive cutoff was triggered among")
+        lines.append("  the five largest SHAP contributors.")
         lines.append("")
-
-    # General recommendation
-    if tier == "HIGH":
-        lines.append("  General: HIGH risk classification.")
-        lines.append("  → Recommend multidisciplinary team review and")
-        lines.append("    intensified follow-up schedule (monthly).")
-    elif tier == "MODERATE":
-        lines.append("  General: MODERATE risk classification.")
-        lines.append("  → Standard follow-up; reassess in 3 months.")
-    else:
-        lines.append("  General: LOW risk classification.")
-        lines.append("  → Standard care pathway; reassess in 6 months.")
 
     lines.append("─" * W)
 
@@ -389,8 +346,9 @@ def format_report(patient_id, proba, shap_series, base_value, X,
     lines.append("")
     lines.append("DISCLAIMER: This report is generated by a machine-learning")
     lines.append("model trained on PRO-ACT data for research purposes only.")
-    lines.append("It does NOT constitute medical advice. Clinical decisions")
-    lines.append("should always be made by qualified healthcare professionals.")
+    lines.append("The probability, classification, SHAP values, and percentile")
+    lines.append("flags have not been prospectively or clinically validated.")
+    lines.append("They do NOT constitute medical advice or a care recommendation.")
     lines.append("=" * W)
 
     return "\n".join(lines)
@@ -400,11 +358,10 @@ def format_report(patient_id, proba, shap_series, base_value, X,
 # Demo patient (default)
 # ─────────────────────────────────────────────────────────────
 def get_demo_patient_id():
-    """Pick a random patient from the TEST set for demonstration."""
+    """Pick a random dataset record for demonstration."""
     rng = np.random.default_rng()
-    hs = pd.read_csv(SPLIT_PATH)
-    test_ids = hs.loc[hs["partition"] == "test", "subject_id"].tolist()
-    return int(rng.choice(test_ids))
+    patient_ids = pd.read_csv(DATA_PATH, usecols=["subject_id"])["subject_id"]
+    return int(rng.choice(patient_ids.to_numpy()))
 
 
 # ─────────────────────────────────────────────────────────────
@@ -436,7 +393,7 @@ def main():
         patient_id = args.patient_id
     else:
         patient_id = get_demo_patient_id()
-        print(f"No patient specified — using demo patient {patient_id} from TEST set.")
+        print(f"No patient specified — using dataset record {patient_id} for demonstration.")
         X, slope_val = patient_from_dataset(patient_id, feat_cols)
 
     # Predict

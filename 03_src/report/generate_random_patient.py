@@ -1,10 +1,10 @@
 """
 Generate a random fictitious patient JSON for demo/testing purposes.
 
-Each feature is sampled from realistic distributions calibrated on the
-full PRO-ACT dataset (N=1,392): truncated normals matching observed
-mean/std/range for continuous variables, observed frequencies for
-categorical variables, and logical correlations (FVC~sex, BMI=f(W,H)).
+Each feature is sampled from approximate distributions calibrated on the
+full PRO-ACT dataset (N=1,392). The generator reproduces selected marginal
+summaries and a small number of dependencies; it is intended only for
+software demonstration, not for clinical simulation or privacy protection.
 
 Usage
 -----
@@ -31,12 +31,14 @@ def _trunc_normal(rng, mean, std, lo, hi):
 
 
 def generate_random_patient(rng: np.random.Generator | None = None) -> dict:
-    """Return a dict with all 35 features sampled from realistic distributions.
+    """Return a dict with all 35 features sampled from approximate distributions.
 
     Distributions are calibrated from the PRO-ACT dataset (N=1,392):
     - Continuous variables: truncated normal matching observed mean/std/range
     - Categorical variables: probabilities matching observed frequencies
-    - Correlated features (BMI, FVC) derived from base variables
+    - Selected dependencies: BMI from weight/height and FVC conditioned on sex
+
+    The full multivariable dependence structure is not reproduced.
     """
     if rng is None:
         rng = np.random.default_rng()

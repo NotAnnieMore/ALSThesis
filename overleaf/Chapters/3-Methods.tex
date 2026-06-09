@@ -542,8 +542,9 @@ This parallel artifact provides an interpretable full-cohort model for the repor
 
 \section{Explainability Plan (XAI)}
 \label{sec:methods_xai_plan}
-Explainability is treated as a core requirement for clinical acceptability.
-We employ three complementary techniques---\gls{SHAP}, \gls{LIME}, and Logistic Regression coefficient analysis---to examine the DEV-fitted selected model at both the global and individual levels. This preserves the held-out status of the TEST cases used for explanation.
+Explainability is used to inspect how the selected model forms its predictions and whether the resulting patterns are clinically plausible.
+Three complementary approaches are applied: \gls{SHAP}, \gls{LIME}, and Logistic Regression coefficient analysis.
+For this analysis, the selected XGBoost configuration and the balanced Logistic Regression configuration are fitted on DEV only; the \gls{TEST} set is used for explanations but is not included in model fitting.
 
 \subsection{SHAP (SHapley Additive exPlanations)}
 \label{subsec:methods_shap}
@@ -561,22 +562,23 @@ Two levels of analysis are performed:
 
 \subsection{LIME (Local Interpretable Model-agnostic Explanations)}
 \label{subsec:methods_lime}
-\gls{LIME}~\cite{ribeiro2016lime} provides an independent local explanation method for cross-validation against \gls{SHAP}.
+\gls{LIME}~\cite{ribeiro2016lime} provides a second view of individual predictions through a locally fitted surrogate model.
 For each of the same four case-study subjects, \gls{LIME} generates 2{,}000 perturbed neighbours of the input (reduced from the library default of 5{,}000 to limit computation time while remaining large enough for stable local fits), queries the classifier for predicted probabilities, and fits a sparse linear model in the neighbourhood of the original instance.
 The resulting feature weights indicate which variables drive the local decision boundary.
 
-Because the production pipeline includes a one-hot encoder and standard scaler, \gls{LIME} is applied to the \textit{preprocessed} (fully numeric) feature matrix rather than the raw data, wrapping only the final classifier as a black-box predictor.
+Because the XGBoost pipeline includes imputation and one-hot encoding, \gls{LIME} is applied to the \textit{preprocessed} (fully numeric) feature matrix rather than the raw data, wrapping only the final classifier as a black-box predictor.
 This avoids type-conversion errors and ensures that the perturbation distribution matches the feature space seen by the model.
 
 \subsection{SHAP--LIME Concordance}
 \label{subsec:methods_concordance}
-To assess robustness, we compare the top-10 features ranked by absolute \gls{SHAP} value against the top-10 ranked by absolute \gls{LIME} weight for each case study and count the number of overlapping features.
-High concordance between the two independent explanation methods increases confidence that the identified drivers are genuine rather than artefacts of a single attribution technique.
+For each case study, the top-10 features ranked by absolute local \gls{SHAP} value are compared with the top-10 features ranked by absolute \gls{LIME} weight.
+The number of shared features provides a descriptive measure of agreement between two methods with different assumptions; it is not treated as evidence of causal relevance or explanation validity.
 
 \subsection{Logistic Regression Coefficients}
 \label{subsec:methods_lr_coefs}
 The balanced Logistic Regression model (trained with \texttt{class\_weight=balanced}) provides a model-intrinsic form of explainability:
-each standardised coefficient directly quantifies the direction and magnitude of a feature's linear association with the log-odds of rapid progression.
+each coefficient describes the direction and magnitude of a feature's linear association with the predicted log-odds of rapid progression.
+Numeric variables are standardised before fitting, so their coefficients represent a one-standard-deviation change; one-hot encoded categorical indicators retain their binary scale.
 Comparing the \gls{LR} coefficient ranking with \gls{SHAP} importance serves as a further triangulation of feature relevance across fundamentally different model families (linear vs.\ ensemble).
 
 \section{Supplementary Analyses}
@@ -584,21 +586,26 @@ Comparing the \gls{LR} coefficient ranking with \gls{SHAP} importance serves as 
 
 \subsection{Error Profiling}
 \label{subsec:methods_error_profile}
-To understand \textit{which} patients the model misclassifies, we profile all \gls{TEST}-set subjects by confusion-matrix quadrant (\gls{TP}, \gls{FP}, \gls{FN}, \gls{TN}) and stratify by four clinical variables:
+To describe which participants the model misclassifies, all \gls{TEST}-set subjects are assigned to a confusion-matrix quadrant (\gls{TP}, \gls{FP}, \gls{FN}, or \gls{TN}) at the selected threshold and stratified by four clinical variables:
 \begin{itemize}
   \item \textbf{Age group} (quartile-based: $\leq$49, 50--57, 58--65, $>$65),
   \item \textbf{Sex} (Male, Female),
   \item \textbf{\gls{ALSFRS-R} severity} ($\leq$35 severe, 36--39, 40--42, $>$42 mild),
   \item \textbf{\gls{FVC} \% of normal} (quartile-based: $\leq$77\%, 78--87\%, 88--98\%, $>$98\%).
 \end{itemize}
-These variables were chosen because they span the main clinical axes known to influence \gls{ALS} prognosis: demographics (age, sex), overall functional status (\gls{ALSFRS-R}), and respiratory reserve (\gls{FVC}).
-For each group we report absolute counts and proportions per quadrant, with particular attention to false negatives---the clinically most dangerous error in a screening context.
+The age and \gls{FVC} boundaries are quartile-derived cut-points among participants with observed values.
+Participants with missing age or \gls{FVC} are retained in the error profile as a separate \textit{Missing} group rather than being omitted from the figures.
+These variables represent demographics (age and sex), overall functional status (\gls{ALSFRS-R}), and respiratory function (\gls{FVC}).
+For each group, absolute counts and within-group proportions are reported for all four quadrants, with particular attention to false negatives because missed rapid progressors are the principal concern at a screening-oriented operating point.
 
 \subsection{Subgroup Performance Analysis}
 \label{subsec:methods_subgroup}
-To assess whether the model's performance is equitable across clinical subgroups, we compute \gls{PR-AUC}, recall, precision, and $F_1$ separately for each stratum of the four variables above.
+To explore whether model performance varies across clinical subgroups, we compute \gls{PR-AUC}, recall, precision, and $F_1$ separately for each stratum of the four variables above.
 Subgroups with fewer than 10 subjects or fewer than 3 rapid progressors are excluded to avoid unreliable metric estimates.
-This analysis reveals whether the model exhibits differential performance (e.g., higher recall for severe patients but lower recall for mild-function patients).
+Missing age and \gls{FVC} values are retained as separate groups when they meet these criteria.
+The overall \gls{TEST}-set \gls{PR-AUC} and recall are included in the figures as descriptive reference lines.
+Because subgroup sizes and outcome prevalences differ, and no multiplicity-adjusted hypothesis tests or subgroup-specific confidence intervals are used, this analysis is exploratory and does not establish fairness or equivalence.
+In particular, absolute \gls{PR-AUC} values are interpreted alongside the rapid-progressor prevalence in each subgroup.
 
 \subsection{Decision Curve Analysis}
 \label{subsec:methods_dca}
@@ -610,8 +617,10 @@ The net benefit at threshold $t$ is defined as:
 \end{equation}
 where the ratio $t/(1-t)$ represents the relative cost of a false positive versus a missed case.
 The model's net-benefit curve is compared against two reference strategies: \textit{treat all} (classify every patient as rapid) and \textit{treat none} (classify no patient as rapid).
-A model is clinically useful at thresholds where its net benefit exceeds both references.
-The analysis is evaluated over the range $t \in [0.01,\, 0.80]$; thresholds above 0.80 are omitted because they imply an implausibly high cost of false positives and produce unstable net-benefit estimates due to very few predicted-positive cases.
+A model has a higher estimated net benefit at thresholds where its curve exceeds both references.
+The analysis is evaluated over $t \in [0.01,\, 0.60]$ in increments of 0.01.
+No participant has a predicted probability above 0.58, so higher thresholds are equivalent to the treat-none strategy and add no information.
+Because the analysis uses the same finite TEST sample as the performance evaluation and does not include confidence intervals, isolated threshold points are interpreted cautiously; emphasis is placed on continuous intervals of higher net benefit.
 
 \subsection{Calibration Analysis}
 \label{subsec:methods_calibration}
@@ -622,19 +631,22 @@ Calibration is additionally summarised numerically by the Brier score (Table~\re
 
 \subsection{Learning Curves}
 \label{subsec:methods_learning_curves}
-To assess whether additional training data would improve performance, we construct learning curves by training the selected XGBoost configuration on progressively larger random subsets of the \gls{DEV} set (20\%, 30\%, \ldots, 100\%) and evaluating each on the fixed \gls{TEST} set.
-Subsampling is performed at the subject level (not row level) to preserve the GroupKFold rationale.
-Each fraction below 100\% is repeated five times with different random seeds to estimate variance.
-Subject selection at each fraction is purely random---no stratification by the target label is applied---so minor variation in class proportions across subsamples is expected and absorbed by the five-repetition averaging.
-A plateau in \gls{PR-AUC} at high fractions indicates a feature-driven, rather than data-driven, performance ceiling.
+To explore sensitivity to training-set size, the selected XGBoost configuration is trained on progressively larger subsets of DEV (20\%, 30\%, \ldots, 100\%) and evaluated on the fixed \gls{TEST} set.
+DEV contains one row per participant, so subsampling is performed directly at participant level.
+Each fraction below 100\% is repeated 20 times using stratified random samples, preserving the rapid-progressor proportion at approximately 30\%; the full DEV fit is deterministic and is therefore run once.
+The figure reports the mean \gls{PR-AUC} and \gls{ROC-AUC} across repetitions, with error bars representing one standard deviation rather than confidence intervals.
+Because the same TEST set is evaluated repeatedly, this is treated as a post-evaluation sensitivity analysis and is not used for model or hyperparameter selection.
+The curve can indicate whether performance continues to change with sample size, but it cannot by itself establish a fixed performance ceiling or predict the benefit of collecting additional data.
 
 \subsection{Bootstrap Confidence Intervals}
 \label{subsec:methods_bootstrap}
-To quantify the statistical uncertainty of the \gls{TEST}-set performance estimates, we compute 95\% confidence intervals via the non-parametric bootstrap~\cite{efron1993bootstrap}.
-For each of $B\!=\!2{,}000$ iterations, we draw a sample of size $N_{\text{test}}$ with replacement from the \gls{TEST} set and re-compute six metrics: \gls{PR-AUC}, \gls{ROC-AUC}, recall, precision, $F_1$, and the Brier score (the mean squared error between predicted probabilities and observed binary outcomes, serving as a calibration measure).
+To quantify sampling uncertainty in the \gls{TEST}-set performance estimates, we compute 95\% confidence intervals via the non-parametric bootstrap~\cite{efron1993bootstrap}.
+For each of $B\!=\!2{,}000$ iterations, a sample of size $N_{\text{test}}$ is drawn with replacement from the \gls{TEST} participants and seven metrics are recomputed: \gls{PR-AUC}, \gls{ROC-AUC}, recall, precision, $F_1$, $F_2$, and the Brier score.
+The fitted model and operating threshold ($t=0.21$) remain fixed across resamples.
 The 2.5th and 97.5th percentiles of the bootstrap distribution define the 95\% confidence interval for each metric.
 Degenerate bootstrap samples (single-class) are discarded.
-This approach makes no distributional assumptions and accounts for the sampling variability inherent in a fixed-size held-out set.
+This approach avoids a parametric sampling-distribution assumption and describes uncertainty due to the composition of the finite TEST sample.
+It is conditional on the fitted model and selected threshold and therefore does not incorporate uncertainty from DEV sampling, hyperparameter optimisation, model selection, or threshold selection.
 
 \subsection{Partial Dependence Plots}
 \label{subsec:methods_pdp}
@@ -645,39 +657,46 @@ For a feature $x_j$, the partial dependence function is:
   \label{eq:pdp}
 \end{equation}
 where $\mathbf{x}_{i,\setminus j}$ denotes the values of all features except $x_j$ for subject $i$.
-We compute \glspl{PDP} for the three features with the highest global \gls{SHAP} importance (\gls{ALSFRS-R} total, \gls{FVC} in litres, respiratory rate). The grid spans the 5th to 95th percentile of each feature's distribution to avoid extrapolation artefacts.
-A rug plot of observed values is overlaid to indicate data density.
+We compute \glspl{PDP} for the three features with the highest global \gls{SHAP} importance: \gls{ALSFRS-R} total, \gls{FVC} in litres, and age.
+For each feature, the grid spans the 5th to 95th percentile of its observed values in TEST; missing values are excluded when defining the grid and rug plot but remain median-imputed within the model pipeline for prediction.
+A rug plot shows the observed TEST values and therefore makes sparse regions and missingness easier to recognise.
+PDPs average over the joint distribution of all remaining variables and can evaluate feature combinations that are uncommon or clinically implausible, particularly when predictors are correlated.
+They are consequently interpreted as descriptive summaries of the fitted model, not as causal dose--response relationships or individual-level effects.
 
 \section{Patient Risk Report Generator}
 \label{sec:methods_patient_report}
 
-To demonstrate how the trained pipeline could be used in a clinical decision-support context, we develop a \textit{patient risk report generator} that produces a structured textual report for a single patient.
-The tool loads the persisted XGBoost pipeline and its associated metadata (feature list, slope cutoff, decision threshold) and accepts patient data from three sources:
+As a post-evaluation software demonstrator, we developed a \textit{patient risk report generator} that presents the output of the persisted XGBoost pipeline for one patient record.
+The report uses the model refitted on the complete eligible cohort after held-out evaluation (Section~\ref{sec:methods_final_model}); it must therefore not be used to estimate predictive performance.
+The tool loads the pipeline and its associated metadata (feature list, slope cutoff, and decision threshold) and accepts data from three sources:
 \begin{enumerate}
-  \item \textbf{Dataset lookup:} a subject ID from the held-out \gls{TEST} set;
+  \item \textbf{Dataset lookup:} a subject ID from the processed cohort;
   \item \textbf{\gls{JSON} file:} a key--value file with baseline feature values, allowing external or synthetic patients;
-  \item \textbf{Demo mode:} a randomly selected \gls{TEST}-set patient for quick demonstration.
+  \item \textbf{Demo mode:} a randomly selected record from the processed cohort.
 \end{enumerate}
 
 Each report comprises three sections:
 \begin{itemize}
-  \item \textbf{Risk Assessment.} The predicted probability of rapid progression $P(\text{rapid})$ is displayed alongside a three-tier risk classification: LOW ($P < 0.21$, below the $F_1$-optimal decision threshold), MODERATE ($0.21 \leq P < 0.50$), and HIGH ($P \geq 0.50$, the point at which the model assigns more probability mass to rapid progression than to slow).
-  A binary classification at the optimal operating threshold ($t\!=\!0.21$) is also shown; in this dataset the $F_1$-optimal and $F_2$-optimal thresholds coincide because the $F_2$ curve is nearly flat between 0.15 and 0.21, so the argmax lands at the same point.
-  When the true label is available (dataset patients), it is shown for verification.
+  \item \textbf{Model output.} The estimated probability of rapid progression, $P(\text{rapid})$, is shown together with the binary classification obtained at the preselected operating threshold ($t=0.21$).
+  For cohort records, the retrospectively derived outcome is also displayed, but only as contextual information because those records contributed to the final refit.
   \item \textbf{Top-5 Contributing Features (\gls{SHAP}).} A local TreeSHAP explanation lists the five features with the largest absolute Shapley values, together with the feature value, \gls{SHAP} magnitude, and direction of influence.
-  Transformed features (one-hot encoded) are aggregated back to their original variable names for clinical readability.
-  \item \textbf{Monitoring Suggestions.}  Rule-based clinical alerts are triggered when a top contributing feature falls outside population-normal bounds.
-  Thirteen features have predefined rules comparing the patient's value against population percentiles (25th or 75th) computed from the \gls{DEV} set ($N = 1{,}113$).
-  For example, an \gls{ALSFRS-R} total below the 25th percentile (35~points) triggers a recommendation for monthly functional reassessment.
+  Contributions from one-hot encoded columns are aggregated under the corresponding source variable.
+  These values explain the fitted model for that record; they do not identify causal effects.
+  \item \textbf{Contextual review flags.} For 13 variables, descriptive rules identify whether a top-five contributor lies beyond a predefined 25th- or 75th-percentile cutoff derived from \gls{DEV}.
+  The flags provide distributional context only.
+  They are not clinical reference ranges, alerts, or recommendations for follow-up or treatment.
 \end{itemize}
+
+The generated text includes an explicit research-use disclaimer.
+Neither the predicted probability nor the displayed threshold and review flags have undergone prospective clinical validation.
 
 \subsection{Synthetic Patient Generator}
 \label{subsec:methods_random_patient}
-To enable demonstration with fictitious patients, a companion script generates random patient profiles with all 35~baseline features.
-Each continuous variable is sampled from a truncated normal distribution calibrated on the full \gls{PRO-ACT} dataset ($N = 1{,}392$), matching the observed mean, standard deviation, and range.
-Categorical variables (sex, ethnicity, race, riluzole use) are sampled with the observed population frequencies.
-Logical correlations are preserved: \gls{FVC} in litres is conditioned on sex (males $\mu = 3.9$~L, females $\mu = 2.8$~L), and \gls{BMI} is derived from the sampled weight and height rather than drawn independently.
-This design ensures that generated patients are statistically plausible without replicating any real individual from the dataset.
+To test the report interface without selecting a named cohort record, a companion script generates fictitious profiles containing all 35 baseline features.
+Continuous variables are sampled from bounded distributions calibrated to approximate observed summaries in the full \gls{PRO-ACT} cohort ($N=1{,}392$), while categorical variables use approximate observed frequencies.
+Two dependencies are imposed explicitly: \gls{BMI} is calculated from sampled weight and height, and \gls{FVC} in litres is conditioned on sex.
+The remaining variables are sampled separately, so the generator does not reproduce the full joint distribution of the clinical data.
+These profiles are suitable for testing data ingestion, prediction, and report formatting, but not for clinical simulation, privacy assessment, or model validation.
 
 \bigskip
 \noindent

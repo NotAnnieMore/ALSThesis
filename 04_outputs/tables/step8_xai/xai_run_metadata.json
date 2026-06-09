@@ -1,0 +1,18 @@
+{
+  "training_partition": "DEV only",
+  "explanation_partition": "TEST",
+  "n_dev": 1113,
+  "n_test": 279,
+  "rapid_progression_cutoff": -1.2430281747151972,
+  "classification_threshold": 0.21,
+  "xgb_parameter_file": "04_outputs\\tables\\step5_tuning\\XGB_unbalanced_6m_best.json",
+  "lr_parameter_file": "04_outputs\\tables\\step5_tuning\\LR_balanced_6m_best.json",
+  "test_pr_auc": 0.45646207840694486,
+  "test_roc_auc": 0.6601343101343101,
+  "confusion_matrix": {
+    "true_positive": 72,
+    "false_positive": 133,
+    "false_negative": 12,
+    "true_negative": 62
+  }
+}
