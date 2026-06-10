@@ -1,40 +1,48 @@
 ﻿\chapter{Survival Prognosis Replication: Methods}
 \label{ch:study2_methods}
 
-This chapter describes the methodology for Study~II, which replicates and extends the ALS survival prognosis framework of Papaiz et al.\ \cite{Papaiz2024}.
-Study~I, which develops the original functional progression pipeline, is described in Chapter~\ref{ch:study1_methods}.
-The two studies address different clinical targets and use different experimental designs; this chapter focuses exclusively on the survival prognosis task.
+This chapter describes the design of Study~II, a partial replication and extension of the ALS survival prognosis study by Papaiz et al.~\cite{Papaiz2024}.
+General descriptions of \gls{PRO-ACT}, hyperparameter optimisation, and post-hoc explanation methods were provided in the preceding chapters.
+The discussion here is therefore limited to the cohort, target, feature representation, and experimental choices specific to the survival task.
 
 % ============================================================
 \section{Rationale and Relationship to Study~I}
 \label{sec:s2_rationale}
 % ============================================================
 
-Study~I develops an original leakage-free pipeline for predicting short-term ALSFRS-R functional progression in ALS.
-Study~II addresses a different but complementary prognosis target: identifying patients who will die within 24 months of symptom onset, referred to throughout as Short Survivors.
-Both studies share the same source database (\gls{PRO-ACT}), the same Optuna-based hyperparameter optimisation framework, and the same post-hoc SHAP interpretability approach, but they differ in their clinical target, feature set, class imbalance severity, and optimisation objective.
+Study~I asks whether baseline clinical data can distinguish patients with rapid and slower short-term functional decline.
+Study~II changes both the outcome and the methodological purpose.
+Its target is Short Survivor status, defined as death within 24 months of symptom onset, and its starting point is a published prediction framework rather than a newly designed pipeline.
 
-Study~II serves two purposes within this dissertation.
-First, it extends the scope of ALS prognostic modelling from functional progression to survival prognosis, covering a second clinically relevant outcome.
-Second, it evaluates reproducibility and methodological robustness by replicating and extending a published survival prediction pipeline under different validation and imbalance conditions.
-Both purposes connect to the dissertation-wide themes: leakage-free validation, class imbalance, threshold-aware evaluation, explainability, and clinical interpretability.
+The replication was included to test whether a reported result survives a new implementation and a different public extract of the same database.
+This is distinct from developing another classifier for a second outcome.
+The reference study provides a fixed target, feature set, and ensemble-imbalance protocol against which discrepancies can be examined rather than absorbed into a new modelling design.
+
+The two studies nevertheless address the same broader problem: performance estimates depend on how the outcome is defined, how patients are separated, how class imbalance is handled, and how the decision threshold is interpreted.
+That final issue is more pronounced in Study~II because Short Survivors form a substantially smaller class.
+For this reason, the replication considers ranking performance and threshold-dependent detection as separate parts of the evaluation.
 
 % ============================================================
 \section{Reference Study and Replication Objectives}
 \label{sec:s2_reference}
 % ============================================================
 
-Papaiz et al.~\cite{Papaiz2024} proposed a systematic evaluation of six classical ML classifiers combined with BalancedBagging, using 23 hand-crafted clinical features derived from the PRO-ACT database.
-That study (hereafter the \emph{reference study}) showed that the ensemble wrapper consistently improved balanced accuracy, with the MLP emerging as the best performer under repeated cross-validation.
+Papaiz et al.~\cite{Papaiz2024}, hereafter the \emph{reference study}, compared six classifiers using 23 clinical variables derived at or near diagnosis.
+Five classifier families were evaluated with BalancedBagging, while Random Forest was paired with Balanced Random Forest.
+Model development used five-fold cross-validation repeated three times within an 80\% training partition; selected models were then refitted and assessed on the remaining 20\% validation partition.
+The ensemble neural network produced the strongest reported validation performance.
 
-The reference study left several methodological questions open: hyperparameters were tuned by grid search; gradient-boosted classifiers were not considered; and performance was assessed entirely within cross-validation without a separate held-out test set---a gap that, as this study's results show, has non-trivial consequences.
+Study~II is a partial rather than exact replication.
+It reconstructs the 24-month survival target and 23-feature representation from the available \gls{PRO-ACT} extract, but the extract and resulting cohort are not identical to those used in the reference study.
+The modelling stage also changes deliberately: Optuna replaces grid search, LightGBM is added, and individual over-sampling, under-sampling, cleaning, and hybrid strategies are compared.
+These changes separate the reproduction of the central ensemble-imbalance claim from the extensions introduced in this dissertation.
 
-This study makes the following contributions:
+The study has four objectives:
 \begin{enumerate}
-  \item A partial replication of the reference study on the publicly available PRO-ACT extract, confirmed by Bonferroni-corrected statistical tests across all seven classifiers;
-  \item An extension replacing grid search with Bayesian hyperparameter optimisation (Optuna~\cite{optuna2019}) and adding LightGBM~\cite{ke2017lightgbm} as a seventh classifier, evaluated across ten imbalance-handling strategies;
-  \item A held-out test evaluation showing that the MLP's leading cross-validation AUC does not translate to adequate minority-class sensitivity at the default threshold, whereas LightGBM with Random Oversampling achieves the best overall balance;
-  \item SHAP-based interpretability analysis~\cite{lundberg2017shap,lundberg2020treeshap} for both the replication and extension models, identifying diagnostic delay and ALSFRS-R decline slopes as the dominant prognostic variables.
+  \item reconstruct the reference cohort definition, fixed 24-month survival target, and 23-feature representation using the available \gls{PRO-ACT} data;
+  \item re-evaluate the effect of BalancedBagging relative to the corresponding single classifiers using repeated cross-validation and multiplicity-corrected paired tests;
+  \item extend the comparison to seven classifiers and ten imbalance-handling strategies, with Optuna-based hyperparameter search and final assessment on the reserved test partition; and
+  \item examine whether model ranking, minority-class sensitivity, and SHAP-based predictive explanations lead to the same interpretation of performance.
 \end{enumerate}
 
 % ============================================================
@@ -45,30 +53,27 @@ This study makes the following contributions:
 \subsection{PRO-ACT Source and Cohort Construction}
 \label{subsec:s2_proact}
 
-The PRO-ACT database~\cite{PROACT} contains longitudinal clinical records from ALS patients enrolled across multiple controlled trials, covering ALSFRS-R assessments, vital signs, forced vital capacity (FVC), medication history, and demographic data.
-The publicly available extract examined here comprises 2,147 patient records across 16 clinical tables prior to any filtering.
-For the full description of PRO-ACT and its role in the thesis, see Section~\ref{subsec:methods_proact}; only the Study~II-specific differences are described here.
+The general structure of the PRO-ACT database~\cite{PROACT} was described in Section~\ref{subsec:methods_proact}. The public extract used here contains 16 source tables. Its demographic table contains 12,504 unique patient identifiers, of which 9,483 have usable age and sex records and form the patient-level starting set for Study~II. The remaining variables were drawn from disease history, ALSFRS-R, forced vital capacity (FVC), vital signs, riluzole, and death records.
 
-Following the feature engineering protocol of Papaiz et al.~\cite{Papaiz2024}, 23 categorical and ordinal features were extracted representing each patient's clinical status at or near the time of diagnosis.
+Following the feature engineering protocol of Papaiz et al.~\cite{Papaiz2024}, repeated measurements were reduced to values at or near diagnosis, except where longitudinal records were required to estimate functional decline. This produced 23 categorical and ordinal predictors.
 
 \subsection{Target Definition}
 \label{subsec:s2_target}
 
-Throughout this study, patients who died within 24 months of symptom onset are termed \textbf{Short Survivors}; those who died after 24 months or were alive beyond that point are termed \textbf{Standard Survival} patients.
-The binary target variable is defined accordingly: Short Survivor (death $\leq 24$ months from symptom onset) versus Standard Survival (death $> 24$ months, or alive beyond 24 months).
-Patients alive at the time of their last observation but without 24 months of confirmed follow-up were treated as censored and excluded, consistent with the reference study.
-Patients missing site-of-onset records were also excluded.
+The target was defined as a fixed-horizon binary outcome. Patients who died within 24 months of symptom onset were assigned to the \textbf{Short Survivor} class. The \textbf{Standard Survival} class comprised patients who died after 24 months and those who were alive with at least 24 months of documented follow-up. Short Survivor is treated as the positive class throughout this study.
 
-This target definition differs fundamentally from Study~I.
-In Study~I, the target is the fold-wise binary classification of the ALSFRS-R slope---a continuous measure of short-term functional deterioration.
-In Study~II, the target is confirmed death within a fixed 24-month window from symptom onset, a longer-horizon outcome with substantially more severe class imbalance.
+The outcome could be assigned to 6,120 patients: 656 Short Survivors and 5,464 Standard Survival patients. A further 1,396 patients were alive at their last recorded visit but had less than 24 months of follow-up. These records were excluded because their class could not be established at the selected horizon. Another 1,967 patients lacked sufficient information to determine either time to death or follow-up duration.
+
+Site of onset was represented as a binary variable distinguishing bulbar from limb/spinal onset. The 298 records classified as \textit{Other} and the 20 records containing both limb and bulbar onset were therefore excluded. Forty-two patients with missing site-of-onset information were subsequently removed during complete-case filtering.
+
+This target differs from the short-term functional progression outcome used in Study~I. Rather than classifying patients from their ALSFRS-R rate of decline, Study~II predicts survival within a fixed 24-month window and presents a more severe class imbalance.
 
 \subsection{Cohort Size and Class Distribution}
 \label{subsec:s2_cohort}
 
-Table~\ref{tab:s2_dataset} compares the resulting dataset with the one reported in the reference study.
-Our cohort comprises 1,502 patients, 23.6\% fewer than the original, primarily because the publicly available PRO-ACT extract contains a substantially higher proportion of missing FVC records (62.3\% after survival and site filtering) and sparser height data required for BMI derivation.
-The imbalance ratio rises correspondingly (7.6 versus 6.9).
+After outcome classification and the exclusion of non-binary site-of-onset categories, 5,802 patients remained. Complete-case filtering across all 23 predictors reduced the final cohort to 1,502 patients. The largest source of feature missingness was FVC, which was unavailable for 62.3\% of the 5,802 records; BMI was missing for 20.0\%. Missing values in the remaining predictors also contributed to the reduction.
+
+The final cohort is 23.6\% smaller than the 1,967-patient cohort reported in the reference study. This difference may reflect variation in the public data extract and in the availability of the variables required to reconstruct the original feature set. The resulting class imbalance is also slightly greater, with 7.6 Standard Survival patients per Short Survivor compared with 6.9 in the reference cohort. Table~\ref{tab:s2_dataset} provides the full comparison.
 
 \begin{table}[ht!]
   \centering
@@ -95,40 +100,39 @@ The imbalance ratio rises correspondingly (7.6 versus 6.9).
 \subsection{Preprocessing}
 \label{subsec:s2_preprocessing}
 
-Preprocessing mirrored the reference study's pipeline.
-Binary features---sex, site of onset, riluzole use, and gastrostomy---were encoded as 0/1 indicators.
-Age at onset was discretised into five ordinal groups ($\leq 39$, 40--49, 50--59, 60--69, $\geq 70$).
-Diagnostic delay was categorised as short ($\leq 8$ months), average (9--18 months), or long ($\geq 19$ months), serving as a proxy for pre-diagnostic disease tempo.
-FVC at diagnosis was classified as abnormal ($<$80\% predicted) or normal.
-BMI was derived from body weight and height measurements closest to the diagnosis visit and encoded into four standard categories.
+Feature construction followed the definitions reported by Papaiz et al.~\cite{Papaiz2024}. Diagnostic delay was calculated as the interval between symptom onset and diagnosis and grouped as short ($\leq 8$ months), average (9--18 months), or long ($\geq 19$ months). Age at onset was estimated from the demographic age and the recorded symptom-onset offset, then divided into five groups: $\leq 39$, 40--49, 50--59, 60--69, and $\geq 70$ years. Sex, site of onset, riluzole use, and gastrostomy were represented as binary variables. A patient was considered to use riluzole if any corresponding record indicated its use.
 
-ALSFRS-R functional decline slopes for each of the ten subscores (Q1--Q10) were computed as $(4 - \text{score}) / \text{months from symptom onset}$ at the assessment visit closest in time to each patient's diagnosis date, following the formulation of the reference study~\cite{Papaiz2024}.
-Where no pre-diagnosis assessment was available, the nearest available visit was used; this introduces a limited risk of post-diagnosis information being incorporated for a subset of patients, a limitation discussed in Section~\ref{sec:s2r_limitations}.
-Slopes were binned as slow ($<$0.05), average (0.05--0.14), or rapid ($\geq$0.14 points per month).
-Disease regions involved (bulbar, upper limb, lower limb, respiratory) were derived from ALSFRS-R subscores at the same visit.
+For longitudinal clinical variables, the available measurement closest to the diagnosis date was selected by absolute time difference. This rule allows the selected record to fall either before or after diagnosis. FVC was expressed as percentage predicted, using the largest of the available trial measurements or, when percentage values were absent, the ratio between measured and expected volume. Values below 80\% were coded as abnormal. BMI was calculated from the weight measurement closest to diagnosis and the median valid height recorded for that patient. It was grouped as underweight ($<18.5$), normal (18.5--24.9), overweight (25.0--29.9), or obesity ($\geq 30$).
+
+Functional decline was represented separately for the ten ALSFRS items Q1--Q10. For records collected with the revised scale, the dyspnoea item was used as the compatible respiratory item Q10; Q11 and Q12 were not included. At the selected assessment, each item slope was calculated as
+\[
+  \frac{4 - \text{item score}}{\text{months from symptom onset}}.
+\]
+Slopes were classified as slow ($<0.05$), average ($0.05$--$0.13$), or rapid ($\geq 0.14$ points per month).
+
+Four indicators described regional involvement at the same assessment. Bulbar involvement was present when the sum of Q1--Q3 was below 12, upper-limb involvement when Q4 and Q5 summed to less than 8, lower-limb involvement when Q8 and Q9 summed to less than 8, and respiratory involvement when Q10 was below 4. Their sum gave the number of involved regions, from zero to four. Gastrostomy was identified from the presence of the gastrostomy-specific Q5 response.
+
+After complete-case filtering, categorical and ordinal values were converted to integer codes following the reference study. The 23 coded predictors were then scaled to the $[0,1]$ interval before data partitioning, matching the order used in the published pipeline.
 
 \subsection{Feature Set}
 \label{subsec:s2_featureset}
 
-The final feature set comprises 23 features identical to those used by Papaiz et al.\ \cite{Papaiz2024}, all ordinal, binary, or categorical:
+The final representation uses the same 23 feature definitions as the reference study:
 
 \begin{itemize}
-  \item \textbf{Demographics (3):} Sex, Site of Onset (Bulbar / Limb / Other), Age at Onset (five ordinal groups).
-  \item \textbf{Treatment and timing (2):} Riluzole use (binary), Diagnostic Delay (three ordinal categories).
-  \item \textbf{Clinical severity at diagnosis (10):} FVC at diagnosis (binary), BMI (four categories), Gastrostomy (binary), five binary region-involvement flags (bulbar, upper limb, lower limb, respiratory, generalised), number of regions involved.
-  \item \textbf{ALSFRS-R item slopes (8):} Functional decline slopes for items Q1 (speech), Q4 (handwriting), Q5 (cutting food), Q6 (dressing), Q8 (walking), Q9 (climbing stairs), Q10 (dyspnoea), and Q6 (turning in bed), each discretised into three ordinal categories.
+  \item \textbf{Patient characteristics, treatment, and timing (5):} sex, site of onset, age at onset, riluzole use, and diagnostic delay;
+  \item \textbf{Clinical status at diagnosis (8):} FVC, BMI, gastrostomy, number of involved regions, and four binary indicators for bulbar, upper-limb, lower-limb, and respiratory involvement; and
+  \item \textbf{Functional decline (10):} the discretised slopes of Q1 speech, Q2 salivation, Q3 swallowing, Q4 handwriting, Q5 cutting food, Q6 dressing and hygiene, Q7 turning in bed, Q8 walking, Q9 climbing stairs, and Q10 respiratory function.
 \end{itemize}
 
-These features differ from Study~I, which uses 35 baseline clinical features mostly continuous or mixed-type.
-Study~II relies on pre-engineered ordinal and binary representations following Papaiz et al., enabling direct comparison with the reference study but constraining the feature space relative to Study~I.
+Unlike the mainly continuous or mixed-type variables used in Study~I, this representation deliberately reduces the clinical measurements to binary and ordinal categories. This preserves comparability with the reference study, although some information within the original continuous measurements is lost.
 
 % ============================================================
 \section{Data Partitioning}
 \label{sec:s2_split}
 % ============================================================
 
-The dataset was split 80/20 into training ($n = 1{,}201$; 139 Short Survivors, 1,062 Standard Survival) and test ($n = 301$; 35 Short Survivors, 266 Standard Survival) partitions using stratified random sampling (seed 42).
-The test set was sealed until all model selection and hyperparameter optimisation had been completed.
+The 1,502 patients were divided by stratified random sampling into an 80\% training partition ($n = 1{,}201$; 139 Short Survivors and 1,062 Standard Survival patients) and a 20\% test partition ($n = 301$; 35 and 266, respectively). A fixed random seed of 42 was used. Only the training partition was available during hyperparameter optimisation and model selection; the test partition was reserved for the final assessment.
 
 % ============================================================
 \section{Experimental Design}
@@ -147,64 +151,62 @@ Figure~\ref{fig:s2_workflow} provides an overview of the complete experimental p
 \subsection{Classifiers and Imbalance Strategies}
 \label{subsec:s2_classifiers}
 
-Seven classifiers were evaluated: K-Nearest Neighbours (\gls{KNN}), Naïve Bayes, Decision Tree, Random Forest, Support Vector Machine (\gls{SVM}), Multi-Layer Perceptron (MLP), and LightGBM~\cite{ke2017lightgbm}.
-The first six correspond directly to those used in the reference study; LightGBM is the primary extension.
+Seven classifiers were evaluated: K-Nearest Neighbours (\gls{KNN}), Gaussian Naïve Bayes, Decision Tree, Random Forest, Support Vector Machine (\gls{SVM}), Multi-Layer Perceptron (MLP), and LightGBM~\cite{ke2017lightgbm}. The first six match the algorithm families considered by Papaiz et al.~\cite{Papaiz2024}; LightGBM was added as a gradient-boosted tree model.
 
-Ten class-imbalance correction strategies were evaluated: no correction (None), Random Oversampling (ROS), SMOTE~\cite{chawla2002smote}, Borderline-SMOTE, ADASYN, Random Undersampling (RUS), NearMiss, TomekLinks, SMOTETomek, and SMOTEENN, yielding 70 classifier--strategy combinations in total.
-All resampling operations were applied exclusively to the training fold of each cross-validation iteration, after the fold split and before classifier fitting; the validation fold and the held-out test set were never resampled.
-Cross-validation estimates and final test performance therefore both reflect the natural class distribution (11.6\% Short Survivors), with no leakage from held-out samples into the resampled training distribution.
+Each classifier was paired with ten imbalance-handling conditions. These comprised an unmodified baseline; four over-sampling methods, Random Oversampling (ROS), SMOTE~\cite{chawla2002smote}, Borderline-SMOTE, and ADASYN; three under-sampling or cleaning methods, Random Undersampling (RUS), NearMiss, and TomekLinks; and two hybrid methods, SMOTETomek and SMOTEENN. This produced 70 classifier--strategy combinations.
+
+Resampling was performed separately within each cross-validation iteration. The sampler was fitted only to the training fold, and the resulting data were then used to fit the classifier. Neither the validation fold nor the held-out test partition was resampled. Their class distributions therefore remained representative of the final cohort.
 
 \subsection{Optimisation Protocol}
 \label{subsec:s2_optuna}
 
-Hyperparameter optimisation followed the same Optuna-based framework introduced in Study~I (Section~\ref{sec:methods_optuna}), employing the TPE sampler.
-In Study~II, the protocol differed in three aspects: (i)~the objective metric was \gls{ROC-AUC} rather than \gls{PR-AUC}; (ii)~50 TPE trials were used per model--strategy combination rather than 60; and (iii)~optimisation was performed across 70 combinations, compared with 13 configurations in Study~I.
+Hyperparameter optimisation used the Optuna framework introduced in Study~I (Section~\ref{sec:methods_optuna}) with a seeded Tree-structured Parzen Estimator sampler. Fifty trials were run for each of the 70 classifier--strategy combinations, giving 3,500 optimisation trials. Each trial was evaluated by repeated cross-validation, and its objective value was the mean \gls{ROC-AUC}.
 
-Optimising for the same criterion as the reference study (ROC-AUC) ensures that any divergence between cross-validation AUC and held-out minority-class performance can be attributed to properties of the criterion itself, not to differences in the model selection procedure.
+The combination with the highest mean cross-validation ROC-AUC was retained for each classifier and later refitted on the full training partition. This differs from the reference study, which used grid search and selected models by balanced accuracy. ROC-AUC was chosen here to assess probability ranking independently of a fixed decision threshold; sensitivity and specificity were examined separately during evaluation.
 
 \subsection{Cross-Validation Strategy}
 \label{subsec:s2_cv}
 
-Model selection was conducted using Repeated Stratified $K$-Fold cross-validation with $K = 5$ and 3 repeats (15 evaluations per configuration), applied exclusively to the training set.
-Stratification ensures that class proportions are preserved in each fold.
+Model selection used repeated stratified five-fold cross-validation with three repeats, producing 15 validation scores for each Optuna trial. Stratification maintained the Short Survivor proportion in each fold. The same folds were generated from the training partition with random seed 42.
 
-This differs from Study~I, which uses a single 5-fold GroupKFold with subject-level separation.
-Study~II uses repeated stratified CV because the replication framing follows the reference study's experimental design; each row corresponds to a distinct patient, so no explicit subject-grouping constraint applies beyond stratification.
+Study~I required grouped folds because several records could belong to the same patient. Here, each row represents one patient, so repeated stratified cross-validation was sufficient to prevent patient overlap while retaining the validation structure of the reference study.
 
 % ============================================================
-\section{BalancedBagging Replication Protocol}
+\section{BalancedBagging Comparison Protocol}
 \label{sec:s2_bagging}
 % ============================================================
 
-To directly replicate the reference study, all seven classifiers were additionally evaluated in two configurations using the same cross-validation protocol: (i)~a single-model baseline with no imbalance correction, and (ii)~wrapped inside a BalancedBagging ensemble~\cite{lemaitre2017} with ten estimators and random undersampling applied within each bootstrap iteration.
+An additional analysis examined the central ensemble-imbalance claim of the reference study. For each of the seven classifiers, the best hyperparameters found for the unmodified baseline were used in two conditions: the classifier alone and the same classifier wrapped in a BalancedBagging ensemble~\cite{lemaitre2017}. BalancedBagging used ten estimators and random under-sampling within each bootstrap sample. Keeping the base hyperparameters fixed isolated the effect of adding the ensemble wrapper.
 
-Per-fold balanced accuracy scores from the 15 cross-validation folds were compared between the single-model and BalancedBagging configurations for each classifier using the Wilcoxon signed-rank test~\cite{wilcoxon1945}.
-Family-wise error rate inflation across the seven simultaneous comparisons was controlled by Bonferroni correction (corrected significance threshold $\alpha_c = 0.05 / 7 \approx 0.007$).
+This is not an exact reconstruction of every ensemble in the reference study. Papaiz et al. used BalancedBagging for five classifier families and Balanced Random Forest for Random Forest, and did not include LightGBM. The present comparison instead applies a common BalancedBagging mechanism to all seven classifiers; results for the original five families provide the closest methodological comparison, while Random Forest and LightGBM should be read as extensions.
+
+Balanced accuracy, sensitivity, and specificity were recorded for the single and ensemble conditions in each of the 15 paired cross-validation folds. Differences were tested with two-sided Wilcoxon signed-rank tests~\cite{wilcoxon1945}. Bonferroni-adjusted $p$-values controlled the seven comparisons made for each metric, equivalent to an unadjusted significance threshold of $0.05/7 \approx 0.007$.
 
 % ============================================================
 \section{Explainability Protocol}
 \label{sec:s2_xai}
 % ============================================================
 
-SHAP was applied as in Study~I (Section~\ref{subsec:methods_shap}) to provide post-hoc model explanations for survival prognosis.
-TreeSHAP~\cite{lundberg2020treeshap} was used for the best LightGBM configuration, providing exact Shapley values at negligible computational cost.
-KernelSHAP~\cite{lundberg2017shap} was used for the MLP model (100 background samples, 200 evaluation samples per instance), providing approximate Shapley values for a non-tree architecture.
-SHAP values were computed on the held-out test set after final retraining on the full training partition.
+SHAP was used to examine the two models selected for closer comparison: LightGBM with Random Oversampling and the unmodified MLP. Both models were refitted on the full training partition using their selected hyperparameters before explanation. The held-out test records were then used as the samples to be explained.
+
+TreeSHAP~\cite{lundberg2020treeshap} was applied to LightGBM and produced values for all 301 test patients. KernelSHAP~\cite{lundberg2017shap} was used for the MLP. Its background distribution was represented by 100 k-means centroids derived from the training data, and each test explanation used 200 KernelSHAP samples. The resulting values describe contributions to the models' predictions; they do not establish causal or independently prognostic effects.
+
+Global importance was summarised by the mean absolute SHAP value and by beeswarm plots showing the direction and distribution of feature contributions. Waterfall and decision plots were used for selected individual predictions. Feature rankings from LightGBM and MLP were also compared using Spearman's rank correlation.
 
 % ============================================================
-\section{Evaluation Metrics}
+\section{Evaluation Metrics, Thresholds, and Uncertainty}
 \label{sec:s2_metrics}
 % ============================================================
 
-Models were assessed using ROC-AUC, balanced accuracy, sensitivity (recall for the Short Survivor class), specificity, and geometric mean (G-Mean $= \sqrt{\text{Sensitivity} \times \text{Specificity}}$).
-Missing a Short Survivor is the worst-case error in this clinical setting; sensitivity is therefore the primary metric throughout.
+ROC-AUC was the optimisation and ranking metric during model selection. Held-out performance was then described using ROC-AUC, balanced accuracy, sensitivity, specificity, and the geometric mean,
+\[
+  \text{G-Mean}=\sqrt{\text{Sensitivity}\times\text{Specificity}}.
+\]
+Sensitivity denotes recall for the Short Survivor class. Average precision, precision, minority-class $F_1$, and overall accuracy were calculated as secondary descriptors. Because failing to identify a Short Survivor is the more consequential error in the intended setting, sensitivity received particular attention when interpreting models with similar ranking performance.
 
-Given the small number of Short Survivors in the test set ($n = 35$), point estimates shift by 2.86 percentage points per patient.
-Bootstrap 95\% percentile confidence intervals (2,000 resamples, \texttt{random\_state}$= 42$) were computed for all held-out metrics.
-Bootstrap samples containing no Short Survivors were excluded from sensitivity and G-Mean calculations.
+The default operating point was a probability threshold of 0.50. Three alternatives were derived from the repeated cross-validation predictions generated on the training partition: (i) the threshold maximising Youden's $J$~\cite{youden1950}; (ii) the highest threshold with sensitivity of at least 0.90; and (iii) the threshold maximising minority-class $F_1$. The validation predictions from all 15 folds were pooled, so each training patient contributed one out-of-fold prediction in each of the three repeats. No held-out test prediction was used to choose a threshold. The selected values were subsequently applied unchanged to the test probabilities.
 
-To investigate the effect of the decision boundary, three alternative thresholds were derived per classifier from out-of-fold (OOF) cross-validation predictions---never from the held-out test set---using (i)~Youden's J statistic~\cite{youden1950}, (ii)~the highest threshold achieving sensitivity $\geq 0.90$, and (iii)~the threshold maximising minority-class F1 score.
-These thresholds were subsequently applied to the test set and evaluated alongside the default 0.50 boundary.
+The test set contains 35 Short Survivors, so one correctly classified patient changes sensitivity by 2.86 percentage points. Sampling uncertainty was described using 95\% percentile bootstrap intervals. For each fitted classifier, 2,000 samples of 301 patient-level outcome--prediction pairs were drawn with replacement using random seed 42, and the five principal metrics were recalculated. A bootstrap sample containing only one outcome class would be omitted for any metric that could not be computed; none of the 2,000 samples was degenerate in this analysis. These intervals quantify variation within the held-out sample while treating the fitted model and selected threshold as fixed.
 
 % ============================================================
 \section{Methodological Differences from Study~I}
@@ -223,18 +225,18 @@ Table~\ref{tab:study_comparison} summarises the key methodological differences b
 \textbf{Dimension} & \textbf{Study~I} & \textbf{Study~II} \\
 \midrule
 Clinical target         & ALSFRS-R functional progression   & Survival $\leq 24$ months \\
-Class distribution      & 30\% / 70\%                       & 11.6\% / 88.4\% \\
+Class distribution      & 30\% rapid / 70\% non-rapid       & 11.6\% Short / 88.4\% Standard \\
 Imbalance ratio         & $\approx 2.3\!:\!1$              & $\approx 7.6\!:\!1$ \\
 Features                & 35 (continuous + mixed)           & 23 (ordinal / binary) \\
 Train / Test            & 1,113 / 279                       & 1,201 / 301 \\
-Classifiers             & 7                                 & 7 (same families) \\
+Classifiers             & 7                                 & 7 (partly overlapping families) \\
 Imbalance handling      & Class-weight modes (2)            & Resampling strategies (10) \\
 Total configurations    & 13                                & 70 \\
 Tuning trials           & 60 per config                     & 50 per combo \\
 Tuning metric           & \gls{PR-AUC}                     & \gls{ROC-AUC} \\
 Validation strategy     & GroupKFold (5-fold)               & RepeatedStratKFold (5$\times$3) \\
 Explainability          & SHAP + LIME + LR coefficients     & SHAP (TreeSHAP + KernelSHAP) \\
-Contribution type       & Original model development        & Replication and extension \\
+Contribution type       & Original model development        & Partial replication and extension \\
 \bottomrule
 \end{tabular}
 \end{table}

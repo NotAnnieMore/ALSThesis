@@ -1,64 +1,54 @@
 ﻿\chapter{Survival Prognosis Replication: Results and Discussion}
 \label{ch:study2_results}
 
-This chapter presents and discusses the results of Study~II.
-Section~\ref{sec:s2r_cohort} describes the final cohort and class distribution.
-Sections~\ref{sec:s2r_cv} and~\ref{sec:s2r_test} report cross-validation and held-out test performance.
-Section~\ref{sec:s2r_decoupling} analyses the AUC--sensitivity decoupling identified in the MLP model.
-Section~\ref{sec:s2r_threshold} presents the decision threshold analysis.
-Section~\ref{sec:s2r_bagging} presents the BalancedBagging replication and statistical tests.
-Section~\ref{sec:s2r_comparison} compares this study with Papaiz et al.
-Section~\ref{sec:s2r_shap} discusses SHAP-based model interpretation.
-Sections~\ref{sec:s2r_limitations} and~\ref{sec:s2r_summary} cover limitations and a synthesis of the main findings.
+This chapter presents and discusses the results of Study~II. It begins with the final cohort and model-selection results, followed by held-out test performance and threshold analysis. The later sections examine the BalancedBagging comparison, interpret the selected models using SHAP, and discuss the main limitations and clinical implications.
 
 % ============================================================
 \section{Cohort and Class Distribution}
 \label{sec:s2r_cohort}
 % ============================================================
 
-After applying all eligibility filters (censored patients, missing FVC/BMI, ambiguous site of onset), the final cohort comprises 1,502 patients: 174 Short Survivors (11.6\%) and 1,328 Standard Survival patients (88.4\%).
+The cohort derivation described in Section~\ref{subsec:s2_cohort} yielded 1,502 patients with complete data across all 23 predictors: 174 Short Survivors (11.6\%) and 1,328 Standard Survival patients (88.4\%).
 The train/test partition yields 1,201 training patients (139 Short Survivors, 1,062 Standard Survival) and 301 test patients (35 Short Survivors, 266 Standard Survival).
 
 This imbalance ratio of 7.6:1 is substantially more severe than the 2.3:1 ratio of Study~I.
 A classifier that labels all patients as Standard Survival achieves 88.4\% accuracy while detecting zero Short Survivors.
-ROC-AUC alone does not distinguish such a degenerate model from a clinically useful one, motivating the focus on sensitivity and threshold-aware evaluation throughout this chapter.
+Accuracy is therefore uninformative in isolation. ROC-AUC avoids dependence on a single decision threshold by evaluating ranking performance, but it must still be considered alongside sensitivity, specificity, and precision--recall measures when selecting a clinically meaningful operating point.
 
 % ============================================================
 \section{Cross-Validation Performance}
 \label{sec:s2r_cv}
 % ============================================================
 
-Table~\ref{tab:s2_cv} shows, for each classifier, the highest-AUC configuration found across 70 Optuna-optimised combinations, averaged over 15 cross-validation folds.
+Table~\ref{tab:s2_cv} reports the configuration selected for each classifier. Selection was based on the highest mean ROC-AUC among the ten imbalance-handling conditions, with each value estimated from the 15 validation folds produced by five-fold cross-validation repeated three times.
 
 \begin{table}[ht!]
   \centering
-  \caption[Best cross-validation results per classifier (Study II)]{Best cross-validation results per classifier (Optuna, 70 combinations, 15-fold repeated CV). Sensitivity and specificity refer to the Short Survivor (minority) class. G-Mean $= \sqrt{\text{Sensitivity} \times \text{Specificity}}$.}
+  \caption[Selected cross-validation configuration per classifier (Study II)]{Selected configuration for each classifier after Optuna optimisation of all 70 classifier--imbalance combinations. ROC-AUC is reported as mean $\pm$ standard deviation across the 15 validation folds. Sensitivity is the recall of Short Survivors, whereas specificity is the recall of Standard Survival patients. G-Mean $= \sqrt{\text{Sensitivity} \times \text{Specificity}}$.}
   \label{tab:s2_cv}
   \resizebox{\linewidth}{!}{%
   \begin{tabular}{llcccc}
     \toprule
-    \textbf{Classifier} & \textbf{Best Technique} & \textbf{AUC}
+    \textbf{Classifier} & \textbf{Selected Technique} & \textbf{ROC-AUC}
       & \textbf{Sensitivity} & \textbf{Specificity} & \textbf{G-Mean} \\
     \midrule
-    MLP           & None       & 0.915 & 0.427 & 0.969 & 0.641 \\
-    LightGBM      & ROS        & 0.914 & 0.780 & 0.864 & 0.819 \\
-    SVM           & SMOTEENN   & 0.911 & 0.904 & 0.784 & 0.842 \\
-    Random Forest & None       & 0.906 & 0.276 & 0.983 & 0.517 \\
-    Naïve Bayes   & None       & 0.891 & 0.727 & 0.867 & 0.793 \\
-    KNN           & RUS        & 0.880 & 0.767 & 0.831 & 0.797 \\
-    Decision Tree & TomekLinks & 0.861 & 0.413 & 0.948 & 0.621 \\
+    MLP           & None       & $0.915 \pm 0.029$ & 0.427 & 0.969 & 0.641 \\
+    LightGBM      & ROS        & $0.914 \pm 0.029$ & 0.780 & 0.864 & 0.819 \\
+    SVM           & SMOTEENN   & $0.911 \pm 0.027$ & 0.904 & 0.784 & 0.842 \\
+    Random Forest & None       & $0.906 \pm 0.030$ & 0.276 & 0.983 & 0.517 \\
+    Naïve Bayes   & None       & $0.891 \pm 0.034$ & 0.727 & 0.867 & 0.793 \\
+    KNN           & RUS        & $0.880 \pm 0.035$ & 0.767 & 0.831 & 0.797 \\
+    Decision Tree & TomekLinks & $0.861 \pm 0.039$ & 0.413 & 0.948 & 0.621 \\
     \bottomrule
   \end{tabular}%
   }
 \end{table}
 
-The MLP achieves the highest cross-validation AUC (0.915) but at the cost of low minority-class sensitivity (0.427).
-The Optuna configuration behind this result carries a comparatively strong L2 penalty ($\alpha = 0.061$), roughly five times larger than values found for the same architecture under any resampling strategy.
-This may indicate that regularisation suppresses the model's tendency to assign uniformly high scores to Standard Survival patients, improving probability ranking (and therefore AUC) without pushing minority-class scores above the 0.5 decision boundary.
+MLP produced the highest mean ROC-AUC (0.915), followed by LightGBM+ROS (0.914) and SVM+SMOTEENN (0.911). These differences are small relative to the variation across folds, so the ordering should not be interpreted as evidence that MLP was consistently better than the other two models. Their behaviour at the default threshold was also markedly different. MLP identified 42.7\% of Short Survivors, whereas LightGBM+ROS identified 78.0\% and SVM+SMOTEENN 90.4\%. SVM consequently achieved the highest G-Mean in the table (0.842), despite ranking third by ROC-AUC.
 
-LightGBM with Random Oversampling sits one AUC point behind (0.914) but delivers sensitivity of 0.780 and G-Mean of 0.819.
-Three classifiers---MLP, Random Forest, and Naïve Bayes---reach their best AUC with no imbalance correction at all; for MLP and Random Forest, that high AUC coexists with poor sensitivity.
-The held-out test makes this gap impossible to ignore.
+The selection rule had a similar effect within individual classifier families. For MLP, SMOTE obtained a mean ROC-AUC of 0.914, less than 0.002 below the selected unbalanced configuration, while increasing sensitivity from 0.427 to 0.835 and G-Mean from 0.641 to 0.837. Random Forest showed the same pattern: ROS reduced mean ROC-AUC from 0.906 to 0.905 but increased sensitivity from 0.276 to 0.736. Since ROC-AUC was the optimisation criterion, neither resampled alternative was selected.
+
+This distinction is central to the interpretation of Study~II. The selected configurations are those with the strongest average ranking performance, not necessarily those with the most favourable sensitivity--specificity balance at a threshold of 0.5. The held-out evaluation therefore retains both threshold-free and threshold-dependent metrics rather than treating the cross-validation ranking as a final model comparison.
 
 % ============================================================
 \section{Held-Out Test Set Evaluation}
@@ -70,7 +60,7 @@ Results appear in Table~\ref{tab:s2_test}.
 
 \begin{table}[ht!]
   \centering
-  \caption[Held-out test performance with 95\% bootstrap CI]{Held-out test set performance for each classifier under its best cross-validation configuration. Each cell shows the point estimate with the bootstrap 95\% percentile confidence interval in parentheses (2,000 resamples; no bootstrap sample contained zero Short Survivors). Bold indicates the best point estimate per metric. With 35 Short Survivors, one patient $= 2.86$\,pp; the sensitivity CIs of LightGBM+ROS and SVM+SMOTEENN overlap, indicating the one-patient difference is not statistically distinguishable given the 35-patient minority class.}
+  \caption[Held-out test performance with 95\% bootstrap CI]{Held-out test performance for each classifier under its selected cross-validation configuration. Each cell shows the point estimate with the 95\% percentile bootstrap interval in parentheses (2,000 patient-level resamples). Bold indicates the highest point estimate for each metric. The test set contains 35 Short Survivors, so one additional true positive changes sensitivity by 2.86 percentage points.}
   \label{tab:s2_test}
   \resizebox{\linewidth}{!}{%
   \begin{tabular}{llccccc}
@@ -133,24 +123,23 @@ Results appear in Table~\ref{tab:s2_test}.
   }
 \end{table}
 
-LightGBM with Random Oversampling identified 30 of 35 Short Survivors (sensitivity 0.857, 95\%\,CI [0.724,\,0.967]; specificity 0.831; AUC 0.923).
-SVM with SMOTEENN caught 31 of 35 (sensitivity 0.886, 95\%\,CI [0.765,\,0.975]), but at lower specificity (0.767) and AUC (0.909).
-The sensitivity confidence intervals of these two models overlap substantially: the one-patient difference is not statistically distinguishable given the 35-patient minority class.
-Both models serve different use cases---SVM+SMOTEENN when missing a Short Survivor is the worst outcome; LightGBM+ROS when overall balance across all metrics matters.
+LightGBM+ROS achieved the highest test ROC-AUC (0.923), balanced accuracy (0.844), and G-Mean (0.844). It identified 30 of the 35 Short Survivors while correctly classifying 83.1\% of Standard Survival patients. SVM+SMOTEENN identified one additional Short Survivor, giving the highest sensitivity (0.886), but its specificity was lower at 0.767. The bootstrap intervals are wide and overlap substantially, so the test set does not provide a clear separation between these models on sensitivity.
+
+The remaining classifiers illustrate why the ranking metric cannot be read as a complete account of test performance. Random Forest and MLP obtained ROC-AUC values of 0.919 and 0.918, respectively, but identified only 9 and 1 Short Survivors at the default threshold. KNN, by contrast, had a lower ROC-AUC of 0.886 but detected 28 Short Survivors and achieved a balanced accuracy of 0.812. Model preference therefore depends on the intended error trade-off rather than on ROC-AUC alone.
 
 Figures~\ref{fig:s2_cvtest} and~\ref{fig:s2_decoupling} show the AUC comparison across all seven classifiers.
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step6_cv_vs_test.png}
-  \caption[CV AUC vs.\ test AUC by classifier]{Cross-validation AUC versus held-out test AUC for all seven classifiers under their best configurations. The MLP ranks first in CV AUC (0.915) yet achieves near-chance sensitivity on the test set (0.029), illustrating the AUC--sensitivity decoupling under severe class imbalance.}
+  \caption[CV AUC vs.\ test AUC by classifier]{Cross-validation ROC-AUC versus held-out test ROC-AUC for all seven classifiers under their selected configurations. The broadly similar values suggest that ranking performance transferred to the test set, although this comparison does not describe behaviour at the default decision threshold.}
   \label{fig:s2_cvtest}
 \end{figure}
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/fig_auc_sensitivity_decoupling.png}
-  \caption[CV AUC vs.\ test sensitivity: AUC--sensitivity decoupling]{Cross-validation AUC versus held-out test sensitivity for all seven classifiers. The MLP achieves the highest CV AUC (0.915) yet collapses to near-zero sensitivity (0.029), while LightGBM+ROS and SVM+SMOTEENN maintain sensitivity above 0.85 with competitive AUC values.}
+  \caption[CV AUC vs.\ test sensitivity: AUC--sensitivity decoupling]{Cross-validation ROC-AUC versus held-out test sensitivity for all seven classifiers. MLP achieved the highest cross-validation ROC-AUC (0.915) but only 0.029 sensitivity at the default threshold. LightGBM+ROS and SVM+SMOTEENN combined similar ranking performance with test sensitivity above 0.85.}
   \label{fig:s2_decoupling}
 \end{figure}
 
@@ -159,18 +148,11 @@ Figures~\ref{fig:s2_cvtest} and~\ref{fig:s2_decoupling} show the AUC comparison 
 \label{sec:s2r_decoupling}
 % ============================================================
 
-The MLP detected one Short Survivor out of 35.
-Sensitivity is 0.029.
-Balanced accuracy is 0.514 (essentially a coin flip).
-A specificity of 1.000 is not a strength: it means the model labelled 34 of 35 Short Survivors as Standard Survival, as shown in Figure~\ref{fig:s2_cm}.
-Yet its test AUC is 0.918, the third highest overall.
+The MLP detected only one of the 35 Short Survivors at the default threshold, giving a sensitivity of 0.029 and a balanced accuracy of 0.514. Its perfect specificity reflects an almost entirely negative classification rule rather than balanced performance: 34 Short Survivors were assigned to the Standard Survival class, as shown in Figure~\ref{fig:s2_cm}. At the same time, its test ROC-AUC was 0.918, the third highest among the seven classifiers.
 
-The name for this pattern is AUC--sensitivity decoupling.
-AUC measures ranking ability---the probability that a positive instance receives a higher predicted score than a negative one---not the ability to classify correctly at a given threshold.
-Under severe class imbalance (7.6:1), a model can learn to assign slightly higher probabilities to Short Survivors on average while still placing those probabilities well below the 0.5 decision boundary.
-Cross-validation detects the ranking signal but does not expose the threshold mismatch; the held-out test makes it visible.
+This is an example of ROC-AUC and operating-point performance becoming decoupled. ROC-AUC measures how well the scores rank Short Survivors above Standard Survival patients across all possible thresholds. It does not require the minority-class scores to exceed 0.50. The MLP retained strong ranking ability, but its probability scale placed almost every test patient below the default boundary. The cross-validation results already indicated this mismatch through the combination of ROC-AUC 0.915 and sensitivity 0.427; the test set showed a more extreme version of the same behaviour.
 
-The precision-recall curves in Figure~\ref{fig:s2_pr} confirm this: despite an average precision of 0.669, the MLP's minority-class probabilities cluster below the decision threshold for nearly all patients, with only one crossing 0.5.
+The precision--recall curves in Figure~\ref{fig:s2_pr} provide a second threshold-free view. MLP reached an average precision of 0.669, compared with 0.704 for LightGBM+ROS and 0.595 for SVM+SMOTEENN. Its ranking signal was therefore not absent. The confusion matrix, rather than the precision--recall curve, shows the consequence of applying the 0.50 threshold.
 
 \begin{figure}[ht!]
   \centering
@@ -182,12 +164,11 @@ The precision-recall curves in Figure~\ref{fig:s2_pr} confirm this: despite an a
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/fig_pr_curves.png}
-  \caption[Precision--Recall curves for three classifiers (Study II)]{Precision-recall curves on the held-out test set for the three highlighted classifiers. Despite a competitive average precision (LightGBM+ROS: 0.704, MLP: 0.669, SVM+SMOTEENN: 0.595), the MLP's minority-class probabilities cluster below the default threshold, collapsing to near-zero sensitivity at the operating point. The dashed line marks the random-classifier baseline (AP $\approx$ prevalence $\approx$ 0.116).}
+  \caption[Precision--Recall curves for three classifiers (Study II)]{Precision--recall curves on the held-out test set for the three highlighted classifiers (LightGBM+ROS: AP 0.704; MLP: AP 0.669; SVM+SMOTEENN: AP 0.595). The dashed line marks the Short Survivor prevalence in the test set (0.116), which is the expected average precision of a random ranking.}
   \label{fig:s2_pr}
 \end{figure}
 
-This finding reinforces the dissertation-wide argument (see also Section~\ref{sec:results_threshold_opt} for Study~I): ALS prognostic models must be evaluated not only by ranking metrics, but also by threshold behaviour and minority-class recall.
-In a clinical setting, missing a Short Survivor means missing the window for timely palliative planning; high AUC without adequate sensitivity is clinically insufficient.
+As in Study~I (Section~\ref{sec:results_threshold_xgb}), ranking performance and the final classification rule answer different questions. In the intended prognostic setting, a false negative could delay recognition of a patient at risk of short survival. A high ROC-AUC is therefore insufficient unless the operating threshold produces an acceptable balance between missed Short Survivors and false alerts.
 
 % ============================================================
 \section{Decision Threshold Analysis}
@@ -202,7 +183,8 @@ and (iii)~F1-optimal (maximises minority-class F1 on OOF predictions).
 Table~\ref{tab:s2_threshold} reports results for the two most instructive classifiers.
 
 \begin{table}[ht!]
-  \caption[Decision threshold analysis: MLP and LightGBM]{Test-set performance under three decision thresholds for MLP+None and LightGBM+ROS. Thresholds marked $\dagger$ were derived from out-of-fold CV predictions; the 0.50 row is the unmodified baseline. The sensitivity-constrained strategy ($\geq 0.90$) returned degenerate thresholds ($\approx\!0$) for both classifiers and is excluded. TP/FN counts are out of 35 Short Survivors.}
+  \centering
+  \caption[Decision threshold analysis: MLP and LightGBM]{Test-set performance for MLP and LightGBM+ROS at the default threshold and at three thresholds selected from pooled out-of-fold training predictions. The sensitivity-constrained threshold was the highest OOF value achieving sensitivity $\geq 0.90$; this constraint was not guaranteed to transfer unchanged to the held-out test set. TP/FN counts refer to the 35 Short Survivors.}
   \label{tab:s2_threshold}
   \resizebox{\linewidth}{!}{%
   \begin{tabular}{llcccccc}
@@ -211,32 +193,30 @@ Table~\ref{tab:s2_threshold} reports results for the two most instructive classi
       & \textbf{Sensitivity} & \textbf{Specificity} & \textbf{Bal.\ Acc.}
       & \textbf{G-Mean} & \textbf{TP/FN} \\
     \midrule
-    \multirow{3}{*}{MLP + None}
-      & Default (0.50)       & 0.500 & 0.029 & 1.000 & 0.514 & 0.169 & 1\,/\,34 \\
-      & Youden$^\dagger$     & 0.152 & 0.486 & 0.966 & 0.726 & 0.685 & 17\,/\,18 \\
-      & F1-optimal$^\dagger$ & 0.239 & 0.371 & 0.981 & 0.676 & 0.604 & 13\,/\,22 \\
+    \multirow{4}{*}{MLP + None}
+      & Default (0.50)                 & 0.500 & 0.029 & 1.000 & 0.514 & 0.169 & 1\,/\,34 \\
+      & Youden                         & 0.152 & 0.486 & 0.966 & 0.726 & 0.685 & 17\,/\,18 \\
+      & Sensitivity $\geq 0.90$        & 0.078 & 0.771 & 0.883 & 0.827 & 0.826 & 27\,/\,8 \\
+      & $F_1$-optimal                  & 0.242 & 0.371 & 0.981 & 0.676 & 0.604 & 13\,/\,22 \\
     \midrule
-    \multirow{3}{*}{LightGBM + ROS}
-      & Default (0.50)       & 0.500 & 0.857 & 0.831 & 0.844 & 0.844 & 30\,/\,5 \\
-      & Youden$^\dagger$     & 0.404 & 0.857 & 0.778 & 0.818 & 0.817 & 30\,/\,5 \\
-      & F1-optimal$^\dagger$ & 0.656 & 0.800 & 0.925 & 0.862 & 0.860 & 28\,/\,7 \\
+    \multirow{4}{*}{LightGBM + ROS}
+      & Default (0.50)                 & 0.500 & 0.857 & 0.831 & 0.844 & 0.844 & 30\,/\,5 \\
+      & Youden                         & 0.404 & 0.857 & 0.778 & 0.818 & 0.817 & 30\,/\,5 \\
+      & Sensitivity $\geq 0.90$        & 0.311 & 0.886 & 0.759 & 0.823 & 0.820 & 31\,/\,4 \\
+      & $F_1$-optimal                  & 0.656 & 0.800 & 0.925 & 0.862 & 0.860 & 28\,/\,7 \\
     \bottomrule
   \end{tabular}%
   }
 \end{table}
 
-Lowering the MLP threshold from 0.500 to the Youden value (0.152) raises sensitivity from 0.029 to 0.486---16 additional Short Survivors correctly identified---while retaining high specificity (0.966).
-The F1-optimal threshold (0.239) yields a more conservative recovery (sensitivity 0.371, specificity 0.981).
-Even under optimal threshold selection, however, the MLP's best sensitivity (0.486) remains well below that of LightGBM+ROS at the default boundary (0.857), confirming that the AUC--sensitivity decoupling is structural rather than a threshold artefact.
+Threshold selection substantially changed the interpretation of the MLP. Youden's threshold increased sensitivity from 0.029 to 0.486 while retaining specificity of 0.966. The sensitivity-constrained threshold produced the largest recovery, identifying 27 of the 35 Short Survivors with specificity of 0.883. Its test sensitivity was 0.771 rather than the 0.90 targeted in the OOF data, showing that an operating constraint estimated during development does not necessarily transfer exactly to unseen patients. The $F_1$-optimal threshold was more conservative and identified 13 Short Survivors.
 
-For LightGBM+ROS, the Youden threshold (0.404) detects the same number of Short Survivors as the default (30 of 35), with a modest specificity trade-off.
-The F1-optimal threshold (0.656) shifts the balance toward specificity (0.925), missing two additional patients, and yields the highest G-Mean across all configurations in this table (0.860).
+LightGBM+ROS was less sensitive to threshold adjustment. Youden's threshold identified the same 30 Short Survivors as the default while adding 14 false positives. The sensitivity-constrained threshold recovered one additional Short Survivor but reduced specificity from 0.831 to 0.759. In contrast, the $F_1$-optimal threshold favoured specificity, identifying 28 Short Survivors with specificity of 0.925 and the highest G-Mean in the table (0.860).
 
-The sensitivity-constrained analysis (targeting $\geq 0.90$ sensitivity) produced degenerate thresholds ($\approx\!0$) for both classifiers, meaning no threshold achieves 90\% sensitivity with meaningful specificity under the current feature set.
-This signals a dataset-level ceiling on Short Survivor recall that neither resampling nor threshold selection can overcome without additional discriminative features.
+The MLP result shows that its failure at 0.50 was largely an operating-point problem rather than a complete failure to rank the minority class. LightGBM+ROS retained the stronger sensitivity--specificity balance at the default threshold, but threshold selection narrowed the practical difference between the models. Choosing among these operating points would require an explicit clinical cost for false negatives and false positives; the present analysis describes the trade-offs but does not define that cost.
 
 % ============================================================
-\section{BalancedBagging Replication and Statistical Validation}
+\section{BalancedBagging Comparison and Statistical Analysis}
 \label{sec:s2r_bagging}
 % ============================================================
 
@@ -253,7 +233,7 @@ Table~\ref{tab:s2_bonferroni} reports mean balanced accuracy for each classifier
       & \textbf{$\Delta$} & \textbf{$p$ (Bonf.)} \\
     \midrule
     KNN           & 0.566 & 0.788 & $+$0.221 & $<0.001^{***}$ \\
-    Naïve Bayes   & 0.797 & 0.809 & $+$0.012 & $>$0.999 n.s.  \\
+    Naïve Bayes   & 0.797 & 0.809 & $+$0.012 & $1.000$ n.s.  \\
     Decision Tree & 0.653 & 0.777 & $+$0.125 & $0.001^{**}$   \\
     Random Forest & 0.629 & 0.814 & $+$0.185 & $<0.001^{***}$ \\
     SVM           & 0.500 & 0.793 & $+$0.293 & $<0.001^{***}$ \\
@@ -264,82 +244,77 @@ Table~\ref{tab:s2_bonferroni} reports mean balanced accuracy for each classifier
   }
 \end{table}
 
-Six of seven classifiers exhibit a statistically significant improvement in balanced accuracy under BalancedBagging ($p \leq 0.01$ after Bonferroni correction).
-The sole exception is Naïve Bayes ($p > 0.999$, n.s.): its generative modelling of class-conditional densities makes it relatively insensitive to training class proportions, and its single-model balanced accuracy (0.797) already approaches its ensemble counterpart (0.809).
+BalancedBagging increased balanced accuracy for six of the seven classifiers. The largest gain was observed for SVM, from 0.500 to 0.793, followed by KNN and Random Forest. MLP achieved the highest mean balanced accuracy under BalancedBagging (0.832), with LightGBM (0.820) and Random Forest (0.814) close behind.
 
-The SVM shows the largest absolute gain ($\Delta = +0.293$), crossing from a balanced accuracy of 0.500 to 0.793 once internal balancing is applied within each bootstrap sample.
-The MLP achieves the highest ensemble balanced accuracy (0.832), consistent with the reference study's findings.
-LightGBM also improves significantly under BalancedBagging ($\Delta = +0.128$, $p < 0.001$), demonstrating that the ensemble strategy generalises beyond the six classifiers of the original work.
+The effect was not a simultaneous improvement in both classes. Across all seven classifiers, BalancedBagging increased sensitivity and reduced specificity, shifting the predictions towards the minority class. For Naïve Bayes, these changes nearly cancelled each other: sensitivity increased, specificity decreased, and balanced accuracy rose by only 0.012. Its balanced-accuracy difference was therefore not significant after correction.
+
+These tests describe the consistency of the paired differences within the repeated cross-validation procedure. Since training sets overlap across folds and repeats, the 15 observations are not fully independent. The adjusted p-values should therefore be interpreted as supporting evidence within this resampling protocol rather than as external validation.
 
 % ============================================================
 \section{Comparison with the Reference Study}
 \label{sec:s2r_comparison}
 % ============================================================
 
-Table~\ref{tab:s2_comparison} summarises the methodological and performance differences between the reference study and Study~II.
+Table~\ref{tab:s2_comparison} summarises the main methodological differences between the reference study and Study~II. The comparison is not exact: although both studies use the same survival definition and predictor set, they differ in cohort size, model-selection objective, search procedure, and implementation of the balanced ensemble.
 
 \begin{table}[ht!]
   \centering
-  \caption[Comparison with Papaiz et al.\ (2024)]{Direct comparison between Papaiz et al.~\cite{Papaiz2024} and Study~II. \textsuperscript{a}Best ensemble balanced accuracy reported under repeated CV. \textsuperscript{b}Not reported in the reference study.}
+  \caption[Comparison with Papaiz et al.\ (2024)]{Methodological comparison between Papaiz et al.~\cite{Papaiz2024} and Study~II. \textsuperscript{a}The reported values correspond to different evaluation stages and are not directly comparable.}
   \label{tab:s2_comparison}
   \resizebox{\linewidth}{!}{%
   \begin{tabular}{lcc}
     \toprule
     \textbf{Aspect} & \textbf{Papaiz et al.~\cite{Papaiz2024}} & \textbf{Study~II} \\
     \midrule
-    Patients                                   & 1,967              & 1,502              \\
-    Classifiers evaluated                      & 6                  & 7 (+LightGBM)      \\
-    Imbalance strategies                       & BalancedBagging    & 10 strategies + BB \\
-    Hyperparameter optimisation                & Grid search        & Bayesian (Optuna)  \\
-    Best CV Bal.\ Acc.\ (MLP+BB)\textsuperscript{a} & $\approx$0.84 & 0.832 \\
-    Held-out test evaluation                   & No\textsuperscript{b} & Yes             \\
-    Best test AUC                              & ---\textsuperscript{b} & 0.923 (LightGBM+ROS) \\
-    Best test Sensitivity                      & ---\textsuperscript{b} & 0.857 (LightGBM+ROS) \\
-    Explainability (SHAP)                      & Yes (6 classifiers) & Yes (TreeSHAP + KernelSHAP) \\
+    Patients                                   & 1,967 & 1,502 \\
+    Short survival prevalence                  & 13.0\% & 11.6\% \\
+    Classifier families                        & 6 & 7 (+LightGBM) \\
+    Balanced ensemble                          & BalancedBagging for five classifiers; Balanced Random Forest for RF & BalancedBagging for all seven classifiers \\
+    Hyperparameter optimisation                & Grid search & Bayesian optimisation (Optuna) \\
+    Selection objective                        & Balanced accuracy & ROC-AUC \\
+    Validation design                          & 5-fold CV $\times$ 3 within the training set & 5-fold CV $\times$ 3 within the training set \\
+    Final evaluation                           & 20\% validation set & 20\% held-out test set \\
+    Best ensemble Bal.\ Acc.\textsuperscript{a} & 0.88, selected neural-network ensemble on validation data & 0.832, MLP+BB in repeated CV \\
+    Explainability (SHAP)                      & Selected neural-network model & Selected LightGBM and MLP models \\
     \bottomrule
   \end{tabular}%
   }
 \end{table}
 
-The CV balanced accuracy for MLP+BalancedBagging (0.832) closely matches the reference figure ($\approx$0.84) on a smaller, more imbalanced cohort.
-The minor gap reflects the smaller cohort (1,502 versus 1,967 patients), the higher imbalance ratio (7.6 versus 6.9), and minor differences in the PRO-ACT extract available.
-The per-classifier pattern of gains mirrors the original paper across all seven classifiers, suggesting its conclusions hold across different PRO-ACT extracts.
+The closest comparison concerns the five classifier families evaluated with BalancedBagging in both studies: KNN, Naïve Bayes, Decision Tree, SVM, and MLP. In both analyses, the balanced ensemble improved balanced accuracy for four of these five families, while Naïve Bayes was the exception. This reproduces the qualitative pattern reported by Papaiz et al., although not the exact experimental protocol or performance values.
 
-Three additions matter beyond the replication.
-Bayesian optimisation finds hyperparameter configurations---particularly the MLP's high L2 penalty---that grid search would rarely reach.
-LightGBM adds a gradient-boosted option the original study did not test, and it proves to be the most balanced performer on the held-out set.
-The held-out test reveals that MLP's cross-validation lead does not hold under unseen data, a finding invisible in the reference study's CV-only design.
+The reported neural-network balanced accuracy was 0.88 in the reference study, compared with a repeated cross-validation mean of 0.832 for MLP with BalancedBagging in the present analysis. These values come from different evaluation stages and should not be treated as a direct performance comparison. Differences in cohort composition, optimisation objective, hyperparameter search, and ensemble implementation may all contribute, and their individual effects cannot be separated here.
+
+The Random Forest result is not an exact replication because Papaiz et al. used Balanced Random Forest, whereas the present study applied the same BalancedBagging wrapper used for the other classifiers. LightGBM was not included in the reference work and should instead be regarded as an extension. Overall, the results support the broader finding that balanced ensembles can recover minority-class sensitivity under severe imbalance, while also showing that the magnitude of the benefit depends on the classifier and evaluation protocol.
 
 % ============================================================
 \section{SHAP-Based Interpretation}
 \label{sec:s2r_shap}
 % ============================================================
 
-Figure~\ref{fig:s2_shap} shows the TreeSHAP output for LightGBM+ROS on the held-out test set, with features ranked by mean absolute SHAP value.
+Figure~\ref{fig:s2_shap} presents the TreeSHAP analysis of LightGBM+ROS on the held-out test set. Mean absolute SHAP values describe the average magnitude of each feature's contribution, while the beeswarm plot shows whether individual feature values moved predictions towards Short or Standard Survival.
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step7_lightgbm_fig3_combined.png}
-  \caption[SHAP feature importance: LightGBM+ROS (Study II)]{SHAP feature importance for LightGBM+ROS (held-out test set). \textit{Left:} global bar chart of mean $|\text{SHAP}|$ values. \textit{Right:} beeswarm plot showing per-instance SHAP contributions, coloured by feature value (red = high, blue = low).}
+  \caption[SHAP feature importance: LightGBM+ROS (Study II)]{TreeSHAP analysis of LightGBM+ROS on the 301 held-out test patients. \textit{Left:} features ranked by mean absolute SHAP value. \textit{Right:} patient-level contributions, where positive values move the model output towards Short Survival and negative values towards Standard Survival. Colour represents the encoded feature value from low (blue) to high (red).}
   \label{fig:s2_shap}
 \end{figure}
 
-\texttt{Diagnosis\_Delay} is the dominant predictor (mean $|\text{SHAP}| = 0.986$), more than double the next-ranked feature.
-Long delays associate with Standard Survival; short delays signal rapid pre-diagnosis progression and Short Survivor risk, consistent with clinical observations~\cite{Feldman2022}.
+\texttt{Diagnosis\_Delay} had the largest mean absolute contribution (0.986), approximately twice that of Q8 walking slope (0.495). Short diagnostic delays moved predictions towards Short Survival, whereas long delays moved them strongly towards Standard Survival. This pattern is compatible with diagnostic delay acting as a proxy for early disease tempo~\cite{Feldman2022}, but it should not be interpreted as a causal effect. Both diagnostic delay and the survival outcome are measured from symptom onset, so part of this association also reflects their shared temporal anchor and the fixed 24-month target definition.
 
-ALSFRS-R slopes fill ranks two through four and six: Q8 (walking), Q4 (handwriting), Q1 (speech), Q10 (respiratory).
-Age at onset is fifth ($|\text{SHAP}| = 0.364$); older patients tend to progress faster.
-FVC at diagnosis ranks ninth ($|\text{SHAP}| = 0.260$), adding a respiratory dimension.
-This ranking is consistent with the reference study's SHAP output~\cite{Papaiz2024}.
+Four ALSFRS-R slopes appeared among the six highest-ranked features: Q8 walking, Q4 handwriting, Q1 speech, and Q10 respiratory function. Rapid decline categories generally increased the model output for Short Survival. Higher age-at-onset categories showed the same direction and ranked fifth (mean $|\text{SHAP}|=0.364$). Abnormal FVC at diagnosis also moved predictions towards Short Survival, although it ranked ninth (0.260). These are associations learned by the fitted LightGBM model from discretised predictors; they do not establish that changing any one feature would alter survival.
 
-The parallel KernelSHAP analysis of the MLP found the same top feature and a broadly similar slope ranking, though with smaller absolute attributions, expected given the more diffuse weight structure of neural networks.
+The overlap with Papaiz et al.~\cite{Papaiz2024} is strongest at the level of the broader prognostic pattern. Both analyses emphasised short diagnostic delay, functional decline in walking, climbing stairs, and speech, older age, sex, and abnormal FVC. The detailed rankings were not identical. Q4 handwriting and Q10 respiratory slope were more prominent here, while Q6 dressing and hygiene was among the leading features in the reference study but ranked lower in the present LightGBM analysis.
 
-Figure~\ref{fig:s2_featbars} shows how \texttt{Diagnosis\_Delay} and Q8 separate the two groups at the population level.
+KernelSHAP for the MLP also ranked \texttt{Diagnosis\_Delay} first, followed by Q4 handwriting, Q9 climbing stairs, Q8 walking, and Q2 salivation slopes. Agreement between the two fitted models was therefore partial rather than complete: for example, age at onset ranked fifth for LightGBM but fourteenth for MLP, while site of onset ranked sixth for MLP and twenty-first for LightGBM. The absolute SHAP magnitudes should not be compared across the two models. TreeSHAP explains the LightGBM output on its internal scale, whereas KernelSHAP approximates MLP probability contributions using 100 background centroids and 200 samples per patient.
+
+Figure~\ref{fig:s2_featbars} provides a descriptive view of the two most prominent LightGBM features. Among Short Survivors, 66.7\% had a diagnostic delay of at most eight months, compared with 28.1\% of Standard Survival patients. Rapid Q8 walking decline occurred in 47.7\% and 5.0\% of the two groups, respectively. These outcome-stratified distributions help explain why the fitted model used the features, but they are not an independent validation of the SHAP results.
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.97\linewidth]{images/figures/fig_feature_bars.png}
-  \caption[Feature distributions by survival group]{Distribution of \texttt{Diagnosis\_Delay} (left) and \texttt{Q8\_Walking\_slope} (right) by survival group across the full dataset. Short Survivors are disproportionately concentrated in the short-delay and rapid-slope categories, consistent with their SHAP importance rankings.}
+  \caption[Feature distributions by survival group]{Distribution of diagnostic-delay and Q8 walking-slope categories by survival group across the full 1,502-patient cohort. Percentages are calculated within each survival group. The figure is descriptive and uses the same cohort from which the train and test partitions were drawn.}
   \label{fig:s2_featbars}
 \end{figure}
 
@@ -364,15 +339,14 @@ Several limitations apply to the results of Study~II.
 \label{sec:s2r_summary}
 % ============================================================
 
-Study~II confirms the central finding of Papaiz et al.~\cite{Papaiz2024}: BalancedBagging significantly improves balanced accuracy in six of seven classifiers under severe ALS survival class imbalance, with the MLP achieving the highest ensemble balanced accuracy (0.832 versus the reference's $\approx$0.84).
+Study~II reproduced the qualitative BalancedBagging pattern reported by Papaiz et al.~\cite{Papaiz2024}: balanced accuracy improved for most classifier families, while Naïve Bayes was the exception. The performance values are not directly comparable because the studies differ in evaluation stage and ensemble implementation.
 
-Beyond replication, LightGBM with Random Oversampling emerges as the most effective single model, achieving AUC 0.923 and sensitivity 0.857 on the held-out test set---outperforming all six classifiers evaluated in the reference study.
+Among the configurations evaluated in this study, LightGBM with Random Oversampling provided the strongest balance at the default threshold, with ROC-AUC 0.923, sensitivity 0.857, and specificity 0.831 on the held-out test set.
 
-The most consequential finding is the AUC--sensitivity decoupling: the MLP achieves the second-highest test AUC (0.918) while detecting only 1 of 35 Short Survivors at the default threshold (sensitivity 0.029).
-Threshold optimisation using Youden's J raises MLP sensitivity to 0.486, but this remains well below LightGBM+ROS at its default threshold, confirming the decoupling is structural.
+The most consequential finding is the AUC--sensitivity decoupling: the MLP achieved the third-highest test ROC-AUC (0.918) while detecting only 1 of 35 Short Survivors at the default threshold (sensitivity 0.029).
+Threshold adjustment changed that interpretation. The sensitivity-constrained OOF threshold increased test sensitivity to 0.771 while retaining specificity of 0.883, showing that the default probability boundary was poorly aligned with the intended minority-class detection task.
 
-SHAP analysis consistently identifies \texttt{Diagnosis\_Delay} as the dominant predictor (mean $|\text{SHAP}| = 0.986$), followed by ALSFRS-R functional decline slopes.
-These findings are robust across both TreeSHAP (LightGBM) and KernelSHAP (MLP), and are consistent with the reference study's interpretations.
+Both SHAP analyses ranked \texttt{Diagnosis\_Delay} first and placed several ALSFRS-R slopes among the leading predictors, but the detailed rankings differed between LightGBM and MLP. The shared pattern also overlaps partly with the interpretation reported in the reference study.
 
 Taken together, Study~II demonstrates that imbalance-aware learning can improve ALS survival prognosis, while also showing that high ROC-AUC can mask clinically unacceptable minority-class recall.
 These findings reinforce the dissertation's broader argument: ALS prognostic modelling must be evaluated through threshold behaviour, minority-class sensitivity, and interpretability, not ranking metrics alone.

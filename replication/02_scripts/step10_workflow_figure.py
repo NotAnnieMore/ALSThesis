@@ -109,7 +109,7 @@ Y['output']   = Y['shap']      - BH - GAP * 1.2
 # ── 1. PRO-ACT Database ────────────────────────────────────────────────────
 box(ax, cx, Y['proact'], BW, BH,
     'PRO-ACT Database',
-    subtext='2,147 patients · 16 clinical tables',
+    subtext='12,504 identifiers / 9,483 starting set\n16 clinical tables',
     facecolor=C_DATA, bold=True)
 
 # ── 2. Feature Engineering ────────────────────────────────────────────────
