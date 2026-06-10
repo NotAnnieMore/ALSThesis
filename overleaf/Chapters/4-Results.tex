@@ -1163,56 +1163,48 @@ The exercise demonstrates report generation, not clinical validity or readiness 
 \label{sec:results_summary}
 % ============================================================
 
-The results obtained so far establish the feasibility and performance baseline for the explainable ALS progression classification pipeline.
-The main findings are:
+Study~I examined whether rapid six-month functional progression could be predicted from baseline \gls{PRO-ACT} data under a leakage-free evaluation protocol.
+Its main findings can be summarised as follows:
 
 \begin{enumerate}
-  \item \textbf{Cohort viability.} Leakage-free, subject-wise evaluation is feasible using PRO-ACT baseline features and future ALSFRS-R slopes.
-    The 6-month cohort ($N\!=\!1{,}392$) yields slope estimates of high quality (99.8\% based on $\geq 3$ data points).
-  \item \textbf{Data quality.} A systematic BMI data-quality issue (147 mis-labelled height records) was identified and corrected.
-    Associations with FVC availability were compatible with a contribution from trial-level collection practices, although the missing-data mechanism could not be confirmed and an MNAR component remains possible.
-  \item \textbf{Treatment features.} Neither study arm nor documented riluzole use is significantly associated with the descriptive rapid-progression label.
-    Active and Placebo rates are 26.5\% and 31.6\%, respectively ($p=0.057$), while riluzole groups show similar label rates ($p=0.416$) and slope distributions ($p=0.534$).
-    These variables remain candidate predictors of patient and trial heterogeneity, without a causal interpretation.
-  \item \textbf{Model selection.} Unified Optuna tuning of 7 model families across 13 configurations identifies XGBoost (unbalanced) as the top-ranked model by PR-AUC ($0.434 \pm 0.049$), followed by RF~unbalanced ($0.431$) and SVM~balanced ($0.425$).
-    Several model families obtain similar internal validation performance, with less than 0.01 PR-AUC separating the two leading configurations. The Friedman test does not reject equal rank distributions across models ($p=0.053$), so the XGBoost selection reflects the prespecified ranking criterion rather than demonstrated statistical superiority.
-  \item \textbf{Class balancing.} Balanced and unbalanced modes produce similar PR-AUC values for most model families, although SVM improves by 0.036 with weighting. The larger differences in $F_1$ and $F_2$ at $t\!=\!0.5$ mainly reflect shifts in predicted probabilities and reinforce the need to separate model ranking from operating-threshold selection.
-  \item \textbf{Feature-block analysis.} The core baseline block retains most of the cross-validated performance. Adding FVC produces the clearest gains for Random Forest ($+0.025$) and XGBoost ($+0.009$), while the effects of vital signs, treatment variables, and laboratory measurements are smaller and vary by model.
-  \item \textbf{Metric consistency.} PR-AUC and ROC-AUC produce strongly correlated model rankings ($\rho\!=\!0.758$), supporting the use of PR-AUC as the primary metric.
-    Fixed-cutoff $F_1$ and $F_2$ do not reproduce this ranking and are reserved for operating-point assessment.
-  \item \textbf{Cross-horizon sensitivity.} The 3-month horizon ($N\!=\!2{,}407$) produces a similar range of PR-AUC values (top PR-AUC $0.426$; $|\Delta| \leq 0.021$ for matched configurations), although the exact ranking changes.
-    The 6-month horizon is retained as the primary analysis because its slopes are based on longer follow-up and more observations per participant.
-  \item \textbf{Held-out generalisation.}
-    Test-set PR-AUC (RF\,$=\!0.459$, XGB\,$=\!0.456$) is slightly above the corresponding cross-validated development means, with no marked loss of discrimination on the held-out partition.
-    Random Forest and XGBoost remain closely matched, but the TEST results are not used to repeat model selection.
-  \item \textbf{Threshold optimisation.}
-    The $F_1$-optimal threshold ($t\!=\!0.21$) achieves recall\,$=\!85.7$\% on TEST, but classifies 73.5\% of participants as rapid and produces 133 false positives ($F_1\!=\!0.498$, $F_2\!=\!0.665$).
-    XGBoost achieves the lowest Brier score ($0.197$) among the compared models, with some deviation from ideal calibration at higher predicted probabilities.
-  \item \textbf{Explainability.}
-    SHAP and LR both assign the largest overall contribution to baseline ALSFRS-R total, with FVC and respiratory rate also prominent.
-    Local SHAP--LIME overlap ranges from 50\% to 70\% across the four case studies, indicating partial agreement rather than interchangeable explanations.
-    The attribution results are used to describe model behaviour and assess clinical plausibility, not to infer causal effects.
-  \item \textbf{Error profiling and subgroup equity.}
-    Seven of the 12 false negatives occur among participants with ALSFRS-R $\geq 40$, including five in the mildest group ($>42$), where recall is 54.5\%.
-    Sex-stratified estimates are descriptively similar (PR-AUC 0.45 for females and 0.47 for males), although no formal equivalence claim is made.
-    The clearest descriptive difference is lower recall in the mildest ALSFRS-R group (54.5\%); PR-AUC comparisons are interpreted cautiously because subgroup prevalence varies substantially.
-  \item \textbf{Clinical utility.}
-    Decision Curve Analysis shows higher estimated net benefit than treat-all and treat-none across the main continuous interval $t \in [0.18,\,0.47]$, which includes the selected threshold of 0.21. This is evidence of potential decision value rather than confirmation of clinical utility.
-  \item \textbf{Data sufficiency.}
-    Training-size sensitivity shows modest average improvement and lower variability as more DEV participants are used, but no sharply defined plateau.
-    The analysis does not establish a fixed performance ceiling or rule out benefit from additional baseline data.
-  \item \textbf{Statistical stability.}
-    Bootstrap intervals quantify TEST-sample uncertainty conditional on the fitted model and threshold.
-    PR-AUC has a comparatively wide 95\% interval of $[0.364,\,0.568]$; recall and $F_2$ intervals are $[0.781,\,0.929]$ and $[0.593,\,0.729]$, respectively.
-  \item \textbf{Feature effect shapes.}
-    Partial dependence plots show a generally decreasing marginal response for ALSFRS-R, a step-like reduction around 4 litres for FVC, and a sharp age-related transition around the low-40s followed by relative stability.
-    These are descriptive model-response patterns and may reflect correlations or uncommon counterfactual feature combinations.
-  \item \textbf{Patient risk report.}
-    A post-evaluation report demonstrator combines model output with SHAP-based attribution and descriptive percentile flags.
-    Tests using 12~cohort records and 10~fictitious profiles confirm the software workflow, but do not provide additional performance or clinical-validity evidence.
+  \item \textbf{The cohort supported the intended analysis, but data quality required active review.}
+    The six-month cohort included 1,392 participants, and 99.8\% of the slopes were estimated from at least three \gls{ALSFRS-R} measurements.
+    The preprocessing audit corrected a systematic height-unit error affecting 147 raw records and showed that \gls{FVC} availability varied across trials.
+    The source of the missingness could not be established from the available data.
+
+  \item \textbf{No single classifier was clearly superior.}
+    Among 13 tuned configurations, unbalanced XGBoost ranked first on development \gls{PR-AUC} ($0.434 \pm 0.049$), narrowly ahead of unbalanced Random Forest ($0.431 \pm 0.042$) and balanced \gls{SVM} ($0.425 \pm 0.049$).
+    The fold-level distributions overlapped, and the Friedman test did not reject equal model ranks ($p=0.053$).
+    XGBoost was therefore selected by the prespecified ranking rule, not because statistical superiority had been demonstrated.
+
+  \item \textbf{Baseline functional status contained most of the predictive signal.}
+    The core feature block retained most of the cross-validated performance, while adding \gls{FVC} gave the clearest incremental gain for Random Forest and XGBoost.
+    Vital signs, treatment variables, and laboratory measurements had smaller and less consistent effects.
+    Repeating the analysis at three months produced a similar range of \gls{PR-AUC} values, although the model ordering changed slightly; six months remained the primary horizon because the slopes were supported by longer follow-up.
+
+  \item \textbf{Held-out discrimination was moderate and uncertain.}
+    The selected XGBoost model achieved a TEST \gls{PR-AUC} of 0.456, compared with a rapid-progression prevalence of 0.301.
+    Random Forest was almost identical at 0.459, but the held-out partition was not used to reopen model selection.
+    The bootstrap 95\% interval for XGBoost \gls{PR-AUC} was wide ($[0.364,\,0.568]$), and the Brier score of 0.197 indicated modest probabilistic accuracy rather than full calibration.
+
+  \item \textbf{The operating threshold determined the practical behaviour of the model.}
+    At the development-derived threshold of $t=0.21$, XGBoost detected 72 of 84 rapid progressors on TEST (recall 85.7\%) but classified 205 of 279 participants as rapid.
+    Precision was 35.1\%, with 133 false positives, showing that the gain in sensitivity came at a substantial cost in specificity.
+    The threshold is consequently an experimental, sensitivity-oriented operating point rather than a clinically established cutoff.
+
+  \item \textbf{The explanations were coherent at population level but less uniform for individual records.}
+    Baseline \gls{ALSFRS-R} had the largest global SHAP contribution, followed by \gls{FVC}, age, and respiratory rate; Logistic Regression gave a compatible overall ranking.
+    Local SHAP and \gls{LIME} shared 50--70\% of their top-ten features across the four case studies, which supports partial agreement but not interchangeability.
+    Error profiling also showed a relevant limitation: recall fell to 54.5\% in the mildest baseline \gls{ALSFRS-R} subgroup ($>42$), where five of the 12 false negatives occurred.
+
+  \item \textbf{The supplementary analyses support further investigation, not clinical use.}
+    Decision Curve Analysis estimated positive net benefit relative to both reference strategies across the main interval $t\in[0.18,\,0.47]$, while the learning curves did not show a clear performance plateau.
+    Partial dependence patterns and the patient-level report provide additional views of model behaviour, but neither establishes causal effects, external validity, or readiness for individual clinical decisions.
 \end{enumerate}
 
 \bigskip
 \noindent
-Taken together, these results establish Study~I as the original methodological contribution of this dissertation: a leakage-free, explainable, and clinically motivated pipeline for short-term functional progression prediction in \gls{ALS}.
-The methodological lessons --- metric alignment, threshold-aware evaluation, and the primacy of baseline functional status --- inform the design of Study~II, described in Chapter~\ref{ch:study2_methods}.
+Taken together, Study~I provides a reproducible framework for short-term functional progression prediction rather than a model ready for deployment.
+Its main contribution lies in the complete evaluation protocol: temporally valid target construction, subject-wise validation, metric-led model selection, development-only threshold choice, held-out testing, and post-hoc explanation.
+The distinction between ranking performance and threshold-dependent behaviour becomes particularly important in Study~II, where the class imbalance is more severe and the target changes from functional decline to survival.
+That study is described in Chapter~\ref{ch:study2_methods}.

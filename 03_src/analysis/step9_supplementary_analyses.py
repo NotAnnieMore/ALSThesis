@@ -75,6 +75,14 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from xgboost import XGBClassifier
+from study1_style import (
+    FIGURE_INK,
+    PALETTE,
+    apply_study1_style,
+    style_axis,
+)
+
+apply_study1_style()
 
 
 # ─────────────────────────────────────────────────────────────
@@ -142,8 +150,8 @@ def ensure_dirs():
 def save_fig(fig, name):
     """Save figure to outputs + overleaf, both PDF and PNG."""
     for d in (OUT_FIG, OVERLEAF_FIG):
-        fig.savefig(os.path.join(d, f"{name}.pdf"), dpi=200, bbox_inches="tight")
-        fig.savefig(os.path.join(d, f"{name}.png"), dpi=200, bbox_inches="tight")
+        fig.savefig(os.path.join(d, f"{name}.pdf"), dpi=300, bbox_inches="tight")
+        fig.savefig(os.path.join(d, f"{name}.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"  [OK] {name}")
 
@@ -340,6 +348,12 @@ def _save_error_counts(prof):
 def _plot_error_bars(df, group_col, fname, title):
     """Stacked bar chart: quadrant proportions per group."""
     ct = pd.crosstab(df[group_col], df["quadrant"])
+    group_orders = {
+        "ALSFRS_severity": ["≤35 (severe)", "36-39", "40-42", ">42 (mild)"],
+        "FVC_group": ["≤77%", "78-87%", "88-98%", ">98%", "Missing"],
+    }
+    if group_col in group_orders:
+        ct = ct.reindex(group_orders[group_col], fill_value=0)
     # Ensure column order
     for q in ["TP", "FP", "FN", "TN"]:
         if q not in ct.columns:
@@ -348,13 +362,18 @@ def _plot_error_bars(df, group_col, fname, title):
 
     ct_pct = ct.div(ct.sum(axis=1), axis=0) * 100
 
-    colors = {"TP": "#2ecc71", "FP": "#e74c3c", "FN": "#f39c12", "TN": "#3498db"}
+    colors = {
+        "TP": PALETTE["velvet_purple"],
+        "FP": PALETTE["powder_blush"],
+        "FN": PALETTE["deep_rose"],
+        "TN": PALETTE["glaucous"],
+    }
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
 
     # Left: absolute counts
     ct.plot(kind="bar", stacked=True, ax=axes[0],
-            color=[colors[c] for c in ct.columns], edgecolor="white", linewidth=0.5)
+            color=[colors[c] for c in ct.columns], edgecolor=FIGURE_INK, linewidth=0.5)
     axes[0].set_title("Absolute counts", fontsize=11)
     axes[0].set_ylabel("Subjects")
     axes[0].set_xlabel("")
@@ -366,7 +385,7 @@ def _plot_error_bars(df, group_col, fname, title):
 
     # Right: percentage
     ct_pct.plot(kind="bar", stacked=True, ax=axes[1],
-                color=[colors[c] for c in ct_pct.columns], edgecolor="white", linewidth=0.5)
+                color=[colors[c] for c in ct_pct.columns], edgecolor=FIGURE_INK, linewidth=0.5)
     axes[1].set_title("Proportion (%)", fontsize=11)
     axes[1].set_ylabel("Percentage")
     axes[1].set_xlabel("")
@@ -383,7 +402,19 @@ def _plot_error_bars(df, group_col, fname, title):
                          ha="center", va="center", fontsize=8, fontweight="bold")
 
     fig.suptitle(title, fontsize=12, fontweight="bold", y=1.02)
-    fig.tight_layout()
+    for ax in axes:
+        style_axis(ax, "y")
+    if fname in {"error_profile_alsfrs", "error_profile_fvc"}:
+        axes[0].get_legend().remove()
+        axes[1].legend(
+            loc="upper left",
+            bbox_to_anchor=(1.01, 1.0),
+            fontsize=8,
+            borderaxespad=0,
+        )
+        fig.tight_layout(rect=(0, 0, 0.94, 1))
+    else:
+        fig.tight_layout()
     save_fig(fig, fname)
 
 
@@ -484,18 +515,27 @@ def _plot_subgroup_metric(df, metric, fname, title, overall_value):
     if len(strats) == 1:
         axes = [axes]
 
-    palette = plt.cm.Set2(np.linspace(0, 1, 8))
+    palette = [
+        PALETTE["pastel_petal"],
+        PALETTE["powder_blush"],
+        PALETTE["glaucous"],
+        PALETTE["soft_mauve"],
+        PALETTE["bubblegum_pink"],
+        PALETTE["deep_rose"],
+        PALETTE["velvet_purple"],
+    ]
 
     for ax, strat in zip(axes, strats):
         sub = df[df["Stratification"] == strat].copy()
         x = np.arange(len(sub))
         bars = ax.bar(x, sub[metric], color=palette[:len(sub)],
-                      edgecolor="grey", linewidth=0.5, width=0.65)
+                      edgecolor=FIGURE_INK, linewidth=0.5, width=0.65)
 
         # Annotate values + N
         for i, (val, n) in enumerate(zip(sub[metric], sub["N"])):
             ax.text(i, val + 0.01, f"{val:.3f}", ha="center", va="bottom", fontsize=8)
-            ax.text(i, -0.04, f"n={n}", ha="center", va="top", fontsize=7, color="grey")
+            ax.text(i, -0.04, f"n={n}", ha="center", va="top",
+                    fontsize=7, color=FIGURE_INK)
 
         ax.set_xticks(x)
         ax.set_xticklabels(sub["Group"], fontsize=9)
@@ -503,7 +543,7 @@ def _plot_subgroup_metric(df, metric, fname, title, overall_value):
         ax.set_ylim(-0.08, min(1.15, sub[metric].max() + 0.15))
         ax.axhline(
             y=overall_value,
-            color="red",
+            color=FIGURE_INK,
             linestyle="--",
             linewidth=0.8,
             alpha=0.7,
@@ -513,12 +553,14 @@ def _plot_subgroup_metric(df, metric, fname, title, overall_value):
     axes[-1].plot(
         [],
         [],
-        color="red",
+        color=FIGURE_INK,
         linestyle="--",
         linewidth=0.8,
         label=f"Overall TEST = {overall_value:.3f}",
     )
     axes[-1].legend(loc="upper right", fontsize=7)
+    for ax in axes:
+        style_axis(ax, "y")
     fig.suptitle(title, fontsize=12, fontweight="bold", y=1.02)
     fig.tight_layout()
     save_fig(fig, fname)
@@ -566,14 +608,15 @@ def run_decision_curve(pipe, X_test, y_test):
     # --- Plot ---
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.plot(dc_df["threshold"], dc_df["nb_model"],
-            color="#2980b9", linewidth=2, label="XGBoost model")
+            color=FIGURE_INK, linewidth=2, label="XGBoost model")
     ax.plot(dc_df["threshold"], dc_df["nb_treat_all"],
-            color="#e74c3c", linewidth=1.5, linestyle="--", label="Treat all")
-    ax.axhline(y=0, color="grey", linewidth=1, linestyle=":", label="Treat none")
+            color=PALETTE["deep_rose"], linewidth=1.5, linestyle="--", label="Treat all")
+    ax.axhline(y=0, color=PALETTE["glaucous"], linewidth=1,
+               linestyle=":", label="Treat none")
     ax.axvspan(
         0.18,
         0.47,
-        color="#2980b9",
+        color=PALETTE["pastel_petal"],
         alpha=0.08,
         label="Main net-benefit interval",
     )
@@ -581,11 +624,11 @@ def run_decision_curve(pipe, X_test, y_test):
     # Mark the operating threshold
     t_row = dc_df.iloc[(dc_df["threshold"] - THRESHOLD).abs().argsort()[:1]]
     ax.scatter(THRESHOLD, t_row["nb_model"].values[0],
-               color="#2980b9", s=80, zorder=5, edgecolors="black")
+               color=FIGURE_INK, s=80, zorder=5, edgecolors=FIGURE_INK)
     ax.annotate(f"t = {THRESHOLD}",
                 xy=(THRESHOLD, t_row["nb_model"].values[0]),
                 xytext=(THRESHOLD + 0.06, t_row["nb_model"].values[0] + 0.03),
-                fontsize=9, arrowprops=dict(arrowstyle="->", color="black"))
+                fontsize=9, arrowprops=dict(arrowstyle="->", color=FIGURE_INK))
 
     ax.set_xlabel("Threshold Probability", fontsize=11)
     ax.set_ylabel("Net Benefit", fontsize=11)
@@ -594,7 +637,7 @@ def run_decision_curve(pipe, X_test, y_test):
     ax.legend(loc="upper right", fontsize=9)
     ax.set_xlim(0, 0.60)
     ax.set_ylim(-0.05, max(dc_df["nb_model"].max(), prevalence) + 0.05)
-    ax.grid(alpha=0.3)
+    style_axis(ax)
     fig.tight_layout()
     save_fig(fig, "decision_curve")
 
@@ -697,10 +740,10 @@ def run_learning_curves(X_dev, y_dev, groups_dev, X_test, y_test, params):
     fig, ax = plt.subplots(figsize=(8, 5))
 
     ax.errorbar(lc_df["n_subjects"], lc_df["pr_auc_mean"],
-                yerr=lc_df["pr_auc_std"], fmt="o-", color="#2980b9",
+                yerr=lc_df["pr_auc_std"], fmt="o-", color=FIGURE_INK,
                 linewidth=2, capsize=4, markersize=6, label="PR-AUC (TEST)")
     ax.errorbar(lc_df["n_subjects"], lc_df["roc_auc_mean"],
-                yerr=lc_df["roc_auc_std"], fmt="s--", color="#27ae60",
+                yerr=lc_df["roc_auc_std"], fmt="s--", color=PALETTE["soft_mauve"],
                 linewidth=2, capsize=4, markersize=6, label="ROC-AUC (TEST)")
 
     # Annotate each point
@@ -708,14 +751,14 @@ def run_learning_curves(X_dev, y_dev, groups_dev, X_test, y_test, params):
         ax.annotate(f"{r['pr_auc_mean']:.3f}",
                     xy=(r["n_subjects"], r["pr_auc_mean"]),
                     xytext=(0, 10), textcoords="offset points",
-                    ha="center", fontsize=8, color="#2980b9")
+                    ha="center", fontsize=8, color=FIGURE_INK)
 
     ax.set_xlabel("Training Set Size (subjects)", fontsize=11)
     ax.set_ylabel("AUC (on TEST set)", fontsize=11)
     ax.set_title("Training-Size Sensitivity — XGBoost (TEST set)",
                  fontsize=12, fontweight="bold")
     ax.legend(loc="lower right", fontsize=9)
-    ax.grid(alpha=0.3)
+    style_axis(ax)
     ax.set_ylim(0.30, 0.80)
     fig.tight_layout()
     save_fig(fig, "learning_curve")
@@ -789,15 +832,7 @@ def run_bootstrap_ci(pipe, X_test, y_test):
     # --- Plot: forest plot of CIs ---
     fig, ax = plt.subplots(figsize=(7, 4.5))
     y_pos = np.arange(len(ci_df))
-    colors = [
-        "#2980b9",
-        "#27ae60",
-        "#e67e22",
-        "#8e44ad",
-        "#e74c3c",
-        "#d35400",
-        "#1abc9c",
-    ]
+    colors = list(PALETTE.values())
 
     for i, (_, r) in enumerate(ci_df.iterrows()):
         ax.errorbar(r["Point"], i,
@@ -814,7 +849,7 @@ def run_bootstrap_ci(pipe, X_test, y_test):
     ax.set_xlabel("Value", fontsize=11)
     ax.set_title("Bootstrap 95% Confidence Intervals (TEST set, B=2000)",
                  fontsize=12, fontweight="bold")
-    ax.grid(axis="x", alpha=0.3)
+    style_axis(ax, "x")
     ax.set_xlim(0, 1.05)
     fig.tight_layout()
     save_fig(fig, "bootstrap_ci")
@@ -900,23 +935,25 @@ def run_pdp(pipe, X_test):
 
         # Map grid back to original scale (undo standardisation if applicable)
         # Since XGBoost doesn't use scaling, grid is in original scale
-        ax.plot(grid, pd_values, color="#2980b9", linewidth=2)
-        ax.fill_between(grid, pd_values, alpha=0.15, color="#2980b9")
+        ax.plot(grid, pd_values, color=FIGURE_INK, linewidth=2)
+        ax.fill_between(grid, pd_values, alpha=0.25, color=PALETTE["pastel_petal"])
 
         # Add rug plot of actual data
         ax.plot(observed_vals, np.full_like(observed_vals, pd_values.min() - 0.005),
-                "|", color="grey", alpha=0.3, markersize=6)
+                "|", color=PALETTE["soft_mauve"], alpha=0.45, markersize=6)
 
         ax.set_xlabel(label, fontsize=11)
         ax.set_ylabel("Avg. P(rapid)", fontsize=10)
         ax.set_title(label, fontsize=11, fontweight="bold")
-        ax.grid(alpha=0.3)
+        style_axis(ax)
 
         # Annotate the range
         ax.annotate(f"Δ = {pd_values.max() - pd_values.min():.3f}",
                     xy=(0.95, 0.95), xycoords="axes fraction",
                     ha="right", va="top", fontsize=9,
-                    bbox=dict(boxstyle="round,pad=0.3", fc="lightyellow", alpha=0.8))
+                    bbox=dict(boxstyle="round,pad=0.3",
+                              fc=PALETTE["pastel_petal"],
+                              ec=FIGURE_INK, alpha=0.8))
 
     fig.suptitle("Partial Dependence Plots — XGBoost (TEST set)",
                  fontsize=12, fontweight="bold", y=1.02)

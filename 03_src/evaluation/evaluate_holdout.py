@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import time
 import warnings
 
@@ -76,6 +77,18 @@ from sklearn.tree import DecisionTreeClassifier
 
 from lightgbm import LGBMClassifier
 from xgboost import XGBClassifier
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "analysis"))
+from study1_style import (  # noqa: E402
+    FIGURE_INK,
+    PALETTE as STUDY1_PALETTE,
+    SEQUENTIAL_CMAP,
+    apply_study1_style,
+    model_colour,
+    style_axis,
+)
+
+apply_study1_style()
 
 
 # ─────────────────────────────────────────────────────────────
@@ -328,26 +341,18 @@ def oof_threshold_sweep(model_key, params, balanced, X_dev, y_dev, groups_dev):
 # ─────────────────────────────────────────────────────────────
 # Figures
 # ─────────────────────────────────────────────────────────────
-PALETTE = {
-    "XGB":  "#2196F3",
-    "RF":   "#4CAF50",
-    "SVM":  "#FF9800",
-    "LGBM": "#9C27B0",
-    "LR":   "#F44336",
-    "DT":   "#795548",
-    "KNN":  "#607D8B",
-}
+MODEL_PALETTE = {key: model_colour(key) for key in MODEL_NAMES}
 
 
 def plot_pr_curves(results, y_test):
     fig, ax = plt.subplots(figsize=(7, 5))
     prev = y_test.mean()
-    ax.axhline(prev, ls="--", color="grey", lw=0.8, label=f"Baseline ({prev:.2f})")
+    ax.axhline(prev, ls="--", color=FIGURE_INK, lw=0.9, label=f"Baseline ({prev:.2f})")
 
     for key, mode, proba, _ in results:
         prec, rec, _ = precision_recall_curve(y_test, proba)
         ap = average_precision_score(y_test, proba)
-        ax.plot(rec, prec, color=PALETTE[key], lw=1.6,
+        ax.plot(rec, prec, color=MODEL_PALETTE[key], lw=1.8,
                 label=f"{MODEL_NAMES[key]} (AP={ap:.3f})")
 
     ax.set_xlabel("Recall")
@@ -356,21 +361,23 @@ def plot_pr_curves(results, y_test):
     ax.legend(fontsize=8, loc="upper right")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
+    style_axis(ax)
     fig.tight_layout()
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(OUT_FIGURES, f"step6_pr_curves.{ext}"), dpi=200)
+        fig.savefig(os.path.join(OUT_FIGURES, f"step6_pr_curves.{ext}"),
+                    dpi=300, bbox_inches="tight")
     plt.close(fig)
     print("  → step6_pr_curves.pdf/png")
 
 
 def plot_roc_curves(results, y_test):
     fig, ax = plt.subplots(figsize=(7, 5))
-    ax.plot([0, 1], [0, 1], ls="--", color="grey", lw=0.8, label="Random")
+    ax.plot([0, 1], [0, 1], ls="--", color=FIGURE_INK, lw=0.9, label="Random")
 
     for key, mode, proba, _ in results:
         fpr, tpr, _ = roc_curve(y_test, proba)
         auc = roc_auc_score(y_test, proba)
-        ax.plot(fpr, tpr, color=PALETTE[key], lw=1.6,
+        ax.plot(fpr, tpr, color=MODEL_PALETTE[key], lw=1.8,
                 label=f"{MODEL_NAMES[key]} (AUC={auc:.3f})")
 
     ax.set_xlabel("False Positive Rate")
@@ -379,9 +386,11 @@ def plot_roc_curves(results, y_test):
     ax.legend(fontsize=8, loc="lower right")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
+    style_axis(ax)
     fig.tight_layout()
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(OUT_FIGURES, f"step6_roc_curves.{ext}"), dpi=200)
+        fig.savefig(os.path.join(OUT_FIGURES, f"step6_roc_curves.{ext}"),
+                    dpi=300, bbox_inches="tight")
     plt.close(fig)
     print("  → step6_roc_curves.pdf/png")
 
@@ -390,19 +399,21 @@ def plot_threshold_sweep(thresholds, sweep, best):
     """Multi-metric threshold sweep with F1, F2, precision, recall."""
     fig, ax = plt.subplots(figsize=(8, 5))
 
-    ax.plot(thresholds, sweep["f1"],        color="#2196F3", lw=1.8, label="F₁")
-    ax.plot(thresholds, sweep["f2"],        color="#F44336", lw=1.8, label="F₂")
-    ax.plot(thresholds, sweep["precision"], color="#4CAF50", lw=1.2, ls="--", label="Precision")
-    ax.plot(thresholds, sweep["recall"],    color="#FF9800", lw=1.2, ls="--", label="Recall")
+    ax.plot(thresholds, sweep["f1"], color=FIGURE_INK, lw=1.8, label="F₁")
+    ax.plot(thresholds, sweep["f2"], color=STUDY1_PALETTE["deep_rose"], lw=1.8, label="F₂")
+    ax.plot(thresholds, sweep["precision"], color=STUDY1_PALETTE["glaucous"],
+            lw=1.4, ls="--", label="Precision")
+    ax.plot(thresholds, sweep["recall"], color=STUDY1_PALETTE["soft_mauve"],
+            lw=1.4, ls="--", label="Recall")
 
     # Mark best F1 threshold
     t_f1 = best["f1"]["threshold"]
     v_f1 = best["f1"]["value"]
-    ax.axvline(t_f1, ls=":", color="#2196F3", lw=1.0, alpha=0.7)
+    ax.axvline(t_f1, ls=":", color=FIGURE_INK, lw=1.0, alpha=0.8)
     ax.annotate(f"F₁ opt\nt={t_f1:.2f}\nF₁={v_f1:.3f}",
-                xy=(t_f1, v_f1), fontsize=8, color="#2196F3",
+                xy=(t_f1, v_f1), fontsize=8, color=FIGURE_INK,
                 xytext=(t_f1 + 0.08, v_f1 + 0.02),
-                arrowprops=dict(arrowstyle="->", color="#2196F3"))
+                arrowprops=dict(arrowstyle="->", color=FIGURE_INK))
 
     # Mark best Youden threshold
     t_j = best["youden"]["threshold"]
@@ -410,11 +421,11 @@ def plot_threshold_sweep(thresholds, sweep, best):
     # Find the F1 value at the Youden threshold
     idx_j = int(np.argmin(np.abs(thresholds - t_j)))
     f1_at_j = sweep["f1"][idx_j]
-    ax.axvline(t_j, ls=":", color="#9C27B0", lw=1.0, alpha=0.7)
+    ax.axvline(t_j, ls=":", color=STUDY1_PALETTE["soft_mauve"], lw=1.0, alpha=0.8)
     ax.annotate(f"Youden J\nt={t_j:.2f}",
-                xy=(t_j, f1_at_j), fontsize=8, color="#9C27B0",
+                xy=(t_j, f1_at_j), fontsize=8, color=STUDY1_PALETTE["soft_mauve"],
                 xytext=(t_j + 0.08, f1_at_j - 0.08),
-                arrowprops=dict(arrowstyle="->", color="#9C27B0"))
+                arrowprops=dict(arrowstyle="->", color=STUDY1_PALETTE["soft_mauve"]))
 
     ax.set_xlabel("Decision Threshold")
     ax.set_ylabel("Score")
@@ -422,9 +433,11 @@ def plot_threshold_sweep(thresholds, sweep, best):
     ax.legend(fontsize=9, loc="center right")
     ax.set_xlim(0.05, 0.95)
     ax.set_ylim(0, 1)
+    style_axis(ax)
     fig.tight_layout()
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(OUT_FIGURES, f"step6_threshold_sweep.{ext}"), dpi=200)
+        fig.savefig(os.path.join(OUT_FIGURES, f"step6_threshold_sweep.{ext}"),
+                    dpi=300, bbox_inches="tight")
     plt.close(fig)
     print("  → step6_threshold_sweep.pdf/png")
 
@@ -433,9 +446,10 @@ def plot_calibration(y_test, proba, model_label):
     fig, ax = plt.subplots(figsize=(6, 5))
     prob_true, prob_pred = calibration_curve(y_test, proba, n_bins=10,
                                              strategy="uniform")
-    ax.plot(prob_pred, prob_true, "o-", color="#2196F3", lw=1.6,
+    ax.plot(prob_pred, prob_true, "o-", color=FIGURE_INK, lw=1.8,
             label=model_label)
-    ax.plot([0, 1], [0, 1], "--", color="grey", lw=0.8, label="Perfect")
+    ax.plot([0, 1], [0, 1], "--", color=STUDY1_PALETTE["glaucous"],
+            lw=1.0, label="Perfect")
 
     brier = brier_score_loss(y_test, proba)
     ax.set_xlabel("Mean Predicted Probability")
@@ -444,9 +458,11 @@ def plot_calibration(y_test, proba, model_label):
     ax.legend(fontsize=9)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
+    style_axis(ax)
     fig.tight_layout()
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(OUT_FIGURES, f"step6_calibration.{ext}"), dpi=200)
+        fig.savefig(os.path.join(OUT_FIGURES, f"step6_calibration.{ext}"),
+                    dpi=300, bbox_inches="tight")
     plt.close(fig)
     print("  → step6_calibration.pdf/png")
 
@@ -457,7 +473,7 @@ def plot_confusion_matrix(y_test, proba, threshold, model_label):
     tn, fp, fn, tp = cm.ravel()
 
     fig, ax = plt.subplots(figsize=(5, 4))
-    im = ax.imshow(cm, cmap="Blues", interpolation="nearest")
+    im = ax.imshow(cm, cmap=SEQUENTIAL_CMAP, interpolation="nearest")
     fig.colorbar(im, ax=ax, shrink=0.8)
 
     for i in range(2):
@@ -465,7 +481,7 @@ def plot_confusion_matrix(y_test, proba, threshold, model_label):
             val = cm[i, j]
             ax.text(j, i, str(val), ha="center", va="center",
                     fontsize=16, fontweight="bold",
-                    color="white" if val > cm.max() / 2 else "black")
+                    color="white" if val > cm.max() / 2 else FIGURE_INK)
 
     ax.set_xticks([0, 1])
     ax.set_yticks([0, 1])
@@ -474,9 +490,12 @@ def plot_confusion_matrix(y_test, proba, threshold, model_label):
     ax.set_xlabel("Predicted")
     ax.set_ylabel("Actual")
     ax.set_title(f"Confusion Matrix — {model_label}\nThreshold = {threshold:.2f}")
+    style_axis(ax)
+    ax.grid(False)
     fig.tight_layout()
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(OUT_FIGURES, f"step6_confusion_matrix.{ext}"), dpi=200)
+        fig.savefig(os.path.join(OUT_FIGURES, f"step6_confusion_matrix.{ext}"),
+                    dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"  → step6_confusion_matrix.pdf/png  (TP={tp} FP={fp} FN={fn} TN={tn})")
 
@@ -486,25 +505,27 @@ def plot_test_bar(rows):
     fig, ax = plt.subplots(figsize=(8, 4.5))
     names = [r["model"] for r in rows]
     prauc = [r["pr_auc"] for r in rows]
-    colors = [PALETTE[r["key"]] for r in rows]
+    colors = [MODEL_PALETTE[r["key"]] for r in rows]
 
-    bars = ax.barh(names, prauc, color=colors, edgecolor="white", height=0.55)
+    bars = ax.barh(names, prauc, color=colors, edgecolor=FIGURE_INK, height=0.55)
     for bar, val in zip(bars, prauc):
         ax.text(bar.get_width() + 0.005, bar.get_y() + bar.get_height() / 2,
                 f"{val:.3f}", va="center", fontsize=9)
 
     prev = rows[0]["baseline_prev"]
-    ax.axvline(prev, ls="--", color="grey", lw=0.8)
+    ax.axvline(prev, ls="--", color=FIGURE_INK, lw=0.9)
     ax.text(prev + 0.005, len(names) - 0.3, f"baseline {prev:.2f}",
-            fontsize=8, color="grey")
+            fontsize=8, color=FIGURE_INK)
 
     ax.set_xlabel("PR-AUC (TEST)")
     ax.set_title("Held-Out TEST Performance — PR-AUC (6 m)")
     ax.set_xlim(0, max(prauc) + 0.08)
     ax.invert_yaxis()
+    style_axis(ax, "x")
     fig.tight_layout()
     for ext in ("pdf", "png"):
-        fig.savefig(os.path.join(OUT_FIGURES, f"step6_test_prauc_bar.{ext}"), dpi=200)
+        fig.savefig(os.path.join(OUT_FIGURES, f"step6_test_prauc_bar.{ext}"),
+                    dpi=300, bbox_inches="tight")
     plt.close(fig)
     print("  → step6_test_prauc_bar.pdf/png")
 
@@ -517,8 +538,9 @@ def write_latex_table(rows, filepath):
         r"\begin{table}[ht]",
         r"\centering",
         r"\caption{Held-out TEST set metrics (6-month horizon, $n=279$). "
-        r"PR-AUC, ROC-AUC are threshold-free; F$_1$, F$_2$ at default $t=0.50$; "
-        r"Brier score measures probabilistic error (lower is better).}",
+        r"Models were fitted on DEV only. PR-AUC and ROC-AUC are threshold-free; "
+        r"F$_1$ and F$_2$ are evaluated at the default $t=0.50$; the Brier score "
+        r"measures probabilistic error (lower is better).}",
         r"\label{tab:step6_test_metrics}",
         r"\small",
         r"\begin{tabular}{l c c c c c c}",
@@ -676,12 +698,19 @@ def main():
 
     # 7) Copy to overleaf
     import shutil
-    for f in os.listdir(OUT_FIGURES):
-        if f.endswith(".png"):
-            shutil.copy2(os.path.join(OUT_FIGURES, f), os.path.join(OVERLEAF_FIG, f))
-    for f in os.listdir(OUT_TABLES):
-        if f.endswith(".tex"):
-            shutil.copy2(os.path.join(OUT_TABLES, f), os.path.join(OVERLEAF_TAB, f))
+    for f in [
+        "step6_pr_curves.png",
+        "step6_roc_curves.png",
+        "step6_threshold_sweep.png",
+        "step6_calibration.png",
+        "step6_confusion_matrix.png",
+        "step6_test_prauc_bar.png",
+    ]:
+        shutil.copy2(os.path.join(OUT_FIGURES, f), os.path.join(OVERLEAF_FIG, f))
+    shutil.copy2(
+        tex_path,
+        os.path.join(OVERLEAF_TAB, "step6_test_metrics.tex"),
+    )
     print("  → Copied figures/tables to overleaf/images/")
 
     elapsed = time.time() - t0

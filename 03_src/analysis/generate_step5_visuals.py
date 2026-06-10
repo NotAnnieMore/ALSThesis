@@ -25,6 +25,18 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use("Agg")
 from scipy.stats import spearmanr
+from study1_style import (
+    ABOVE_THRESHOLD,
+    BELOW_THRESHOLD,
+    FIGURE_INK,
+    SEQUENTIAL_CMAP,
+    apply_balanced_hatch,
+    apply_study1_style,
+    model_colour,
+    style_axis,
+)
+
+apply_study1_style()
 
 # ── paths ──
 ROOT       = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -54,22 +66,37 @@ print(f"Loaded tuning summary: {len(df)} rows")
 # 2.  PR-AUC horizontal bar chart
 # ════════════════════════════════════════════════════════════
 fig, ax = plt.subplots(figsize=(8, 6))
-colors = ["#3274a1" if m == "unbalanced" else "#e1812c" for m in df["mode"]]
+colors = [model_colour(model) for model in df["model"]]
 bars = ax.barh(df["label"], df["pr_auc_mean"], xerr=df["pr_auc_std"],
-               color=colors, edgecolor="white", capsize=3, height=0.7)
+               color=colors, edgecolor=FIGURE_INK, capsize=3, height=0.7)
+for bar, mode, colour in zip(bars, df["mode"], colors):
+    if mode == "balanced":
+        apply_balanced_hatch(bar, colour)
 ax.set_xlabel("PR-AUC (mean ± std, 5-fold GroupKFold)", fontsize=11)
 ax.set_title("Optuna-Tuned Models — 6-Month Horizon (DEV)", fontsize=13, fontweight="bold")
-ax.axvline(x=df["pr_auc_mean"].max(), ls="--", color="grey", alpha=0.5, lw=0.8)
+ax.axvline(x=df["pr_auc_mean"].max(), ls="--", color=FIGURE_INK, alpha=0.7, lw=0.8)
+for bar, val, err in zip(bars, df["pr_auc_mean"], df["pr_auc_std"]):
+    ax.text(
+        val + err + 0.004,
+        bar.get_y() + bar.get_height() / 2,
+        f"{val:.3f}",
+        va="center",
+        ha="left",
+        fontsize=8,
+        fontweight="bold",
+    )
 
 # Legend
 from matplotlib.patches import Patch
-ax.legend(handles=[Patch(color="#3274a1", label="Unbalanced"),
-                   Patch(color="#e1812c", label="Balanced")],
-          loc="lower right", fontsize=9)
-ax.set_xlim(0.30, 0.50)
+ax.legend(handles=[
+          Patch(facecolor="white", edgecolor=FIGURE_INK, label="Unbalanced"),
+          Patch(facecolor="white", edgecolor=FIGURE_INK, hatch="//", label="Balanced")],
+          loc="upper right", bbox_to_anchor=(1.0, -0.08), ncol=2, fontsize=9)
+ax.set_xlim(0.30, 0.515)
+style_axis(ax, "x")
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR, "step5v2_prauc_barchart.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR, "step5v2_prauc_barchart.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR, "step5v2_prauc_barchart.pdf"), dpi=300, bbox_inches="tight")
+fig.savefig(os.path.join(FIG_DIR, "step5v2_prauc_barchart.png"), dpi=300, bbox_inches="tight")
 plt.close(fig)
 print("  [OK] PR-AUC bar chart saved")
 
@@ -101,21 +128,25 @@ for ax_i, (metric, label) in enumerate([("pr_auc", "PR-AUC"), ("roc_auc", "ROC-A
     for i, row in enumerate(pdf.itertuples()):
         u = getattr(row, f"{metric}_unb")
         b = getattr(row, f"{metric}_bal")
-        ax.plot([u, b], [i, i], "o-", color="grey", lw=1.5, markersize=6)
-        ax.plot(u, i, "o", color="#3274a1", markersize=8, zorder=5)
-        ax.plot(b, i, "s", color="#e1812c", markersize=8, zorder=5)
+        colour = model_colour(row.model)
+        ax.plot([u, b], [i, i], "-", color=colour, lw=1.5)
+        ax.plot(u, i, "o", color=colour, markeredgecolor=FIGURE_INK,
+                markersize=8, zorder=5)
+        ax.plot(b, i, "s", color=colour, markeredgecolor=FIGURE_INK,
+                markersize=8, zorder=5)
     ax.set_yticks(list(y_pos))
     ax.set_yticklabels(pdf["model"], fontsize=10)
     ax.set_xlabel(label, fontsize=11)
     ax.set_title(f"{label}: Unbalanced vs Balanced", fontsize=12, fontweight="bold")
     ax.legend(handles=[
-        plt.Line2D([0],[0], marker="o", color="#3274a1", ls="", markersize=8, label="Unbalanced"),
-        plt.Line2D([0],[0], marker="s", color="#e1812c", ls="", markersize=8, label="Balanced"),
+        plt.Line2D([0],[0], marker="o", color=FIGURE_INK, ls="", markersize=8, label="Unbalanced"),
+        plt.Line2D([0],[0], marker="s", color=FIGURE_INK, ls="", markersize=8, label="Balanced"),
     ], loc="lower right", fontsize=9)
+    style_axis(ax, "x")
 
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR, "step5v2_balanced_vs_unbalanced.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR, "step5v2_balanced_vs_unbalanced.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR, "step5v2_balanced_vs_unbalanced.pdf"), dpi=300, bbox_inches="tight")
+fig.savefig(os.path.join(FIG_DIR, "step5v2_balanced_vs_unbalanced.png"), dpi=300, bbox_inches="tight")
 plt.close(fig)
 print("  [OK] Balanced vs Unbalanced comparison saved")
 
@@ -128,7 +159,7 @@ heat_df.columns = ["PR-AUC", "ROC-AUC", "F1@0.5", "F2@0.5"]
 heat_df = heat_df.iloc[::-1]  # best on top
 
 fig, ax = plt.subplots(figsize=(7, 8))
-im = ax.imshow(heat_df.values, aspect="auto", cmap="YlOrRd")
+im = ax.imshow(heat_df.values, aspect="auto", cmap=SEQUENTIAL_CMAP)
 ax.set_xticks(range(len(heat_df.columns)))
 ax.set_xticklabels(heat_df.columns, fontsize=10)
 ax.set_yticks(range(len(heat_df)))
@@ -137,14 +168,16 @@ ax.set_yticklabels(heat_df.index, fontsize=9)
 for i in range(len(heat_df)):
     for j in range(len(heat_df.columns)):
         val = heat_df.iloc[i, j]
-        txt_color = "white" if val > 0.35 else "black"
+        txt_color = "white" if val > 0.42 else FIGURE_INK
         ax.text(j, i, f"{val:.3f}", ha="center", va="center",
                 fontsize=8, color=txt_color, fontweight="bold")
 ax.set_title("Cross-Validation Metrics — 6m Horizon (DEV)", fontsize=12, fontweight="bold")
 fig.colorbar(im, ax=ax, shrink=0.6, label="Score")
+style_axis(ax)
+ax.grid(False)
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR, "step5v2_metric_heatmap.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR, "step5v2_metric_heatmap.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR, "step5v2_metric_heatmap.pdf"), dpi=300, bbox_inches="tight")
+fig.savefig(os.path.join(FIG_DIR, "step5v2_metric_heatmap.png"), dpi=300, bbox_inches="tight")
 plt.close(fig)
 print("  [OK] Metric heatmap saved")
 
@@ -180,7 +213,7 @@ df_sorted = df.sort_values("pr_auc_mean", ascending=False).reset_index(drop=True
 lines = []
 lines.append(r"\begin{table}[ht]")
 lines.append(r"\centering")
-lines.append(r"\caption{Optuna-tuned model comparison (6-month horizon, DEV set, GroupKFold $K\!=\!5$, 60 trials). "
+lines.append(r"\caption[Optuna-tuned model comparison, 6-month horizon]{Optuna-tuned model comparison (6-month horizon, DEV set, GroupKFold $K\!=\!5$, 60 trials). "
              r"Models ranked by PR-AUC. Best value per metric in \textbf{bold}.}")
 lines.append(r"\label{tab:step5v2_tuning}")
 lines.append(r"\small")
@@ -218,7 +251,7 @@ lines.append(r"\end{table}")
 
 tex_path = os.path.join(TAB_DIR, "step5v2_tuning_comparison.tex")
 with open(tex_path, "w", encoding="utf-8") as f:
-    f.write("\n".join(lines))
+    f.write("\n".join(lines) + "\n")
 print(f"  [OK] LaTeX tuning table saved → {tex_path}")
 
 
@@ -232,7 +265,7 @@ miss6 = miss[miss["horizon"] == "6m"].copy()
 lines2 = []
 lines2.append(r"\begin{table}[ht]")
 lines2.append(r"\centering")
-lines2.append(r"\caption{FVC missingness analysis (6-month cohort). Mann--Whitney U for continuous variables, "
+lines2.append(r"\caption[FVC missingness analysis, 6-month cohort]{FVC missingness analysis (6-month cohort). Mann--Whitney U for continuous variables, "
               r"$\chi^2$ for categorical. Effect sizes: Cohen's $d$ (continuous) and Cramér's $V$ (categorical). "
               r"Significant at $\alpha = 0.05$ marked with $\ast$.}")
 lines2.append(r"\label{tab:fvc_missingness}")
@@ -261,28 +294,32 @@ lines2.append(r"\end{table}")
 
 tex2_path = os.path.join(TAB_DIR, "step5v2_fvc_missingness.tex")
 with open(tex2_path, "w", encoding="utf-8") as f:
-    f.write("\n".join(lines2))
+    f.write("\n".join(lines2) + "\n")
 print(f"  [OK] FVC missingness LaTeX table saved → {tex2_path}")
 
 # Forest-style plot for effect sizes
 fig, ax = plt.subplots(figsize=(8, 5))
 miss6_sorted = miss6.sort_values("effect_size", ascending=True).reset_index(drop=True)
-colors_miss = ["#d62728" if s else "#2ca02c" for s in miss6_sorted["significant_005"]]
+colors_miss = [ABOVE_THRESHOLD if s else BELOW_THRESHOLD
+               for s in miss6_sorted["significant_005"]]
 y = range(len(miss6_sorted))
-ax.barh(list(y), miss6_sorted["effect_size"], color=colors_miss, edgecolor="white", height=0.6)
+ax.barh(list(y), miss6_sorted["effect_size"], color=colors_miss,
+        edgecolor=FIGURE_INK, height=0.6)
 ax.set_yticks(list(y))
 ax.set_yticklabels(miss6_sorted["variable"], fontsize=9)
 ax.set_xlabel("Effect Size (Cohen's $d$ / Cramér's $V$)", fontsize=11)
 ax.set_title("FVC Missingness: Effect Sizes (6m cohort)", fontsize=12, fontweight="bold")
-ax.axvline(x=0.2, ls="--", color="grey", alpha=0.5, lw=0.8, label="Small effect (0.2)")
+ax.axvline(x=0.2, ls="--", color=FIGURE_INK, alpha=0.7, lw=0.8,
+           label="Small effect (0.2)")
 ax.legend(handles=[
-    Patch(color="#d62728", label="Significant ($p < 0.05$)"),
-    Patch(color="#2ca02c", label="Not significant"),
-    plt.Line2D([0],[0], ls="--", color="grey", label="Small effect boundary"),
+    Patch(color=ABOVE_THRESHOLD, label="Significant ($p < 0.05$)"),
+    Patch(color=BELOW_THRESHOLD, label="Not significant"),
+    plt.Line2D([0],[0], ls="--", color=FIGURE_INK, label="Small effect boundary"),
 ], loc="lower right", fontsize=8)
+style_axis(ax, "x")
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR, "step5v2_fvc_missingness_forest.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR, "step5v2_fvc_missingness_forest.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR, "step5v2_fvc_missingness_forest.pdf"), dpi=300, bbox_inches="tight")
+fig.savefig(os.path.join(FIG_DIR, "step5v2_fvc_missingness_forest.png"), dpi=300, bbox_inches="tight")
 plt.close(fig)
 print("  [OK] FVC missingness forest plot saved")
 
@@ -291,12 +328,18 @@ print("  [OK] FVC missingness forest plot saved")
 # Copy to overleaf
 # ════════════════════════════════════════════════════════════
 import shutil
-for f in os.listdir(FIG_DIR):
-    if f.endswith(".png"):
-        shutil.copy2(os.path.join(FIG_DIR, f), os.path.join(OVERLEAF_FIG, f))
-for f in os.listdir(TAB_DIR):
-    if f.endswith(".tex"):
-        shutil.copy2(os.path.join(TAB_DIR, f), os.path.join(OVERLEAF_TAB, f))
+for f in [
+    "step5v2_prauc_barchart.png",
+    "step5v2_balanced_vs_unbalanced.png",
+    "step5v2_metric_heatmap.png",
+    "step5v2_fvc_missingness_forest.png",
+]:
+    shutil.copy2(os.path.join(FIG_DIR, f), os.path.join(OVERLEAF_FIG, f))
+for f in [
+    "step5v2_tuning_comparison.tex",
+    "step5v2_fvc_missingness.tex",
+]:
+    shutil.copy2(os.path.join(TAB_DIR, f), os.path.join(OVERLEAF_TAB, f))
 print("  → Copied figures/tables to overleaf/images/")
 
 

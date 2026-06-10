@@ -47,6 +47,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_rgba
 
 import shap
 import sklearn
@@ -59,6 +60,16 @@ from sklearn.metrics import average_precision_score, confusion_matrix, roc_auc_s
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from xgboost import XGBClassifier
+from study1_style import (
+    FIGURE_INK,
+    RISK_DECREASE,
+    RISK_INCREASE,
+    SHAP_CMAP,
+    apply_study1_style,
+    style_axis,
+)
+
+apply_study1_style()
 
 
 # ─────────────────────────────────────────────────────────────
@@ -140,8 +151,8 @@ def ensure_dirs():
 def save_fig(fig, name):
     """Save figure to outputs + overleaf, both PDF and PNG."""
     for d in (OUT_FIG, OVERLEAF_FIG):
-        fig.savefig(os.path.join(d, f"{name}.pdf"), dpi=200, bbox_inches="tight")
-        fig.savefig(os.path.join(d, f"{name}.png"), dpi=200, bbox_inches="tight")
+        fig.savefig(os.path.join(d, f"{name}.pdf"), dpi=300, bbox_inches="tight")
+        fig.savefig(os.path.join(d, f"{name}.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"  [OK] {name}")
 
@@ -149,6 +160,26 @@ def save_fig(fig, name):
 def readable(name):
     """Return a readable label for a feature name."""
     return FEATURE_LABELS.get(name, name)
+
+
+def recolour_directional_bars(fig):
+    """Apply Study I directional colours to horizontal explanation bars."""
+    for ax in fig.axes:
+        for patch in ax.patches:
+            face = to_rgba(patch.get_facecolor())
+            if hasattr(patch, "get_width"):
+                colour = RISK_INCREASE if patch.get_width() >= 0 else RISK_DECREASE
+            else:
+                colour = RISK_INCREASE if face[0] > face[2] else RISK_DECREASE
+            patch.set_facecolor(colour)
+            patch.set_edgecolor(FIGURE_INK)
+        for text in ax.texts:
+            colour = to_rgba(text.get_color())
+            if max(colour[:3]) - min(colour[:3]) > 0.35:
+                text.set_color(
+                    RISK_INCREASE if colour[0] > colour[2] else RISK_DECREASE
+                )
+        style_axis(ax, "x")
 
 
 def load_data():
@@ -318,24 +349,32 @@ def run_shap(pipe, X_test, feat_cols, case_indices):
     bars = ax.barh(
         [readable(f) for f in top_n["feature"].values[::-1]],
         top_n["mean_abs_shap"].values[::-1],
-        color="#2b7bba", edgecolor="white", height=0.65,
+        color=FIGURE_INK, edgecolor=FIGURE_INK, height=0.65,
     )
     # annotate values
     for bar, val in zip(bars, top_n["mean_abs_shap"].values[::-1]):
         ax.text(bar.get_width() + 0.001, bar.get_y() + bar.get_height() / 2,
-                f"{val:.4f}", va="center", fontsize=8, color="black")
+                f"{val:.4f}", va="center", fontsize=8, color=FIGURE_INK)
     ax.set_xlabel("Mean |SHAP value|", fontsize=11)
     ax.set_title("Global Feature Importance — XGBoost (6-month, TEST set)",
                  fontsize=12, fontweight="bold")
+    style_axis(ax, "x")
     fig.tight_layout()
     save_fig(fig, "shap_bar_global")
 
     # ── Global: beeswarm ──
     fig, ax = plt.subplots(figsize=(10, 7))
-    shap.plots.beeswarm(shap_values, max_display=N_TOP_FEATURES, show=False)
+    shap.plots.beeswarm(
+        shap_values,
+        max_display=N_TOP_FEATURES,
+        color=SHAP_CMAP,
+        show=False,
+    )
     plt.title("SHAP Beeswarm — XGBoost (6-month, TEST set)",
               fontsize=12, fontweight="bold")
     fig = plt.gcf()
+    for axis in fig.axes:
+        style_axis(axis, "x")
     fig.tight_layout()
     save_fig(fig, "shap_beeswarm")
 
@@ -346,6 +385,7 @@ def run_shap(pipe, X_test, feat_cols, case_indices):
         plt.title(f"SHAP Waterfall — {label} (patient index {idx})",
                   fontsize=11, fontweight="bold")
         fig = plt.gcf()
+        recolour_directional_bars(fig)
         fig.tight_layout()
         save_fig(fig, f"shap_waterfall_{label}")
 
@@ -413,6 +453,7 @@ def run_lime(pipe, X_test, X_dev, case_indices, transformed_names):
 
         # Generate LIME figure
         fig = explanation.as_pyplot_figure(label=1)
+        recolour_directional_bars(fig)
         fig.set_size_inches(9, 6)
         fig.suptitle(f"LIME Explanation — {label} (patient index {idx})",
                      fontsize=11, fontweight="bold", y=1.02)
@@ -494,29 +535,31 @@ def run_lr_coefficients(pipe_lr):
     top = top.sort_values("abs_coefficient", ascending=True)
 
     fig, ax = plt.subplots(figsize=(8, 6))
-    colors = ["#d9534f" if c > 0 else "#3274a1" for c in top["coefficient"]]
+    colors = [RISK_INCREASE if c > 0 else RISK_DECREASE
+              for c in top["coefficient"]]
     bars = ax.barh(
         [readable(f) for f in top["feature"]],
         top["coefficient"],
-        color=colors, edgecolor="white", height=0.65,
+        color=colors, edgecolor=FIGURE_INK, height=0.65,
     )
     # annotate
     for bar, val in zip(bars, top["coefficient"]):
         offset = 0.01 if val >= 0 else -0.01
         ha = "left" if val >= 0 else "right"
         ax.text(val + offset, bar.get_y() + bar.get_height() / 2,
-                f"{val:+.3f}", va="center", ha=ha, fontsize=8, color="black")
-    ax.axvline(0, color="grey", lw=0.8, ls="--")
+                f"{val:+.3f}", va="center", ha=ha, fontsize=8, color=FIGURE_INK)
+    ax.axvline(0, color=FIGURE_INK, lw=0.8, ls="--")
     ax.set_xlabel("Model coefficient", fontsize=11)
     ax.set_title("Logistic Regression Coefficients — Top Features (6-month)",
                  fontsize=12, fontweight="bold")
 
     from matplotlib.patches import Patch
     ax.legend(handles=[
-        Patch(color="#d9534f", label="Increases rapid-progression risk"),
-        Patch(color="#3274a1", label="Decreases rapid-progression risk"),
-    ], loc="lower right", fontsize=9)
+        Patch(color=RISK_INCREASE, label="Increases rapid-progression risk"),
+        Patch(color=RISK_DECREASE, label="Decreases rapid-progression risk"),
+    ], loc="lower left", ncol=1, fontsize=7.5)
 
+    style_axis(ax, "x")
     fig.tight_layout()
     save_fig(fig, "lr_coefficients")
     print(f"  [OK] LR coefficients: {len(coef_df)} features")

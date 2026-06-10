@@ -55,6 +55,15 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
+from study1_style import (
+    FIGURE_INK,
+    SEQUENTIAL_CMAP,
+    apply_study1_style,
+    model_colour,
+    style_axis,
+)
+
+apply_study1_style()
 
 
 # ═════════════════════════════════════════════════════════════
@@ -298,13 +307,13 @@ def plot_fold_boxplot(fold_df: pd.DataFrame, out_path: str):
         patch_artist=True,
         widths=0.45,
         showfliers=False,
-        medianprops=dict(color="black", linewidth=1.5),
+        medianprops=dict(color=FIGURE_INK, linewidth=1.5),
     )
 
     # Cosmetics
-    cmap = plt.cm.tab10
-    for i, patch in enumerate(bp["boxes"]):
-        patch.set_facecolor(cmap(i / max(n - 1, 1)))
+    for model, patch in zip(models, bp["boxes"]):
+        patch.set_facecolor(model_colour(model.split()[0]))
+        patch.set_edgecolor(FIGURE_INK)
         patch.set_alpha(0.55)
 
     # Scatter individual dots with jitter and collect annotation texts
@@ -313,31 +322,31 @@ def plot_fold_boxplot(fold_df: pd.DataFrame, out_path: str):
     for i, (m, vals) in enumerate(zip(models, data_list)):
         x_jitter = np.random.uniform(-0.15, 0.15, size=len(vals))
         xs = (i + 1) + x_jitter
-        ax.scatter(xs, vals, s=55, zorder=5, edgecolors="black", linewidth=0.6,
-                   color=cmap(i / max(n - 1, 1)), alpha=0.9)
+        colour = model_colour(m.split()[0])
+        ax.scatter(xs, vals, s=55, zorder=5, edgecolors=FIGURE_INK, linewidth=0.6,
+                   color=colour, alpha=0.9)
         for xj, v in zip(xs, vals):
             texts.append(ax.text(xj, v, f"{v:.3f}", fontsize=7, ha="center",
                                  va="bottom", fontweight="bold"))
 
     # Auto-repel annotations to avoid overlap
     adjust_text(texts, ax=ax, force_text=(0.4, 0.6),
-                arrowprops=dict(arrowstyle="-", color="gray", lw=0.5, alpha=0.6),
+                arrowprops=dict(arrowstyle="-", color=FIGURE_INK, lw=0.5, alpha=0.6),
                 expand=(1.4, 1.8), only_move={"text": "y"})
 
     # Mean line
     for i, mu in enumerate(means):
-        ax.hlines(mu, i + 0.7, i + 1.3, color="red", linewidth=1.2,
+        ax.hlines(mu, i + 0.7, i + 1.3, color=FIGURE_INK, linewidth=1.2,
                   linestyle="--", zorder=4)
         ax.annotate(f"μ = {mu:.3f}", xy=(i + 1.3, mu),
                     xytext=(8, 0), textcoords="offset points",
-                    fontsize=7.5, color="red", fontweight="bold",
+                    fontsize=7.5, color=FIGURE_INK, fontweight="bold",
                     va="center", ha="left")
 
     ax.set_ylabel("PR-AUC (average precision)", fontsize=11)
     ax.set_title("Per-fold PR-AUC — 5-fold GroupKFold (6 m horizon, DEV set)",
                  fontsize=12, fontweight="bold")
-    ax.grid(axis="y", alpha=0.3)
-    ax.set_axisbelow(True)
+    style_axis(ax, "y")
 
     fig.tight_layout()
     fig.savefig(out_path, dpi=300, bbox_inches="tight")
@@ -360,7 +369,7 @@ def plot_pairwise_heatmap(pw_df: pd.DataFrame, labels: list[str], out_path: str)
 
     fig, ax = plt.subplots(figsize=(8, 6.5))
 
-    im = ax.imshow(p_matrix, cmap="RdYlGn", vmin=0, vmax=1, aspect="equal")
+    im = ax.imshow(p_matrix, cmap=SEQUENTIAL_CMAP, vmin=0, vmax=1, aspect="equal")
 
     ax.set_xticks(range(k))
     ax.set_yticks(range(k))
@@ -372,13 +381,13 @@ def plot_pairwise_heatmap(pw_df: pd.DataFrame, labels: list[str], out_path: str)
         for j in range(k):
             if i == j:
                 txt = "—"
-                color = "gray"
+                color = FIGURE_INK
             else:
                 p = p_matrix[i, j]
                 txt = f"{p:.4f}"
                 if p < 0.05:
                     txt += "\n*"
-                color = "white" if p < 0.3 else "black"
+                color = "white" if p > 0.65 else FIGURE_INK
             ax.text(j, i, txt, ha="center", va="center",
                     fontsize=8.5, fontweight="bold", color=color)
 
@@ -387,6 +396,7 @@ def plot_pairwise_heatmap(pw_df: pd.DataFrame, labels: list[str], out_path: str)
 
     ax.set_title("Pairwise Wilcoxon signed-rank tests\n(Bonferroni-corrected, α = 0.05)",
                  fontsize=12, fontweight="bold")
+    style_axis(ax)
 
     fig.tight_layout()
     fig.savefig(out_path, dpi=300, bbox_inches="tight")

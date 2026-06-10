@@ -21,6 +21,15 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
+from study1_style import (
+    FIGURE_INK,
+    apply_balanced_hatch,
+    apply_study1_style,
+    model_colour,
+    style_axis,
+)
+
+apply_study1_style()
 
 # ── paths ──
 ROOT    = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -53,26 +62,31 @@ print(f"Loaded 3m: {len(df3)} rows,  6m: {len(df6)} rows")
 df3s = df3.sort_values("pr_auc_mean", ascending=True).reset_index(drop=True)
 
 fig, ax = plt.subplots(figsize=(8, 5))
-colors = ["#3274a1" if m == "unbalanced" else "#e1812c" for m in df3s["mode"]]
+colors = [model_colour(model) for model in df3s["model"]]
 bars = ax.barh(df3s["label"], df3s["pr_auc_mean"], xerr=df3s["pr_auc_std"],
-               color=colors, edgecolor="white", capsize=3, height=0.7)
+               color=colors, edgecolor=FIGURE_INK, capsize=3, height=0.7)
+for bar, mode, colour in zip(bars, df3s["mode"], colors):
+    if mode == "balanced":
+        apply_balanced_hatch(bar, colour)
 
-# Annotate each bar with its numeric value
-for bar, val in zip(bars, df3s["pr_auc_mean"]):
-    ax.text(val + 0.003, bar.get_y() + bar.get_height() / 2,
+# Place each value immediately after its own error bar.
+for bar, val, err in zip(bars, df3s["pr_auc_mean"], df3s["pr_auc_std"]):
+    ax.text(val + err + 0.004, bar.get_y() + bar.get_height() / 2,
             f"{val:.3f}", va="center", ha="left", fontsize=9, fontweight="bold")
 
 ax.set_xlabel("PR-AUC (mean ± std, 5-fold GroupKFold)", fontsize=11)
 ax.set_title("Optuna-Tuned Models — 3-Month Horizon (DEV, n=1925)", fontsize=13, fontweight="bold")
 best_val = df3s["pr_auc_mean"].max()
-ax.axvline(x=best_val, ls="--", color="grey", alpha=0.5, lw=0.8)
-ax.legend(handles=[Patch(color="#3274a1", label="Unbalanced"),
-                   Patch(color="#e1812c", label="Balanced")],
-          loc="lower right", fontsize=9)
-ax.set_xlim(0.30, 0.50)
+ax.axvline(x=best_val, ls="--", color=FIGURE_INK, alpha=0.7, lw=0.8)
+ax.legend(handles=[Patch(facecolor="white", edgecolor=FIGURE_INK, label="Unbalanced"),
+                   Patch(facecolor="white", edgecolor=FIGURE_INK, hatch="//", label="Balanced")],
+          loc="lower right", fontsize=7.5, handlelength=1.6,
+          handleheight=0.8, borderpad=0.35, labelspacing=0.3)
+ax.set_xlim(0.30, 0.515)
+style_axis(ax, "x")
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_prauc_barchart.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_prauc_barchart.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_prauc_barchart.pdf"), dpi=300, bbox_inches="tight")
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_prauc_barchart.png"), dpi=300, bbox_inches="tight")
 plt.close(fig)
 print("  [OK] 3m PR-AUC bar chart saved")
 
@@ -85,38 +99,60 @@ df3_key = df3[["model", "mode", "pr_auc_mean", "pr_auc_std"]].copy()
 df6_key = df6[["model", "mode", "pr_auc_mean", "pr_auc_std"]].copy()
 merged = df3_key.merge(df6_key, on=["model", "mode"], suffixes=("_3m", "_6m"))
 merged["label"] = merged["model"] + "\n" + merged["mode"]
-merged = merged.sort_values("pr_auc_mean_6m", ascending=True).reset_index(drop=True)
+model_rank = (
+    merged.groupby("model")["pr_auc_mean_6m"]
+    .max()
+    .sort_values()
+    .index
+)
+merged["model_rank"] = pd.Categorical(
+    merged["model"], categories=model_rank, ordered=True
+)
+merged["mode_rank"] = merged["mode"].map({"balanced": 0, "unbalanced": 1})
+merged = (
+    merged.sort_values(["model_rank", "mode_rank"])
+    .drop(columns=["model_rank", "mode_rank"])
+    .reset_index(drop=True)
+)
 
 fig, ax = plt.subplots(figsize=(10, 6))
 y = np.arange(len(merged))
 bar_h = 0.35
 
+model_colours = [model_colour(model) for model in merged["model"]]
 bars_6m = ax.barh(y + bar_h / 2, merged["pr_auc_mean_6m"], bar_h,
-                  xerr=merged["pr_auc_std_6m"], color="#3274a1",
-                  edgecolor="white", capsize=2, label="6-month")
+                  xerr=merged["pr_auc_std_6m"], color=model_colours,
+                  edgecolor=FIGURE_INK, capsize=2, label="6-month")
 bars_3m = ax.barh(y - bar_h / 2, merged["pr_auc_mean_3m"], bar_h,
-                  xerr=merged["pr_auc_std_3m"], color="#e1812c",
-                  edgecolor="white", capsize=2, label="3-month")
+                  xerr=merged["pr_auc_std_3m"], color=model_colours,
+                  edgecolor=FIGURE_INK, capsize=2, label="3-month")
+for bar, colour in zip(bars_3m, model_colours):
+    apply_balanced_hatch(bar, colour)
 
-# Annotate bars
-for bar, val in zip(bars_6m, merged["pr_auc_mean_6m"]):
-    ax.text(val + 0.002, bar.get_y() + bar.get_height() / 2,
+# Place each value immediately after its own error bar.
+for bar, val, err in zip(
+    bars_6m, merged["pr_auc_mean_6m"], merged["pr_auc_std_6m"]
+):
+    ax.text(val + err + 0.004, bar.get_y() + bar.get_height() / 2,
             f"{val:.3f}", va="center", ha="left", fontsize=8, fontweight="bold",
-            color="#3274a1")
-for bar, val in zip(bars_3m, merged["pr_auc_mean_3m"]):
-    ax.text(val + 0.002, bar.get_y() + bar.get_height() / 2,
+            color=FIGURE_INK)
+for bar, val, err in zip(
+    bars_3m, merged["pr_auc_mean_3m"], merged["pr_auc_std_3m"]
+):
+    ax.text(val + err + 0.004, bar.get_y() + bar.get_height() / 2,
             f"{val:.3f}", va="center", ha="left", fontsize=8, fontweight="bold",
-            color="#e1812c")
+            color=FIGURE_INK)
 
 ax.set_yticks(y)
 ax.set_yticklabels(merged["label"], fontsize=9)
 ax.set_xlabel("PR-AUC (mean ± std)", fontsize=11)
 ax.set_title("PR-AUC Comparison: 3-Month vs 6-Month Horizons (DEV)", fontsize=13, fontweight="bold")
-ax.legend(loc="lower right", fontsize=10)
-ax.set_xlim(0.30, 0.50)
+ax.legend(loc="upper right", bbox_to_anchor=(1.0, -0.08), ncol=2, fontsize=10)
+ax.set_xlim(0.30, 0.515)
+style_axis(ax, "x")
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_prauc.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_prauc.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_prauc.pdf"), dpi=300, bbox_inches="tight")
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_prauc.png"), dpi=300, bbox_inches="tight")
 plt.close(fig)
 print("  [OK] 3m vs 6m grouped bar chart saved")
 
@@ -128,44 +164,49 @@ fig, ax = plt.subplots(figsize=(7, 7))
 
 # Diagonal reference line
 lims = [0.38, 0.45]
-ax.plot(lims, lims, "--", color="grey", alpha=0.5, lw=1, label="y = x (parity)")
+ax.plot(lims, lims, "--", color=FIGURE_INK, alpha=0.7, lw=1, label="y = x (parity)")
 
-# Color by mode
+label_offsets = {
+    ("LogisticRegression", "unbalanced"): (-72, -32),
+    ("LogisticRegression", "balanced"): (12, -34),
+    ("LightGBM", "unbalanced"): (-82, 14),
+    ("LightGBM", "balanced"): (0, 34),
+    ("RandomForest", "unbalanced"): (12, -36),
+    ("RandomForest", "balanced"): (-82, -34),
+    ("XGBoost", "unbalanced"): (12, 12),
+    ("XGBoost", "balanced"): (12, 20),
+}
+
 for _, row in merged.iterrows():
-    c = "#3274a1" if row["mode"] == "unbalanced" else "#e1812c"
+    c = model_colour(row["model"])
+    marker = "o" if row["mode"] == "unbalanced" else "s"
     ax.scatter(row["pr_auc_mean_6m"], row["pr_auc_mean_3m"], c=c,
-               s=100, edgecolors="black", linewidths=0.5, zorder=5)
-    # Label with model name
-    offset_x, offset_y = 0.002, 0.002
-    ax.annotate(row["model"], (row["pr_auc_mean_6m"], row["pr_auc_mean_3m"]),
-                textcoords="offset points", xytext=(6, 4), fontsize=7.5,
-                color=c, fontweight="bold")
-
-# Delta annotations: show delta for each point
-for _, row in merged.iterrows():
+               marker=marker, s=100, edgecolors=FIGURE_INK, linewidths=0.7, zorder=5)
     delta = row["pr_auc_mean_3m"] - row["pr_auc_mean_6m"]
-    side = "above" if delta >= 0 else "below"
-    sign = "+" if delta >= 0 else ""
-    ax.annotate(f"{sign}{delta:.3f}",
+    ax.annotate(
+                f"{row['model']}\nΔ={delta:+.3f}",
                 (row["pr_auc_mean_6m"], row["pr_auc_mean_3m"]),
                 textcoords="offset points",
-                xytext=(6, -12 if side == "below" else -12),
-                fontsize=6.5, color="dimgrey", style="italic")
+                xytext=label_offsets[(row["model"], row["mode"])],
+                fontsize=7.2, color=c, fontweight="bold",
+                linespacing=1.15,
+                arrowprops=dict(arrowstyle="-", color=c, lw=0.6, alpha=0.8))
 
 ax.set_xlabel("PR-AUC — 6-month (DEV)", fontsize=11)
 ax.set_ylabel("PR-AUC — 3-month (DEV)", fontsize=11)
 ax.set_title("3m vs 6m PR-AUC per Model (Optuna-Tuned)", fontsize=13, fontweight="bold")
 ax.legend(handles=[
-    plt.Line2D([0], [0], marker="o", color="#3274a1", ls="", markersize=8, label="Unbalanced"),
-    plt.Line2D([0], [0], marker="o", color="#e1812c", ls="", markersize=8, label="Balanced"),
-    plt.Line2D([0], [0], ls="--", color="grey", label="Parity line"),
+    plt.Line2D([0], [0], marker="o", color=FIGURE_INK, ls="", markersize=8, label="Unbalanced"),
+    plt.Line2D([0], [0], marker="s", color=FIGURE_INK, ls="", markersize=8, label="Balanced"),
+    plt.Line2D([0], [0], ls="--", color=FIGURE_INK, label="Parity line"),
 ], loc="upper left", fontsize=9)
 ax.set_xlim(lims)
 ax.set_ylim(lims)
 ax.set_aspect("equal")
+style_axis(ax)
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_scatter.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_scatter.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_scatter.pdf"), dpi=300, bbox_inches="tight")
+fig.savefig(os.path.join(FIG_DIR_3M, "step5v2_3m_vs_6m_scatter.png"), dpi=300, bbox_inches="tight")
 plt.close(fig)
 print("  [OK] 3m vs 6m scatter plot saved")
 
@@ -191,7 +232,7 @@ def fmt_bold(val, best, std=None):
 lines = [
     r"\begin{table}[ht]",
     r"\centering",
-    r"\caption{Optuna-tuned model comparison (3-month horizon, DEV set, GroupKFold $K\!=\!5$, 60 trials). "
+    r"\caption[Optuna-tuned model comparison, 3-month horizon]{Optuna-tuned model comparison (3-month horizon, DEV set, GroupKFold $K\!=\!5$, 60 trials). "
     r"Models ranked by PR-AUC. Best value per metric in \textbf{bold}.}",
     r"\label{tab:step5v2_tuning_3m}",
     r"\small",
@@ -214,7 +255,7 @@ lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
 
 tex_path = os.path.join(TAB_DIR_TUNING, "step5v2_tuning_comparison_3m.tex")
 with open(tex_path, "w", encoding="utf-8") as f:
-    f.write("\n".join(lines))
+    f.write("\n".join(lines) + "\n")
 print(f"  [OK] 3m LaTeX tuning table saved → {tex_path}")
 
 
@@ -252,7 +293,7 @@ lines2 += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
 
 tex2_path = os.path.join(TAB_DIR_COMP, "step5v2_3m_vs_6m_comparison.tex")
 with open(tex2_path, "w", encoding="utf-8") as f:
-    f.write("\n".join(lines2))
+    f.write("\n".join(lines2) + "\n")
 print(f"  [OK] 3m vs 6m LaTeX comparison table saved → {tex2_path}")
 
 
@@ -262,24 +303,28 @@ print(f"  [OK] 3m vs 6m LaTeX comparison table saved → {tex2_path}")
 df6s = df6.sort_values("pr_auc_mean", ascending=True).reset_index(drop=True)
 
 fig, ax = plt.subplots(figsize=(8, 6))
-colors = ["#3274a1" if m == "unbalanced" else "#e1812c" for m in df6s["mode"]]
+colors = [model_colour(model) for model in df6s["model"]]
 bars = ax.barh(df6s["label"], df6s["pr_auc_mean"], xerr=df6s["pr_auc_std"],
-               color=colors, edgecolor="white", capsize=3, height=0.7)
+               color=colors, edgecolor=FIGURE_INK, capsize=3, height=0.7)
+for bar, mode, colour in zip(bars, df6s["mode"], colors):
+    if mode == "balanced":
+        apply_balanced_hatch(bar, colour)
 
-for bar, val in zip(bars, df6s["pr_auc_mean"]):
-    ax.text(val + 0.002, bar.get_y() + bar.get_height() / 2,
+for bar, val, err in zip(bars, df6s["pr_auc_mean"], df6s["pr_auc_std"]):
+    ax.text(val + err + 0.004, bar.get_y() + bar.get_height() / 2,
             f"{val:.3f}", va="center", ha="left", fontsize=8, fontweight="bold")
 
 ax.set_xlabel("PR-AUC (mean ± std, 5-fold GroupKFold)", fontsize=11)
 ax.set_title("Optuna-Tuned Models — 6-Month Horizon (DEV, n=1113)", fontsize=13, fontweight="bold")
-ax.axvline(x=df6s["pr_auc_mean"].max(), ls="--", color="grey", alpha=0.5, lw=0.8)
-ax.legend(handles=[Patch(color="#3274a1", label="Unbalanced"),
-                   Patch(color="#e1812c", label="Balanced")],
-          loc="lower right", fontsize=9)
-ax.set_xlim(0.30, 0.50)
+ax.axvline(x=df6s["pr_auc_mean"].max(), ls="--", color=FIGURE_INK, alpha=0.7, lw=0.8)
+ax.legend(handles=[Patch(facecolor="white", edgecolor=FIGURE_INK, label="Unbalanced"),
+                   Patch(facecolor="white", edgecolor=FIGURE_INK, hatch="//", label="Balanced")],
+          loc="upper right", bbox_to_anchor=(1.0, -0.08), ncol=2, fontsize=9)
+ax.set_xlim(0.30, 0.515)
+style_axis(ax, "x")
 fig.tight_layout()
-fig.savefig(os.path.join(FIG_DIR_TUNING, "step5v2_prauc_barchart.pdf"), dpi=150)
-fig.savefig(os.path.join(FIG_DIR_TUNING, "step5v2_prauc_barchart.png"), dpi=150)
+fig.savefig(os.path.join(FIG_DIR_TUNING, "step5v2_prauc_barchart.pdf"), dpi=300, bbox_inches="tight")
+fig.savefig(os.path.join(FIG_DIR_TUNING, "step5v2_prauc_barchart.png"), dpi=300, bbox_inches="tight")
 plt.close(fig)
 print("  [OK] 6m PR-AUC bar chart regenerated with numeric annotations")
 
@@ -288,14 +333,18 @@ print("  [OK] 6m PR-AUC bar chart regenerated with numeric annotations")
 # Copy to overleaf
 # ════════════════════════════════════════════════════════════
 import shutil
-for d in [FIG_DIR_3M, FIG_DIR_TUNING]:
-    for f in os.listdir(d):
-        if f.endswith(".png"):
-            shutil.copy2(os.path.join(d, f), os.path.join(OVERLEAF_FIG, f))
-for d in [TAB_DIR_TUNING, TAB_DIR_COMP]:
-    for f in os.listdir(d):
-        if f.endswith(".tex"):
-            shutil.copy2(os.path.join(d, f), os.path.join(OVERLEAF_TAB, f))
+for directory, f in [
+    (FIG_DIR_3M, "step5v2_3m_prauc_barchart.png"),
+    (FIG_DIR_3M, "step5v2_3m_vs_6m_prauc.png"),
+    (FIG_DIR_3M, "step5v2_3m_vs_6m_scatter.png"),
+    (FIG_DIR_TUNING, "step5v2_prauc_barchart.png"),
+]:
+    shutil.copy2(os.path.join(directory, f), os.path.join(OVERLEAF_FIG, f))
+for directory, f in [
+    (TAB_DIR_TUNING, "step5v2_tuning_comparison_3m.tex"),
+    (TAB_DIR_COMP, "step5v2_3m_vs_6m_comparison.tex"),
+]:
+    shutil.copy2(os.path.join(directory, f), os.path.join(OVERLEAF_TAB, f))
 print("  → Copied figures/tables to overleaf/images/")
 
 

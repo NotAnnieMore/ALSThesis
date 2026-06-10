@@ -28,6 +28,15 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as path_effects
+from study1_style import (
+    FIGURE_INK,
+    apply_study1_style,
+    model_colour,
+    style_axis,
+)
+
+apply_study1_style()
 
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -177,6 +186,117 @@ def cv_evaluate(model_key, params, balanced, X, slope, groups, scale):
     return {k: (float(np.mean(v)), float(np.std(v))) for k, v in fold_results.items()}
 
 
+def plot_ablation(res_df):
+    """Plot feature-block trajectories using the Study I model palette."""
+    blocks_order = list(BLOCKS.keys())
+    model_styles = {
+        "XGB_unbalanced": ("XGB", "XGBoost (unbal.)", "o"),
+        "RF_unbalanced": ("RF", "RF (unbal.)", "s"),
+        "LGBM_balanced": ("LGBM", "LGBM (bal.)", "^"),
+        "LR_balanced": ("LR", "LR (bal.)", "D"),
+    }
+    block_labels = {
+        "A: Baseline": r"$\bf{A}$" + "\nBaseline (N=15)",
+        "B: +Vitals": r"$\bf{B}$" + "\n+Vitals (N=27)",
+        "C: +FVC": r"$\bf{C}$" + "\n+FVC (N=18)",
+        "D: +Vitals+FVC": r"$\bf{D}$" + "\n+Vitals+FVC (N=30)",
+        "E: +Treatment": r"$\bf{E}$" + "\n+Treatment (N=33)",
+        "F: Full v2": r"$\bf{F}$" + "\nAll Features (N=35)",
+    }
+    x = np.arange(len(blocks_order))
+
+    fig, ax = plt.subplots(figsize=(12, 5.5))
+    final_points = []
+
+    for model_label, (model_key, display_label, marker) in model_styles.items():
+        sub = (
+            res_df[res_df["model"] == model_label]
+            .set_index("block")
+            .reindex(blocks_order)
+        )
+        means = sub["pr_auc_mean"].to_numpy(dtype=float)
+        stds = sub["pr_auc_std"].to_numpy(dtype=float)
+        colour = model_colour(model_key)
+
+        ax.fill_between(
+            x,
+            means - stds,
+            means + stds,
+            color=colour,
+            alpha=0.12,
+            linewidth=0,
+        )
+        line, = ax.plot(
+            x,
+            means,
+            color=colour,
+            marker=marker,
+            markersize=7,
+            markeredgecolor=FIGURE_INK if model_key == "LR" else "white",
+            markeredgewidth=1.2,
+            linewidth=2.2,
+            label=display_label,
+            zorder=3,
+        )
+        if model_key == "LR":
+            line.set_path_effects([
+                path_effects.Stroke(linewidth=4.2, foreground=FIGURE_INK),
+                path_effects.Normal(),
+            ])
+        final_points.append((means[-1], colour))
+
+    label_positions = [0.438, 0.426, 0.414, 0.402]
+    for (value, colour), label_y in zip(final_points, label_positions):
+        ax.annotate(
+            f"{value:.3f}",
+            xy=(x[-1], value),
+            xytext=(x[-1] + 0.38, label_y),
+            ha="left",
+            va="center",
+            fontsize=9,
+            fontweight="bold",
+            color=colour,
+            bbox=dict(
+                boxstyle="round,pad=0.22",
+                facecolor="white",
+                edgecolor=colour,
+                linewidth=0.9,
+            ),
+            arrowprops=dict(
+                arrowstyle="-",
+                color=colour,
+                linewidth=0.8,
+                alpha=0.65,
+            ),
+        )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([block_labels[block] for block in blocks_order], fontsize=9)
+    ax.set_xlabel("Feature Block (cumulative)", fontsize=11)
+    ax.set_ylabel(r"PR-AUC (mean $\pm$ std)", fontsize=11)
+    ax.set_title(
+        "Feature Block Ablation - 6-Month Horizon (DEV, Optuna-Tuned)",
+        fontsize=13,
+        fontweight="bold",
+    )
+    ax.legend(fontsize=8.5, loc="upper right")
+    ax.set_xlim(-0.3, len(blocks_order) - 0.05)
+    ax.set_ylim(0.30, 0.52)
+    style_axis(ax, "y")
+    fig.tight_layout()
+    fig.savefig(
+        os.path.join(FIG_DIR, "step5v2_ablation_prauc.pdf"),
+        dpi=300,
+        bbox_inches="tight",
+    )
+    fig.savefig(
+        os.path.join(FIG_DIR, "step5v2_ablation_prauc.png"),
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close(fig)
+
+
 def main():
     t_global = time.time()
 
@@ -238,29 +358,7 @@ def main():
     # ── Figure: grouped bar chart ──
     blocks_order = list(BLOCKS.keys())
     model_labels = [m[0] for m in MODELS]
-    n_models = len(model_labels)
-    n_blocks = len(blocks_order)
-    x = np.arange(n_blocks)
-    width = 0.8 / n_models
-
-    colors = ["#3274a1", "#e1812c", "#3a923a", "#c03d3e"]
-    fig, ax = plt.subplots(figsize=(12, 5))
-
-    for i, ml in enumerate(model_labels):
-        sub = res_df[res_df["model"] == ml].set_index("block").reindex(blocks_order)
-        ax.bar(x + i * width, sub["pr_auc_mean"], width, yerr=sub["pr_auc_std"],
-               label=ml, color=colors[i], capsize=2, edgecolor="white")
-
-    ax.set_xticks(x + width * (n_models - 1) / 2)
-    ax.set_xticklabels([b.split(":")[0] for b in blocks_order], fontsize=10)
-    ax.set_ylabel("PR-AUC (mean ± std)", fontsize=11)
-    ax.set_title("Feature Block Ablation — 6m Horizon (DEV, Optuna-tuned params)", fontsize=13, fontweight="bold")
-    ax.legend(fontsize=9, loc="lower right")
-    ax.set_ylim(0.30, 0.50)
-    fig.tight_layout()
-    fig.savefig(os.path.join(FIG_DIR, "step5v2_ablation_prauc.pdf"), dpi=150)
-    fig.savefig(os.path.join(FIG_DIR, "step5v2_ablation_prauc.png"), dpi=150)
-    plt.close(fig)
+    plot_ablation(res_df)
 
     # ── LaTeX table ──
     lines = []
@@ -297,12 +395,14 @@ def main():
 
     # Copy to overleaf
     import shutil
-    for fl in os.listdir(FIG_DIR):
-        if fl.endswith(".png"):
-            shutil.copy2(os.path.join(FIG_DIR, fl), os.path.join(OVERLEAF_FIG, fl))
-    for fl in os.listdir(TAB_DIR):
-        if fl.endswith(".tex"):
-            shutil.copy2(os.path.join(TAB_DIR, fl), os.path.join(OVERLEAF_TAB, fl))
+    shutil.copy2(
+        os.path.join(FIG_DIR, "step5v2_ablation_prauc.png"),
+        os.path.join(OVERLEAF_FIG, "step5v2_ablation_prauc.png"),
+    )
+    shutil.copy2(
+        os.path.join(TAB_DIR, "step5v2_ablation.tex"),
+        os.path.join(OVERLEAF_TAB, "step5v2_ablation.tex"),
+    )
     print("  → Copied figures/tables to overleaf/images/")
 
     elapsed_total = time.time() - t_global
