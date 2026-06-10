@@ -675,7 +675,7 @@ The effects of age, respiratory rate, and the remaining variables are less unifo
 To illustrate how the model reasons about individual patients, we select one representative subject from each confusion-matrix quadrant, choosing the patient closest to the median predicted probability within that quadrant.
 Table~\ref{tab:case_study_profiles} summarises the clinical profiles of the four selected patients.
 
-\begin{table}[ht!]
+\begin{table}[H]
 \centering
 \caption[Clinical profiles of four case-study subjects]{Clinical profiles of the four case-study subjects selected from each confusion-matrix quadrant.}
 \label{tab:case_study_profiles}
@@ -698,20 +698,20 @@ Figure~\ref{fig:shap_wf_tp} shows the SHAP waterfall for this correctly identifi
 The high ALSFRS-R score (43) shifts the prediction towards the slow class.
 This is offset by respiratory rate, the imputed FVC value, temperature, and several smaller contributions, leaving the predicted probability above the operating threshold.
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.72\linewidth]{images/figures/shap_waterfall_TP.pdf}
+  \includegraphics[width=0.63\linewidth]{images/figures/shap_waterfall_TP.pdf}
   \caption[SHAP waterfall: true positive case (Subject 672752)]{SHAP waterfall plot for the TP case study (Subject~672752). Respiratory rate and several smaller contributions offset the effect of a high baseline ALSFRS-R score.}
   \label{fig:shap_wf_tp}
-\end{figure} \hfill \break
+\end{figure} \break
 
 \noindent\textbf{False Positive (Subject~491257).}
 This participant was classified as rapid despite the strong slow-class contribution associated with age 28 (Figure~\ref{fig:shap_wf_fp}).
 BMI, ALSFRS-R, the imputed FVC value, and respiratory rate collectively shift the prediction in the opposite direction and place it above the threshold.
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.72\linewidth]{images/figures/shap_waterfall_FP.pdf}
+  \includegraphics[width=0.62\linewidth]{images/figures/shap_waterfall_FP.pdf}
   \caption[SHAP waterfall: false positive case (Subject 491257)]{SHAP waterfall plot for the FP case study (Subject~491257). Several moderate contributions outweigh the slow-class contribution associated with younger age.}
   \label{fig:shap_wf_fp}
 \end{figure}
@@ -732,7 +732,7 @@ The case illustrates that the baseline profile can appear insufficiently suggest
 For this correctly classified slow progressor (Figure~\ref{fig:shap_wf_tn}), high ALSFRS-R (45), age 39, and pulse 60 provide the largest contributions towards the slow class.
 These effects outweigh the positive contributions from BMI, the imputed FVC value, and temperature.
 
-\begin{figure}[ht!]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.62\linewidth]{images/figures/shap_waterfall_TN.pdf}
   \caption[SHAP waterfall: true negative case (Subject 631435)]{SHAP waterfall plot for the TN case study (Subject~631435). Baseline function, age, and pulse provide the largest contributions towards the slow class.}
