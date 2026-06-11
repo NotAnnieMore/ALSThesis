@@ -240,7 +240,7 @@ The 15 most frequently recorded medications are then identified from \texttt{PRO
 
 Neither study arm nor documented riluzole use is significantly associated with the descriptive rapid-progression label at $\alpha=0.05$. Their continuous slope distributions also overlap. Medication count and individual medication rates show variation, but these comparisons are unadjusted and were not designed to identify pharmacological effects.
 
-The three treatment features are retained as candidate predictors of patient and trial heterogeneity. Their incremental predictive contribution is assessed through ablation rather than inferred from this EDA, and subsequent coefficients or \gls{SHAP} values are interpreted as model associations rather than causal effects.
+The three treatment features are retained as candidate predictors of patient and trial heterogeneity. Their incremental predictive contribution is assessed through ablation rather than inferred from this \gls{EDA}, and subsequent coefficients or \gls{SHAP} values are interpreted as model associations rather than causal effects.
 
 
 % ============================================================
@@ -474,7 +474,7 @@ Unbalanced XGBoost remains the selected configuration because it has the highest
 \label{sec:results_threshold_xgb}
 % ============================================================
 
-The default threshold of $t\!=\!0.50$ produces very few positive predictions for the selected unbalanced XGBoost model. Alternative thresholds are therefore compared using out-of-fold (OOF) predictions from five-fold GroupKFold on the DEV set. Labels for this analysis use the fixed DEV 30th-percentile slope cutoff ($-1.243$ points per 30 days).
+The default threshold of $t\!=\!0.50$ produces very few positive predictions for the selected unbalanced XGBoost model. Alternative thresholds are therefore compared using out-of-fold (\gls{OOF}) predictions from five-fold GroupKFold on the DEV set. Labels for this analysis use the fixed DEV 30th-percentile slope cutoff ($-1.243$ points per 30 days).
 
 Three optimality criteria are evaluated:
 \begin{enumerate}

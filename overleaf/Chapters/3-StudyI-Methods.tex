@@ -376,7 +376,7 @@ The preprocessing transformer and classifier are combined in a \texttt{scikit-le
 
 \subsection{Software and Computational Environment}
 \label{sec:methods_environment}
-The analysis was implemented in Python~3.12.10 on Windows~11. The main library versions were \texttt{scikit-learn}~1.8.0, \texttt{XGBoost}~3.2.0, \texttt{LightGBM}~4.6.0, \texttt{Optuna}~4.7.0, \texttt{SHAP}~0.50.0, \texttt{LIME}~0.2.0.1, \texttt{pandas}~3.0.1, \texttt{NumPy}~2.4.2, and \texttt{joblib}~1.5.3. The training scripts used CPU implementations and did not request \gls{GPU} acceleration.
+The analysis was implemented in Python~3.12.10 on Windows~11. The main library versions were \texttt{scikit-learn}~1.8.0, \texttt{XGBoost}~3.2.0, \texttt{LightGBM}~4.6.0, \texttt{Optuna}~4.7.0, \texttt{SHAP}~0.50.0, \texttt{LIME}~0.2.0.1, \texttt{pandas}~3.0.1, \texttt{NumPy}~2.4.2, and \texttt{joblib}~1.5.3. The training scripts used \gls{CPU} implementations and did not request \gls{GPU} acceleration.
 For the six-month horizon, the 13 model and class-weight configurations required 3,900 cross-validation fits during the 60-trial Optuna searches. The recorded optimisation time totalled approximately 34 minutes, with individual configurations ranging from 8 to 768 seconds. These timings describe the workstation used for this analysis and are not intended as hardware-independent benchmarks.
 
 \section{Handling Class Imbalance}
@@ -418,7 +418,7 @@ Recall ($R$) & $\dfrac{\text{TP}}{\text{TP} + \text{FN}}$ & Rapid progressors id
 $F_1$ & $\dfrac{2PR}{P + R}$ & Equal precision--recall weighting \\
 $F_2$ & $\dfrac{5PR}{4P + R}$ & Greater weight on recall \\
 Average precision (PR-AUC) & $\displaystyle\sum_{n}(R_n - R_{n-1})P_n$ & Primary optimisation metric \\
-\gls{ROC-AUC} & Area under the TPR--FPR curve & Secondary ranking metric \\
+\gls{ROC-AUC} & Area under the \gls{TPR}--\gls{FPR} curve & Secondary ranking metric \\
 Brier score & $\dfrac{1}{N}\displaystyle\sum_{i=1}^{N}(p_i-y_i)^2$ & Probabilistic accuracy; lower is better \\
 \bottomrule
 \end{tabular}
@@ -670,7 +670,7 @@ As a post-evaluation software demonstrator, we developed a \textit{patient risk 
 The report uses the model refitted on the complete eligible cohort after held-out evaluation (Section~\ref{sec:methods_final_model}); it must therefore not be used to estimate predictive performance.
 The tool loads the pipeline and its associated metadata (feature list, slope cutoff, and decision threshold) and accepts data from three sources:
 \begin{enumerate}
-  \item \textbf{Dataset lookup:} a subject ID from the processed cohort;
+\item \textbf{Dataset lookup:} a subject \gls{ID} from the processed cohort;
   \item \textbf{\gls{JSON} file:} a key--value file with baseline feature values, allowing external or synthetic patients;
   \item \textbf{Demo mode:} a randomly selected record from the processed cohort.
 \end{enumerate}

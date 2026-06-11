@@ -53,7 +53,7 @@ The study has four objectives:
 \subsection{PRO-ACT Source and Cohort Construction}
 \label{subsec:s2_proact}
 
-The general structure of the PRO-ACT database~\cite{PROACT} was described in Section~\ref{subsec:methods_proact}. The public extract used here contains 16 source tables. Its demographic table contains 12,504 unique patient identifiers, of which 9,483 have usable age and sex records and form the patient-level starting set for Study~II. The remaining variables were drawn from disease history, ALSFRS-R, forced vital capacity (FVC), vital signs, riluzole, and death records.
+The general structure of the PRO-ACT database~\cite{PROACT} was described in Section~\ref{sec:methods_proact_sources}. The public extract used here contains 16 source tables. Its demographic table contains 12,504 unique patient identifiers, of which 9,483 have usable age and sex records and form the patient-level starting set for Study~II. The remaining variables were drawn from disease history, ALSFRS-R, forced vital capacity (FVC), vital signs, riluzole, and death records.
 
 Following the feature engineering protocol of Papaiz et al.~\cite{Papaiz2024}, repeated measurements were reduced to values at or near diagnosis, except where longitudinal records were required to estimate functional decline. This produced 23 categorical and ordinal predictors.
 
@@ -132,7 +132,7 @@ Unlike the mainly continuous or mixed-type variables used in Study~I, this repre
 \label{sec:s2_split}
 % ============================================================
 
-The 1,502 patients were divided by stratified random sampling into an 80\% training partition ($n = 1{,}201$; 139 Short Survivors and 1,062 Standard Survival patients) and a 20\% test partition ($n = 301$; 35 and 266, respectively). A fixed random seed of 42 was used. Only the training partition was available during hyperparameter optimisation and model selection; the test partition was reserved for the final assessment.
+The 1,502 patients were divided by stratified random sampling into an 80\% training partition ($n = 1{,}201$; 139 Short Survivors and 1,062 Standard Survival patients) and a 20\% test partition ($n = 301$; 35 and 266, respectively). A fixed random seed of 42 was used. After partitioning, only the training data were used for hyperparameter optimisation, model selection, and threshold selection. As noted in Section~\ref{sec:s2r_limitations}, however, MinMax scaling had already been fitted to the complete cohort before this split.
 
 % ============================================================
 \section{Experimental Design}
@@ -144,16 +144,16 @@ Figure~\ref{fig:s2_workflow} provides an overview of the complete experimental p
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=\linewidth]{images/figures/experimental_pipeline.png}
-  \caption[Study II experimental pipeline overview]{Overview of the Study~II experimental pipeline. The dashed border delimits the cross-validation loop, applied exclusively to the training partition. The test set remained sealed until all model selection and hyperparameter optimisation had been completed.}
+  \caption[Study II experimental pipeline overview]{Overview of the Study~II experimental pipeline. The dashed border delimits the cross-validation loop, applied exclusively to the training partition. Following the split, test outcomes and predictions were not used during hyperparameter optimisation, model selection, or threshold selection; the earlier cohort-level scaling step is discussed as a limitation in Section~\ref{sec:s2r_limitations}.}
   \label{fig:s2_workflow}
 \end{figure}
 
 \subsection{Classifiers and Imbalance Strategies}
 \label{subsec:s2_classifiers}
 
-Seven classifiers were evaluated: K-Nearest Neighbours (\gls{KNN}), Gaussian Naïve Bayes, Decision Tree, Random Forest, Support Vector Machine (\gls{SVM}), Multi-Layer Perceptron (MLP), and LightGBM~\cite{ke2017lightgbm}. The first six match the algorithm families considered by Papaiz et al.~\cite{Papaiz2024}; LightGBM was added as a gradient-boosted tree model.
+Seven classifiers were evaluated: K-Nearest Neighbours (\gls{KNN}), Gaussian Naïve Bayes, Decision Tree, Random Forest, Support Vector Machine (\gls{SVM}), Multi-Layer Perceptron (\gls{MLP}), and LightGBM~\cite{ke2017lightgbm}. The first six match the algorithm families considered by Papaiz et al.~\cite{Papaiz2024}; LightGBM was added as a gradient-boosted tree model.
 
-Each classifier was paired with ten imbalance-handling conditions. These comprised an unmodified baseline; four over-sampling methods, Random Oversampling (ROS), SMOTE~\cite{chawla2002smote}, Borderline-SMOTE, and ADASYN; three under-sampling or cleaning methods, Random Undersampling (RUS), NearMiss, and TomekLinks; and two hybrid methods, SMOTETomek and SMOTEENN. This produced 70 classifier--strategy combinations.
+Each classifier was paired with ten imbalance-handling conditions. These comprised an unmodified baseline; four over-sampling methods, Random Oversampling (\gls{ROS}), \gls{SMOTE}~\cite{chawla2002smote}, Borderline-SMOTE, and \gls{ADASYN}; three under-sampling or cleaning methods, Random Undersampling (\gls{RUS}), NearMiss, and TomekLinks; and two hybrid methods, \gls{SMOTETomek} and \gls{SMOTEENN}. This produced 70 classifier--strategy combinations.
 
 Resampling was performed separately within each cross-validation iteration. The sampler was fitted only to the training fold, and the resulting data were then used to fit the classifier. Neither the validation fold nor the held-out test partition was resampled. Their class distributions therefore remained representative of the final cohort.
 
@@ -198,7 +198,7 @@ Global importance was summarised by the mean absolute SHAP value and by beeswarm
 \label{sec:s2_metrics}
 % ============================================================
 
-ROC-AUC was the optimisation and ranking metric during model selection. Held-out performance was then described using ROC-AUC, balanced accuracy, sensitivity, specificity, and the geometric mean,
+ROC-AUC was the optimisation and ranking metric during model selection. Held-out performance was then described using ROC-AUC, balanced accuracy, sensitivity, specificity, and the geometric mean (\gls{G-Mean}),
 \[
   \text{G-Mean}=\sqrt{\text{Sensitivity}\times\text{Specificity}}.
 \]

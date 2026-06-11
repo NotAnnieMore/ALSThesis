@@ -13,7 +13,7 @@ The train/test partition yields 1,201 training patients (139 Short Survivors, 1,
 
 This imbalance ratio of 7.6:1 is substantially more severe than the 2.3:1 ratio of Study~I.
 A classifier that labels all patients as Standard Survival achieves 88.4\% accuracy while detecting zero Short Survivors.
-Accuracy is therefore uninformative in isolation. ROC-AUC avoids dependence on a single decision threshold by evaluating ranking performance, but it must still be considered alongside sensitivity, specificity, and precision--recall measures when selecting a clinically meaningful operating point.
+Accuracy is therefore uninformative in isolation. ROC-AUC avoids dependence on a single decision threshold by evaluating ranking performance, but it must still be considered alongside sensitivity, specificity, and precision--recall measures when selecting an operating point.
 
 % ============================================================
 \section{Cross-Validation Performance}
@@ -21,7 +21,7 @@ Accuracy is therefore uninformative in isolation. ROC-AUC avoids dependence on a
 % ============================================================
 
 Table~\ref{tab:s2_cv} reports the configuration selected for each classifier. Selection was based on the highest mean ROC-AUC among the ten imbalance-handling conditions, with each value estimated from the 15 validation folds produced by five-fold cross-validation repeated three times.
-
+\clearpage
 \begin{table}[ht!]
   \centering
   \caption[Selected cross-validation configuration per classifier (Study II)]{Selected configuration for each classifier after Optuna optimisation of all 70 classifier--imbalance combinations. ROC-AUC is reported as mean $\pm$ standard deviation across the 15 validation folds. Sensitivity is the recall of Short Survivors, whereas specificity is the recall of Standard Survival patients. G-Mean $= \sqrt{\text{Sensitivity} \times \text{Specificity}}$.}
@@ -57,7 +57,7 @@ This distinction is central to the interpretation of Study~II. The selected conf
 
 After model selection was finalised on the training set, each classifier was retrained on the full training partition and evaluated on the sealed test set (35 Short Survivors, 266 Standard Survival patients).
 Results appear in Table~\ref{tab:s2_test}.
-
+\clearpage
 \begin{table}[ht!]
   \centering
   \caption[Held-out test performance with 95\% bootstrap CI]{Held-out test performance for each classifier under its selected cross-validation configuration. Each cell shows the point estimate with the 95\% percentile bootstrap interval in parentheses (2,000 patient-level resamples). Bold indicates the highest point estimate for each metric. The test set contains 35 Short Survivors, so one additional true positive changes sensitivity by 2.86 percentage points.}
@@ -65,7 +65,7 @@ Results appear in Table~\ref{tab:s2_test}.
   \resizebox{\linewidth}{!}{%
   \begin{tabular}{llccccc}
     \toprule
-    \textbf{Classifier} & \textbf{Technique} & \textbf{AUC}
+    \textbf{Classifier} & \textbf{Technique} & \textbf{ROC-AUC}
       & \textbf{Bal.\ Acc.} & \textbf{Sensitivity} & \textbf{Specificity}
       & \textbf{G-Mean} \\
     \midrule
@@ -127,8 +127,8 @@ LightGBM+ROS achieved the highest test ROC-AUC (0.923), balanced accuracy (0.844
 
 The remaining classifiers illustrate why the ranking metric cannot be read as a complete account of test performance. Random Forest and MLP obtained ROC-AUC values of 0.919 and 0.918, respectively, but identified only 9 and 1 Short Survivors at the default threshold. KNN, by contrast, had a lower ROC-AUC of 0.886 but detected 28 Short Survivors and achieved a balanced accuracy of 0.812. Model preference therefore depends on the intended error trade-off rather than on ROC-AUC alone.
 
-Figures~\ref{fig:s2_cvtest} and~\ref{fig:s2_decoupling} show the AUC comparison across all seven classifiers.
-
+Figures~\ref{fig:s2_cvtest} and~\ref{fig:s2_decoupling} compare cross-validation ROC-AUC with test ROC-AUC and test sensitivity across the seven selected configurations.
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step6_cv_vs_test.png}
@@ -160,11 +160,11 @@ The precision--recall curves in Figure~\ref{fig:s2_pr} provide a second threshol
   \caption[Confusion matrices for three highlighted classifiers]{Confusion matrices on the held-out test set for the three classifiers highlighted in the text. LightGBM+ROS and SVM+SMOTEENN correctly identify the majority of Short Survivors (TP), whereas MLP+None effectively classifies all patients as Standard Survival (FN\,$= 34$).}
   \label{fig:s2_cm}
 \end{figure}
-
+\clearpage
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.95\linewidth]{images/figures/fig_pr_curves.png}
-  \caption[Precision--Recall curves for three classifiers (Study II)]{Precision--recall curves on the held-out test set for the three highlighted classifiers (LightGBM+ROS: AP 0.704; MLP: AP 0.669; SVM+SMOTEENN: AP 0.595). The dashed line marks the Short Survivor prevalence in the test set (0.116), which is the expected average precision of a random ranking.}
+  \includegraphics[width=0.80\linewidth]{images/figures/fig_pr_curves.png}
+  \caption[Precision--Recall curves for three classifiers (Study II)]{Precision--recall curves on the held-out test set for the three highlighted classifiers (LightGBM+ROS: \gls{AP} 0.704; MLP: \gls{AP} 0.669; SVM+SMOTEENN: \gls{AP} 0.595). The dashed line marks the Short Survivor prevalence in the test set (0.116), which is the expected average precision of a random ranking.}
   \label{fig:s2_pr}
 \end{figure}
 
@@ -176,12 +176,12 @@ As in Study~I (Section~\ref{sec:results_threshold_xgb}), ranking performance and
 % ============================================================
 
 The AUC--sensitivity gap motivates a systematic investigation of alternative decision thresholds.
-Three thresholds were derived from out-of-fold (OOF) CV predictions for each classifier---ensuring no information from the held-out test set was used in their selection---and subsequently applied to the test set:
+Three thresholds were derived from out-of-fold (OOF) CV predictions for each classifier ensuring no information from the held-out test set was used in their selection---and subsequently applied to the test set:
 (i)~Youden's J~\cite{youden1950} (maximises sensitivity $+$ specificity $- 1$);
 (ii)~sensitivity-constrained (highest threshold achieving $\geq 0.90$ sensitivity on OOF predictions);
-and (iii)~F1-optimal (maximises minority-class F1 on OOF predictions).
+and (iii)~$F_1$-optimal (maximises minority-class $F_1$ on OOF predictions).
 Table~\ref{tab:s2_threshold} reports results for the two most instructive classifiers.
-
+\clearpage
 \begin{table}[ht!]
   \centering
   \caption[Decision threshold analysis: MLP and LightGBM]{Test-set performance for MLP and LightGBM+ROS at the default threshold and at three thresholds selected from pooled out-of-fold training predictions. The sensitivity-constrained threshold was the highest OOF value achieving sensitivity $\geq 0.90$; this constraint was not guaranteed to transfer unchanged to the held-out test set. TP/FN counts refer to the 35 Short Survivors.}
@@ -221,7 +221,7 @@ The MLP result shows that its failure at 0.50 was largely an operating-point pro
 % ============================================================
 
 Table~\ref{tab:s2_bonferroni} reports mean balanced accuracy for each classifier under single-model and BalancedBagging configurations, along with the statistical comparison.
-
+\clearpage
 \begin{table}[ht!]
   \centering
   \caption[BalancedBagging vs.\ single classifier (CV balanced accuracy)]{Cross-validation balanced accuracy under single-model and BalancedBagging configurations, with per-fold Wilcoxon signed-rank tests (Bonferroni-corrected for 7 comparisons). $^{***}p \leq 0.001$; $^{**}p \leq 0.01$; n.s.\ = not significant.}
@@ -256,7 +256,7 @@ These tests describe the consistency of the paired differences within the repeat
 % ============================================================
 
 Table~\ref{tab:s2_comparison} summarises the main methodological differences between the reference study and Study~II. The comparison is not exact: although both studies use the same survival definition and predictor set, they differ in cohort size, model-selection objective, search procedure, and implementation of the balanced ensemble.
-
+\clearpage
 \begin{table}[ht!]
   \centering
   \caption[Comparison with Papaiz et al.\ (2024)]{Methodological comparison between Papaiz et al.~\cite{Papaiz2024} and Study~II. \textsuperscript{a}The reported values correspond to different evaluation stages and are not directly comparable.}
@@ -274,7 +274,7 @@ Table~\ref{tab:s2_comparison} summarises the main methodological differences bet
     Selection objective                        & Balanced accuracy & ROC-AUC \\
     Validation design                          & 5-fold CV $\times$ 3 within the training set & 5-fold CV $\times$ 3 within the training set \\
     Final evaluation                           & 20\% validation set & 20\% held-out test set \\
-    Best ensemble Bal.\ Acc.\textsuperscript{a} & 0.88, selected neural-network ensemble on validation data & 0.832, MLP+BB in repeated CV \\
+    Best ensemble Bal.\ Acc.\textsuperscript{a} & 0.88, selected neural-network ensemble on validation data & 0.832, MLP+BalancedBagging in repeated CV \\
     Explainability (SHAP)                      & Selected neural-network model & Selected LightGBM and MLP models \\
     \bottomrule
   \end{tabular}%
@@ -293,7 +293,7 @@ The Random Forest result is not an exact replication because Papaiz et al. used 
 % ============================================================
 
 Figure~\ref{fig:s2_shap} presents the TreeSHAP analysis of LightGBM+ROS on the held-out test set. Mean absolute SHAP values describe the average magnitude of each feature's contribution, while the beeswarm plot shows whether individual feature values moved predictions towards Short or Standard Survival.
-
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step7_lightgbm_fig3_combined.png}
@@ -309,8 +309,11 @@ The overlap with Papaiz et al.~\cite{Papaiz2024} is strongest at the level of th
 
 KernelSHAP for the MLP also ranked \texttt{Diagnosis\_Delay} first, followed by Q4 handwriting, Q9 climbing stairs, Q8 walking, and Q2 salivation slopes. Agreement between the two fitted models was therefore partial rather than complete: for example, age at onset ranked fifth for LightGBM but fourteenth for MLP, while site of onset ranked sixth for MLP and twenty-first for LightGBM. The absolute SHAP magnitudes should not be compared across the two models. TreeSHAP explains the LightGBM output on its internal scale, whereas KernelSHAP approximates MLP probability contributions using 100 background centroids and 200 samples per patient.
 
+Across all 23 features, the rank correlation between the two importance lists was moderate but did not reach the conventional 0.05 significance level (Spearman's $\rho=0.389$, $p=0.066$). This is consistent with a shared emphasis on a small group of predictors rather than agreement across the full ranking.
+
 Figure~\ref{fig:s2_featbars} provides a descriptive view of the two most prominent LightGBM features. Among Short Survivors, 66.7\% had a diagnostic delay of at most eight months, compared with 28.1\% of Standard Survival patients. Rapid Q8 walking decline occurred in 47.7\% and 5.0\% of the two groups, respectively. These outcome-stratified distributions help explain why the fitted model used the features, but they are not an independent validation of the SHAP results.
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.97\linewidth]{images/figures/fig_feature_bars.png}
@@ -319,35 +322,43 @@ Figure~\ref{fig:s2_featbars} provides a descriptive view of the two most promine
 \end{figure}
 
 % ============================================================
+\section{Clinical Interpretation and Scope}
+\label{sec:s2r_clinical}
+% ============================================================
+
+The models estimate the probability of death within 24 months of symptom onset using information available at or near diagnosis. This is not equivalent to predicting survival for 24 months after diagnosis. A patient diagnosed 18 months after onset has only six months remaining before the target boundary, whereas a patient diagnosed after six months has 18. This distinction helps explain the dominant role of diagnostic delay and limits how the output should be communicated: it is a fixed onset-based risk classification, not an individual estimate of remaining survival time.
+
+Within that definition, LightGBM+ROS provided the most balanced default operating point, while SVM+SMOTEENN favoured sensitivity at the cost of more false positives. The threshold analysis showed that this trade-off can change without retraining the model. A clinical operating point would therefore have to be selected from an explicit use case, such as deciding whether a high-risk prediction triggers closer review, and would require costs to be assigned to missed Short Survivors and unnecessary alerts. The present study did not define those costs.
+
+SHAP explanations can indicate which recorded variables drove a model output, but they do not turn the classifier into a clinical decision rule. In particular, diagnostic delay and ALSFRS-R slopes partly summarise disease tempo already observed by diagnosis. Their importance may make a prediction easier to inspect, but it does not show that acting on those variables would change survival. The appropriate interpretation is therefore methodological: the models identify risk patterns in this PRO-ACT cohort and expose the consequences of imbalance and threshold choice. They are not validated for treatment selection, prognostic counselling, or deployment as a clinical decision-support system.
+
+% ============================================================
 \section{Limitations}
 \label{sec:s2r_limitations}
 % ============================================================
 
-Several limitations apply to the results of Study~II.
+The largest data limitation is the complete-case requirement. Only 1,502 of the 5,802 patients remaining after outcome and site-of-onset filtering had all 23 predictors available. FVC was missing for 62.3\% of these records and BMI for 20.0\%, with additional losses across the remaining variables. The analysed cohort may therefore differ systematically from patients with less complete trial follow-up. This selection cannot be corrected by the subsequent train/test split and limits both comparison with Papaiz et al.~\cite{Papaiz2024} and generalisation to the wider ALS population.
 
-\begin{enumerate}
-  \item \textbf{Smaller cohort.} The 1,502-patient cohort is 23.6\% smaller than Papaiz et al.'s 1,967, primarily due to FVC missingness in the publicly available PRO-ACT extract (62.3\% missing post-filters). Patients with complete FVC records may differ systematically from those without, introducing potential selection bias.
-  \item \textbf{Internal test set only.} Train and test sets are drawn from the same PRO-ACT extract. No external validation was performed. Results may not generalise to other clinical populations, different ALS registries, or healthcare systems with different referral patterns.
-  \item \textbf{Small minority-class test set.} Only 35 Short Survivors appear in the test set. One patient equals 2.86 percentage points of sensitivity, making point estimates highly sensitive to individual predictions. Bootstrap confidence intervals confirm wide uncertainty (e.g., LightGBM+ROS recall CI: [0.724,\,0.967]).
-  \item \textbf{Post-diagnosis ALSFRS-R slope risk.} Where no pre-diagnosis assessment was available, the nearest visit was used. For a subset of patients, this introduces limited post-diagnosis information into the predictor set, a constraint inherited from the reference study's design.
-  \item \textbf{Feature set inherited from the reference study.} The 23 ordinal/binary features were chosen to match Papaiz et al.\ for direct comparison, not necessarily to maximise predictive performance. Alternative or richer feature representations may yield better discrimination.
-  \item \textbf{Survival target depends on censoring assumptions.} Subjects alive at last observation with follow-up $> 24$ months are classified as Standard Survival, which may include patients who die shortly after. The 24-month threshold follows the reference study exactly.
-\end{enumerate}
+All patients came from the same PRO-ACT extract, which combines clinical-trial populations rather than a population-based registry. The held-out test set prevents direct reuse of training patients, but it does not test transport to another registry, region, recruitment setting, or period. Moreover, only 35 Short Survivors were available for final evaluation. One prediction changes sensitivity by 2.86 percentage points, and the bootstrap interval for LightGBM+ROS sensitivity spans 0.724--0.967. These bootstrap intervals are conditional on the fitted models and selected thresholds; they do not include uncertainty from repeating cohort construction, hyperparameter optimisation, or model fitting on a new sample.
+
+The fixed 24-month binary target simplifies censoring. Patients alive with less than 24 months of observed follow-up were excluded because their class was unresolved, while patients known to survive beyond 24 months were assigned to Standard Survival regardless of what occurred later. This is consistent with the replication target, but it discards information about survival beyond the boundary and may select for patients with sufficiently long recorded follow-up. A time-to-event analysis could retain censored observations and address a different, more detailed prognostic question.
+
+Temporal alignment is also imperfect. For FVC, BMI, and ALSFRS assessments, the closest available record was selected by absolute distance from diagnosis and could occur after diagnosis. The resulting predictors are therefore best described as measurements at or near diagnosis, not strictly baseline information known at the diagnosis date. This matters most if the model is interpreted as a tool intended for use at that exact clinical encounter.
+
+The feature representation was inherited to preserve comparison with the reference study. Continuous measurements were reduced to broad ordinal or binary categories, which removes within-category variation and makes the chosen cut-offs part of the model definition. The same design also fitted the MinMax scaler on the complete cohort before the train/test split. This is a preprocessing leakage because test-set feature ranges were available during scaling. In this dataset, every predictor had the same minimum and maximum in the training partition as in the complete cohort, so refitting the scaler on training data would have produced the same transformed values. The ordering should nevertheless be corrected in any future implementation.
+
+Finally, the statistical comparisons do not constitute independent confirmation. Repeated cross-validation folds overlap in their training observations, and the Wilcoxon tests treat the 15 paired fold results as the comparison units. The resulting adjusted $p$-values describe consistency within this resampling design. External validation, preferably with prospectively defined thresholds and a prespecified clinical objective, would be required before drawing conclusions about real-world performance.
 
 % ============================================================
 \section{Summary}
 \label{sec:s2r_summary}
 % ============================================================
 
-Study~II reproduced the qualitative BalancedBagging pattern reported by Papaiz et al.~\cite{Papaiz2024}: balanced accuracy improved for most classifier families, while Naïve Bayes was the exception. The performance values are not directly comparable because the studies differ in evaluation stage and ensemble implementation.
+Study~II reproduced the main qualitative BalancedBagging pattern reported by Papaiz et al.~\cite{Papaiz2024}. Balanced accuracy increased for four of the five directly comparable classifier families, with Naïve Bayes again providing the exception. Random Forest and LightGBM extend rather than reproduce the original comparison, and the reported performance values are not directly interchangeable across the two studies.
 
-Among the configurations evaluated in this study, LightGBM with Random Oversampling provided the strongest balance at the default threshold, with ROC-AUC 0.923, sensitivity 0.857, and specificity 0.831 on the held-out test set.
+Selection by mean ROC-AUC retained configurations with similar ranking performance but very different behaviour at the default threshold. On the held-out test set, LightGBM+ROS provided the strongest balance at 0.50, with ROC-AUC 0.923, sensitivity 0.857, and specificity 0.831. The MLP reached ROC-AUC 0.918 but identified only one of 35 Short Survivors. Applying the sensitivity-constrained threshold selected from OOF predictions raised its test sensitivity to 0.771 while retaining specificity of 0.883. The discrepancy was therefore largely tied to the operating point rather than to an absence of ranking signal.
 
-The most consequential finding is the AUC--sensitivity decoupling: the MLP achieved the third-highest test ROC-AUC (0.918) while detecting only 1 of 35 Short Survivors at the default threshold (sensitivity 0.029).
-Threshold adjustment changed that interpretation. The sensitivity-constrained OOF threshold increased test sensitivity to 0.771 while retaining specificity of 0.883, showing that the default probability boundary was poorly aligned with the intended minority-class detection task.
+Both SHAP analyses ranked diagnostic delay first and placed several ALSFRS-R slopes among the leading predictors. Agreement across the complete feature rankings was only moderate, and the explanations remain descriptions of fitted-model behaviour. Together with the complete-case cohort, small minority-class test sample, onset-based target, and absence of external validation, this limits any clinical interpretation.
 
-Both SHAP analyses ranked \texttt{Diagnosis\_Delay} first and placed several ALSFRS-R slopes among the leading predictors, but the detailed rankings differed between LightGBM and MLP. The shared pattern also overlaps partly with the interpretation reported in the reference study.
-
-Taken together, Study~II demonstrates that imbalance-aware learning can improve ALS survival prognosis, while also showing that high ROC-AUC can mask clinically unacceptable minority-class recall.
-These findings reinforce the dissertation's broader argument: ALS prognostic modelling must be evaluated through threshold behaviour, minority-class sensitivity, and interpretability, not ranking metrics alone.
+The main contribution of Study~II is consequently methodological. It shows why a replication claim must distinguish common findings from protocol changes, and why imbalance handling, ranking metrics, threshold selection, uncertainty, and model explanations must be examined together before performance can be interpreted.
 
