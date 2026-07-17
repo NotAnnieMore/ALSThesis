@@ -127,14 +127,7 @@ LightGBM+ROS achieved the highest test ROC-AUC (0.923), balanced accuracy (0.844
 
 The remaining classifiers illustrate why the ranking metric cannot be read as a complete account of test performance. Random Forest and MLP obtained ROC-AUC values of 0.919 and 0.918, respectively, but identified only 9 and 1 Short Survivors at the default threshold. KNN, by contrast, had a lower ROC-AUC of 0.886 but detected 28 Short Survivors and achieved a balanced accuracy of 0.812. Model preference therefore depends on the intended error trade-off rather than on ROC-AUC alone.
 
-Figures~\ref{fig:s2_cvtest} and~\ref{fig:s2_decoupling} compare cross-validation ROC-AUC with test ROC-AUC and test sensitivity across the seven selected configurations.
-\clearpage
-\begin{figure}[ht!]
-  \centering
-  \includegraphics[width=0.95\linewidth]{images/figures/step6_cv_vs_test.png}
-  \caption[CV AUC vs.\ test AUC by classifier]{Cross-validation ROC-AUC versus held-out test ROC-AUC for all seven classifiers under their selected configurations. The broadly similar values suggest that ranking performance transferred to the test set, although this comparison does not describe behaviour at the default decision threshold.}
-  \label{fig:s2_cvtest}
-\end{figure}
+Cross-validation and test ROC-AUC remain broadly similar across the seven selected configurations (Appendix~\ref{app:study2_supplementary}). This agreement concerns ranking performance and does not imply comparable behaviour at the default decision threshold. Figure~\ref{fig:s2_decoupling} makes that distinction explicit by comparing cross-validation ROC-AUC with test sensitivity.
 
 \begin{figure}[ht!]
   \centering
@@ -311,15 +304,7 @@ KernelSHAP for the MLP also ranked \texttt{Diagnosis\_Delay} first, followed by 
 
 Across all 23 features, the rank correlation between the two importance lists was moderate but did not reach the conventional 0.05 significance level (Spearman's $\rho=0.389$, $p=0.066$). This is consistent with a shared emphasis on a small group of predictors rather than agreement across the full ranking.
 
-Figure~\ref{fig:s2_featbars} provides a descriptive view of the two most prominent LightGBM features. Among Short Survivors, 66.7\% had a diagnostic delay of at most eight months, compared with 28.1\% of Standard Survival patients. Rapid Q8 walking decline occurred in 47.7\% and 5.0\% of the two groups, respectively. These outcome-stratified distributions help explain why the fitted model used the features, but they are not an independent validation of the SHAP results.
-
-\clearpage
-\begin{figure}[ht!]
-  \centering
-  \includegraphics[width=0.97\linewidth]{images/figures/fig_feature_bars.png}
-  \caption[Feature distributions by survival group]{Distribution of diagnostic-delay and Q8 walking-slope categories by survival group across the full 1,502-patient cohort. Percentages are calculated within each survival group. The figure is descriptive and uses the same cohort from which the train and test partitions were drawn.}
-  \label{fig:s2_featbars}
-\end{figure}
+The distributions of the two leading LightGBM features are consistent with these attributions. Among Short Survivors, 66.7\% had a diagnostic delay of at most eight months, compared with 28.1\% of Standard Survival patients. Rapid Q8 walking decline occurred in 47.7\% and 5.0\% of the two groups, respectively. These summaries use the same cohort as the modelling analysis and are descriptive rather than independent support for the SHAP findings; the complete figure is provided in Appendix~\ref{app:study2_feature_distributions}.
 
 % ============================================================
 \section{Clinical Interpretation and Scope}

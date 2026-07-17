@@ -317,36 +317,19 @@ FVC in litres is available for 56.3\% of subjects, percentage of normal for 54.5
 
 \subsection{FVC Missingness Analysis}
 \label{subsec:methods_fvc_missingness}
-Because FVC in litres is absent for 43.7\% of the six-month cohort, we examine whether its availability is associated with observed patient characteristics or the target slope. This analysis cannot identify the missing-data mechanism conclusively: \gls{MNAR} depends on unobserved values and cannot be ruled out through comparisons of observed variables alone. It can, however, show whether the missingness pattern is compatible with trial-level collection practices or visibly associated with functional progression.
-
-For each horizon, subjects with and without a valid baseline FVC value are compared across eight continuous variables: total \gls{ALSFRS-R} at $t_0$, age, the corresponding horizon-specific slope, creatinine, \gls{ALT}, \gls{BMI}, weight, and concomitant-medication count. Sex, study arm, and riluzole use are examined as categorical variables. Continuous distributions are compared using two-sided Mann--Whitney~$U$ tests and accompanied by absolute Cohen's~$d$ values based on the pooled standard deviation. Categorical associations are tested with Pearson's $\chi^2$ test and summarised using Cram\'er's~$V$:
-\[
-  V=\sqrt{\frac{\chi^2}{n\min(r-1,c-1)}}.
-\]
-Raw $p$-values are reported alongside effect sizes, and a Bonferroni threshold of $0.05/11$ is considered when interpreting the family of comparisons. Results are presented in Section~\ref{sec:results_fvc_missingness} as evidence about observed associations, not as proof that the data are \gls{MAR}.
+Because FVC in litres is absent for 43.7\% of the six-month cohort, participants with and without a valid baseline value are compared across 11 observed variables. Continuous distributions use two-sided Mann--Whitney~$U$ tests with absolute Cohen's~$d$ effect sizes; categorical variables use Pearson's $\chi^2$ test with Cram\'er's~$V$. Raw $p$-values are interpreted against a Bonferroni threshold of $0.05/11=0.0045$. These comparisons can identify observed differences but cannot establish that the data are \gls{MAR} or exclude an \gls{MNAR} component. Appendix~\ref{app:fvc_missingness} provides the variables, complete results, and effect-size definition.
 
 \subsection{Data Quality: BMI Correction}
 \label{sec:methods_bmi_correction}
-The raw vital-sign table contains 147 height records labelled as centimetres with values between 14.5 and 19.3. These values are consistent with a misplaced decimal point rather than adult stature and produced \gls{BMI} values as high as 4,512 before cleaning. After the last-pre-baseline selection, 132 of these height records remained in the feature table.
-
-Height values outside $[120,220]$\,cm and weight values outside $[30,200]$\,kg were therefore set to \texttt{NaN}, affecting 132 selected heights and 31 selected weights. \gls{BMI} was then recalculated only where both measurements remained valid. In the resulting six-month cohort, BMI ranges from 15.5 to 46.9. The horizon-specific datasets were regenerated after this correction.
+During baseline feature construction, height values outside $[120,220]$\,cm and weight values outside $[30,200]$\,kg were set to \texttt{NaN}. The anomalous heights were compatible with a misplaced decimal point, but the intended values could not be verified from the source data; treating them as missing avoids introducing an assumed correction. This rule affected 132 selected height measurements and 31 weights. \gls{BMI} was recalculated only when both measurements remained valid, with missing values subsequently handled within the model pipeline. Appendix~\ref{app:bmi_correction} documents the original records and the checks performed after cleaning.
 
 \section{Exploratory Analysis: Treatment Variables and Progression}
 \label{sec:methods_eda_treatment}
-The treatment block is examined descriptively before modelling. This analysis uses the complete six-month cohort and a global 30th-percentile slope cutoff to summarise rapid-progression rates. That label is used only for this exploratory description; model development continues to use training-derived cutoffs.
+The treatment block is examined descriptively before modelling using the complete six-month cohort and a rapid-progression label based on the global 30th-percentile slope cutoff. Active and Placebo arms, as well as participants with and without documented pre-baseline riluzole use, are compared using a $\chi^2$ test for the binary label and a two-sided Mann--Whitney~$U$ test for the continuous slope. Medication burden and the most frequently recorded pre-baseline drugs are summarised without drug-level hypothesis testing. This exploratory label is not used during model development, where cutoffs remain derived from the training data.
 
-Study arm, riluzole use, and concomitant-medication burden have different interpretations. ``Active'' combines experimental arms from several trials and does not represent one intervention. Riluzole exposure is observational in this pooled dataset, while medication count may reflect comorbidity, symptom management, trial procedures, or recording intensity. None can therefore be interpreted as a treatment effect without a separate causal design.
+These variables cannot support treatment-effect claims in the pooled \gls{PRO-ACT} data. ``Active'' combines different experimental interventions, riluzole exposure is observational, and medication count may reflect comorbidity, symptom management, trial procedures, or recording intensity. The complete protocol and descriptive outputs are provided in Appendix~\ref{app:treatment_eda}; the findings retained in the main analysis are reported in Section~\ref{sec:results_eda_treatment}.
 
-The analysis comprises four parts:
-\begin{enumerate}
-  \item Active and Placebo participants are compared using a $\chi^2$ test for the binary progression label and a two-sided Mann--Whitney~$U$ test for the continuous slope. Participants with missing study-arm information are retained in descriptive summaries but excluded from these tests.
-  \item The same two tests compare subjects with and without documented pre-baseline riluzole use.
-  \item Study arm and riluzole are cross-tabulated to inspect subgroup rates. No formal interaction test is performed.
-  \item Concomitant-medication counts are summarised in five predefined groups (0, 1--2, 3--5, 6--9, and $\geq10$). The 15 most frequently recorded medications are identified from records beginning no later than each subject's $t_0$, and their progression rates are displayed descriptively.
-\end{enumerate}
-The nominal significance level is $\alpha=0.05$. No drug-level hypothesis tests or multiple-comparison claims are made for the medication ranking. These analyses describe associations in the pooled data and provide context for the predictive features reported in Section~\ref{sec:results_eda_treatment}.
-
-\section{Modeling Setup}
+\section{Modelling Setup}
 \label{sec:methods_modeling}
 \subsection{Models Considered}
 \label{sec:methods_models}
@@ -466,28 +449,13 @@ The analysis includes the best class-weight mode within four selected model fami
 
 Keeping the hyperparameters fixed makes the feature configurations more directly comparable within a model and avoids a separate optimisation search for every subset. However, the parameters were selected using configuration F and may not be optimal for the smaller feature sets. The analysis is therefore treated as an exploratory sensitivity analysis of feature availability, rather than a formal attribution of independent or causal importance to each block.
 
-\section{Hyperparameter Optimization (Optuna)}
+\section{Hyperparameter Optimisation (Optuna)}
 \label{sec:methods_optuna}
 Hyperparameters are optimised with Optuna~\cite{optuna2019} using its \gls{TPE} sampler. TPE is a sequential model-based method that uses the results of completed trials to guide subsequent proposals towards more promising regions of the search space. The sampler is initialised with seed 42; under the Optuna defaults used here, the first 10 trials are sampled independently before the TPE model begins to guide the search.
 
-The search is configured as follows:
-\begin{itemize}
-  \item \textbf{Objective:} mean \gls{PR-AUC} across 5 GroupKFold folds (with fold-wise binary labels).
-  \item \textbf{Budget:} $N_{\text{trials}}\!=\!60$ per model $\times$ mode configuration.
-    With $K\!=\!5$ folds each, this amounts to 300 model fits per configuration and $13 \times 300 = 3{,}900$ fits in total.
-  \item \textbf{Reproducibility:} identical folds and a seeded sampler are used across class-weight modes and model families.
-  \item \textbf{Hyperparameter spaces:} model-specific ranges covering learning rate, regularisation strength, tree depth, number of estimators, and kernel parameters, as applicable.
-    For instance, the XGBoost search space spans \texttt{learning\_rate} $\in [0.01,\,0.20]$ (log-uniform), \texttt{max\_depth} $\in [2,\,8]$, \texttt{n\_estimators} $\in [200,\,1{,}200]$, and regularisation terms over several orders of magnitude; \gls{LR} varies $C \in [10^{-3},\,50]$ with $\ell_1$/$\ell_2$ penalty selection; \gls{SVM} searches $C \in [0.01,\,100]$ across \gls{RBF} and linear kernels.
-    Table~\ref{tab:optuna_spaces} details the complete search-space definitions for all seven model families.
-\end{itemize}
+The objective is mean \gls{PR-AUC} across the five GroupKFold folds. Each of the 13 model--mode configurations receives 60 trials, corresponding to 3,900 cross-validation fits, and no pruning is applied. The folds, fold-specific target procedure, trial budget, and seeded sampler are held constant across configurations. Once the best trial is found, it is evaluated again on the five folds to collect \gls{PR-AUC}, \gls{ROC-AUC}, $F_1$, and $F_2$.
 
-\input{images/tables/optuna_search_spaces.tex}
-
-Each trial stores its proposed hyperparameters and mean cross-validated PR-AUC. After the best trial is identified, that configuration is evaluated again on the same five folds to collect fold-level PR-AUC, \gls{ROC-AUC}, $F_1$, and $F_2$. This adds five fits per configuration to the 3,900 optimisation fits. Trial histories are stored as \gls{CSV} files, and the selected parameters and summary metrics are persisted as \gls{JSON} files for downstream analyses.
-
-The common folds, target procedure, objective, and trial budget make comparisons more consistent, although the dimensionality and structure of the search spaces differ between model families. No trial pruning is configured, so every trial attempts all five folds. All 780 trials in the six-month search completed successfully.
-
-One implementation detail affects the LightGBM search space. The \texttt{subsample} parameter was sampled, but \texttt{subsample\_freq} remained at its default value of zero, which disables row subsampling in LightGBM. The sampled \texttt{subsample} values therefore did not alter the fitted models and should not be interpreted as an effectively optimised parameter. The remaining LightGBM dimensions were active as specified in Table~\ref{tab:optuna_spaces}.
+The search dimensions are adapted to each model family and therefore differ in number and structure. Appendix~\ref{app:tuning} provides the complete search spaces, operational details, and selected six-month configurations. It also records that LightGBM's sampled \texttt{subsample} parameter was inactive because \texttt{subsample\_freq} remained at zero.
 
 \section{Cross-Horizon Comparison}
 \label{sec:methods_cross_horizon}
@@ -502,6 +470,8 @@ For the cross-horizon comparison, configurations are matched by model family and
 Grouped bar charts and a scatter plot with a parity line are used to show the direction and magnitude of these differences.
 
 This comparison is descriptive rather than inferential. The eligible cohorts overlap only partially, their DEV partitions and validation folds differ, and the outcome slopes are estimated over different follow-up periods. The observed differences therefore reflect the combined effects of horizon, cohort composition, target estimation, and sampling variation; they cannot be attributed to the prediction horizon alone.
+
+The main chapter retains the cross-horizon comparison; Appendix~\ref{app:three_month} provides the complete three-month tuning results and the additional comparison outputs.
 
 \section{Statistical Comparison of Models}
 \label{sec:methods_statistical_comparison}
@@ -530,15 +500,15 @@ The TEST partition is used to estimate performance after development choices hav
 \section{Final Model Training and Persistence}
 \label{sec:methods_final_model}
 Only after the held-out evaluation and TEST-based analyses are complete is the tuned XGBoost pipeline refitted on the \textit{entire} six-month cohort ($N\!=\!1{,}392$; \gls{DEV}~+~\gls{TEST}). This post-evaluation refit uses the full-cohort 30th-percentile slope cutoff ($-1.248$ points per 30 days) and retains the operating threshold $t=0.21$ selected from DEV.
-The resulting artifact comprises:
+The resulting artefact comprises:
 (i)~the complete \texttt{scikit-learn} \texttt{Pipeline}---imputation, one-hot encoding, and classifier---serialised with \texttt{joblib}, so that new patients can be scored without external preprocessing; and
 (ii)~a \gls{JSON} metadata file recording the ordered feature list, target cutoff, decision threshold, and fitted XGBoost parameters.
 
-This artifact is intended for the prototype reporting workflow after model assessment. It is not used to calculate the held-out performance reported in Section~\ref{sec:results_test_eval}, since the TEST participants are included in its training data.
+This artefact is intended for the prototype reporting workflow after model assessment. It is not used to calculate the held-out performance reported in Section~\ref{sec:results_test_eval}, since the TEST participants are included in its training data.
 
 In addition, a final \textbf{balanced Logistic Regression} model is trained on the same full cohort using the Optuna-tuned hyperparameters from the LR\_balanced configuration (loaded from the persisted \gls{JSON} file), with the identical preprocessing pipeline (median imputation, one-hot encoding, $z$-score scaling).
 The \gls{LR} pipeline is serialised separately (\texttt{final\_lr\_6m.joblib}) together with its own metadata file.
-This parallel artifact provides an interpretable full-cohort model for the reporting workflow. Coefficient comparisons based on the held-out analysis instead use a Logistic Regression pipeline fitted only on DEV.
+This parallel artefact provides an interpretable full-cohort model for the reporting workflow. Coefficient comparisons based on the held-out analysis instead use a Logistic Regression pipeline fitted only on DEV.
 
 \section{Explainability Plan (XAI)}
 \label{sec:methods_xai_plan}
@@ -586,41 +556,15 @@ Comparing the \gls{LR} coefficient ranking with \gls{SHAP} importance serves as 
 
 \subsection{Error Profiling}
 \label{subsec:methods_error_profile}
-To describe which participants the model misclassifies, all \gls{TEST}-set subjects are assigned to a confusion-matrix quadrant (\gls{TP}, \gls{FP}, \gls{FN}, or \gls{TN}) at the selected threshold and stratified by four clinical variables:
-\begin{itemize}
-  \item \textbf{Age group} (quartile-based: $\leq$49, 50--57, 58--65, $>$65),
-  \item \textbf{Sex} (Male, Female),
-  \item \textbf{\gls{ALSFRS-R} severity} ($\leq$35 severe, 36--39, 40--42, $>$42 mild),
-  \item \textbf{\gls{FVC} \% of normal} (quartile-based: $\leq$77\%, 78--87\%, 88--98\%, $>$98\%).
-\end{itemize}
-The age and \gls{FVC} boundaries are quartile-derived cut-points among participants with observed values.
-Participants with missing age or \gls{FVC} are retained in the error profile as a separate \textit{Missing} group rather than being omitted from the figures.
-These variables represent demographics (age and sex), overall functional status (\gls{ALSFRS-R}), and respiratory function (\gls{FVC}).
-For each group, absolute counts and within-group proportions are reported for all four quadrants, with particular attention to false negatives because missed rapid progressors are the principal concern at a screening-oriented operating point.
+All \gls{TEST}-set participants are assigned to a confusion-matrix quadrant (\gls{TP}, \gls{FP}, \gls{FN}, or \gls{TN}) at the selected threshold and stratified by age, sex, baseline \gls{ALSFRS-R} severity, and \gls{FVC} percentage of normal. Absolute counts and within-group proportions are reported, with particular attention to false negatives because missed rapid progressors are the main concern at a screening-oriented operating point. Missing age and \gls{FVC} values are retained as separate groups. Appendix~\ref{app:error_profiles} gives the stratum definitions and complete profiles; the main findings are summarised in Section~\ref{subsec:results_error_profile}.
 
 \subsection{Subgroup Performance Analysis}
 \label{subsec:methods_subgroup}
-To explore whether model performance varies across clinical subgroups, we compute \gls{PR-AUC}, recall, precision, and $F_1$ separately for each stratum of the four variables above.
-Subgroups with fewer than 10 subjects or fewer than 3 rapid progressors are excluded to avoid unreliable metric estimates.
-Missing age and \gls{FVC} values are retained as separate groups when they meet these criteria.
-The overall \gls{TEST}-set \gls{PR-AUC} and recall are included in the figures as descriptive reference lines.
-Because subgroup sizes and outcome prevalences differ, and no multiplicity-adjusted hypothesis tests or subgroup-specific confidence intervals are used, this analysis is exploratory and does not establish fairness or equivalence.
-In particular, absolute \gls{PR-AUC} values are interpreted alongside the rapid-progressor prevalence in each subgroup.
+\gls{PR-AUC}, recall, precision, and $F_1$ are computed separately for the age, sex, baseline \gls{ALSFRS-R}, and \gls{FVC} strata used in the error profiles. Groups with fewer than ten participants or three rapid progressors are excluded, while missing age and FVC remain separate strata when these criteria are met. Since no multiplicity-adjusted tests or subgroup-specific confidence intervals are calculated, the comparisons are exploratory and do not establish fairness or equivalent performance. Appendix~\ref{app:subgroup_performance} documents the complete results and the variation in outcome prevalence between groups.
 
 \subsection{Decision Curve Analysis}
 \label{subsec:methods_dca}
-Decision Curve Analysis (\gls{DCA})~\cite{vickers2006dca} evaluates the clinical utility of a predictive model by computing the \textit{net benefit} across a range of threshold probabilities.
-The net benefit at threshold $t$ is defined as:
-\begin{equation}
-  \text{NB}(t) = \frac{\text{TP}}{N} - \frac{\text{FP}}{N} \cdot \frac{t}{1-t}
-  \label{eq:net_benefit}
-\end{equation}
-where the ratio $t/(1-t)$ represents the relative cost of a false positive versus a missed case.
-The model's net-benefit curve is compared against two reference strategies: \textit{treat all} (classify every patient as rapid) and \textit{treat none} (classify no patient as rapid).
-A model has a higher estimated net benefit at thresholds where its curve exceeds both references.
-The analysis is evaluated over $t \in [0.01,\, 0.60]$ in increments of 0.01.
-No participant has a predicted probability above 0.58, so higher thresholds are equivalent to the treat-none strategy and add no information.
-Because the analysis uses the same finite TEST sample as the performance evaluation and does not include confidence intervals, isolated threshold points are interpreted cautiously; emphasis is placed on continuous intervals of higher net benefit.
+Decision Curve Analysis (\gls{DCA})~\cite{vickers2006dca} estimates net benefit across threshold probabilities from 0.01 to 0.60 and compares the model with \textit{treat-all} and \textit{treat-none} reference strategies. The analysis uses the same finite \gls{TEST} set as the performance evaluation and does not include confidence intervals, so interpretation focuses on continuous threshold intervals rather than isolated points. Appendix~\ref{app:dca} provides the net-benefit definition, complete curve, and threshold-level results.
 
 \subsection{Calibration Analysis}
 \label{subsec:methods_calibration}
@@ -631,12 +575,7 @@ Calibration is additionally summarised numerically by the Brier score (Table~\re
 
 \subsection{Learning Curves}
 \label{subsec:methods_learning_curves}
-To explore sensitivity to training-set size, the selected XGBoost configuration is trained on progressively larger subsets of DEV (20\%, 30\%, \ldots, 100\%) and evaluated on the fixed \gls{TEST} set.
-DEV contains one row per participant, so subsampling is performed directly at participant level.
-Each fraction below 100\% is repeated 20 times using stratified random samples, preserving the rapid-progressor proportion at approximately 30\%; the full DEV fit is deterministic and is therefore run once.
-The figure reports the mean \gls{PR-AUC} and \gls{ROC-AUC} across repetitions, with error bars representing one standard deviation rather than confidence intervals.
-Because the same TEST set is evaluated repeatedly, this is treated as a post-evaluation sensitivity analysis and is not used for model or hyperparameter selection.
-The curve can indicate whether performance continues to change with sample size, but it cannot by itself establish a fixed performance ceiling or predict the benefit of collecting additional data.
+The selected XGBoost configuration is trained on progressively larger participant-level subsets of \gls{DEV} (20\% to 100\%) and evaluated on the fixed \gls{TEST} set. Fractions below 100\% use 20 stratified repetitions; the full DEV fit is run once. Mean \gls{PR-AUC} and \gls{ROC-AUC} are reported with one-standard-deviation error bars. Since TEST is evaluated repeatedly, this is a post-evaluation sensitivity analysis rather than an additional validation step, and it is not used for model or hyperparameter selection. Appendix~\ref{app:learning_curve} provides the full procedure and curve.
 
 \subsection{Bootstrap Confidence Intervals}
 \label{subsec:methods_bootstrap}
@@ -650,53 +589,12 @@ It is conditional on the fitted model and selected threshold and therefore does 
 
 \subsection{Partial Dependence Plots}
 \label{subsec:methods_pdp}
-Partial Dependence Plots (PDPs)~\cite{friedman2001pdp} visualise the marginal effect of a single feature on the predicted probability of rapid progression, averaged over all other features.
-For a feature $x_j$, the partial dependence function is:
-\begin{equation}
-  \hat{f}_j(x_j) = \frac{1}{N} \sum_{i=1}^{N} \hat{f}(x_j,\, \mathbf{x}_{i,\setminus j})
-  \label{eq:pdp}
-\end{equation}
-where $\mathbf{x}_{i,\setminus j}$ denotes the values of all features except $x_j$ for subject $i$.
-We compute \glspl{PDP} for the three features with the highest global \gls{SHAP} importance: \gls{ALSFRS-R} total, \gls{FVC} in litres, and age.
-For each feature, the grid spans the 5th to 95th percentile of its observed values in TEST; missing values are excluded when defining the grid and rug plot but remain median-imputed within the model pipeline for prediction.
-A rug plot shows the observed TEST values and therefore makes sparse regions and missingness easier to recognise.
-PDPs average over the joint distribution of all remaining variables and can evaluate feature combinations that are uncommon or clinically implausible, particularly when predictors are correlated.
-They are consequently interpreted as descriptive summaries of the fitted model, not as causal dose--response relationships or individual-level effects.
+Partial Dependence Plots (PDPs)~\cite{friedman2001pdp} are computed for the three features with the highest global \gls{SHAP} importance: baseline \gls{ALSFRS-R} total, \gls{FVC} in litres, and age. Each grid spans the 5th to 95th percentile of observed \gls{TEST} values, with rug marks indicating data density. Since PDPs average predictions over the remaining covariates, they may evaluate uncommon feature combinations when predictors are correlated. They are interpreted as summaries of the fitted model rather than causal or individual-level effects. Appendix~\ref{app:pdp} provides the mathematical definition, complete procedure, and resulting curves.
 
 \section{Patient Risk Report Generator}
 \label{sec:methods_patient_report}
 
-As a post-evaluation software demonstrator, we developed a \textit{patient risk report generator} that presents the output of the persisted XGBoost pipeline for one patient record.
-The report uses the model refitted on the complete eligible cohort after held-out evaluation (Section~\ref{sec:methods_final_model}); it must therefore not be used to estimate predictive performance.
-The tool loads the pipeline and its associated metadata (feature list, slope cutoff, and decision threshold) and accepts data from three sources:
-\begin{enumerate}
-\item \textbf{Dataset lookup:} a subject \gls{ID} from the processed cohort;
-  \item \textbf{\gls{JSON} file:} a key--value file with baseline feature values, allowing external or synthetic patients;
-  \item \textbf{Demo mode:} a randomly selected record from the processed cohort.
-\end{enumerate}
-
-Each report comprises three sections:
-\begin{itemize}
-  \item \textbf{Model output.} The estimated probability of rapid progression, $P(\text{rapid})$, is shown together with the binary classification obtained at the preselected operating threshold ($t=0.21$).
-  For cohort records, the retrospectively derived outcome is also displayed, but only as contextual information because those records contributed to the final refit.
-  \item \textbf{Top-5 Contributing Features (\gls{SHAP}).} A local TreeSHAP explanation lists the five features with the largest absolute Shapley values, together with the feature value, \gls{SHAP} magnitude, and direction of influence.
-  Contributions from one-hot encoded columns are aggregated under the corresponding source variable.
-  These values explain the fitted model for that record; they do not identify causal effects.
-  \item \textbf{Contextual review flags.} For 13 variables, descriptive rules identify whether a top-five contributor lies beyond a predefined 25th- or 75th-percentile cutoff derived from \gls{DEV}.
-  The flags provide distributional context only.
-  They are not clinical reference ranges, alerts, or recommendations for follow-up or treatment.
-\end{itemize}
-
-The generated text includes an explicit research-use disclaimer.
-Neither the predicted probability nor the displayed threshold and review flags have undergone prospective clinical validation.
-
-\subsection{Synthetic Patient Generator}
-\label{subsec:methods_random_patient}
-To test the report interface without selecting a named cohort record, a companion script generates fictitious profiles containing all 35 baseline features.
-Continuous variables are sampled from bounded distributions calibrated to approximate observed summaries in the full \gls{PRO-ACT} cohort ($N=1{,}392$), while categorical variables use approximate observed frequencies.
-Two dependencies are imposed explicitly: \gls{BMI} is calculated from sampled weight and height, and \gls{FVC} in litres is conditioned on sex.
-The remaining variables are sampled separately, so the generator does not reproduce the full joint distribution of the clinical data.
-These profiles are suitable for testing data ingestion, prediction, and report formatting, but not for clinical simulation, privacy assessment, or model validation.
+As a post-evaluation software demonstrator, we developed a \textit{patient risk report generator} for individual records processed by the persisted XGBoost pipeline. The report combines the predicted probability and thresholded class with a local \gls{SHAP} explanation and descriptive review flags. It uses the model refitted on the complete eligible cohort after held-out evaluation (Section~\ref{sec:methods_final_model}), so its outputs cannot be treated as a further estimate of predictive performance. The input modes, report structure, research-use safeguards, and companion generator for fictitious profiles are documented in Appendix~\ref{app:patient_report}.
 
 \bigskip
 \noindent

@@ -8,84 +8,177 @@
 \markboth{Appendices}{}
 
 % ============================================================
-\chapter{Hyperparameter Tuning Details}
+\chapter{FVC Missingness Analysis}
+\label{app:fvc_missingness}
+% ============================================================
+
+This appendix reports the complete analysis of baseline \gls{FVC} availability summarised in Section~\ref{sec:results_fvc_missingness}. FVC in litres is missing for 43.7\% of the six-month cohort. Participants with and without an observed value are compared to determine whether availability is visibly associated with patient characteristics, trial attributes, or the target slope.
+
+Eight continuous variables are examined: baseline \gls{ALSFRS-R} total, age, six-month slope, creatinine, \gls{ALT}, \gls{BMI}, weight, and concomitant-medication count. Sex, study arm, and documented riluzole use are treated as categorical variables. Continuous distributions are compared using two-sided Mann--Whitney~$U$ tests and absolute Cohen's~$d$ values based on the pooled standard deviation. Categorical associations use Pearson's $\chi^2$ test and Cram\'er's~$V$:
+\[
+  V=\sqrt{\frac{\chi^2}{n\min(r-1,c-1)}}.
+\]
+
+Raw $p$-values are reported alongside effect sizes. The family of 11 comparisons is interpreted using a Bonferroni threshold of $0.05/11=0.0045$. Table~\ref{tab:fvc_missingness} marks nominal $p<0.05$ separately so that nominal and multiplicity-adjusted results are not conflated.
+
+\input{images/tables/step5v2_fvc_missingness.tex}
+\break
+
+Baseline \gls{ALSFRS-R} ($p=0.345$, $d=0.027$), age ($p=0.459$, $d=0.031$), and sex ($p=0.408$, $V=0.022$) show little observed difference between participants with and without FVC. The target slope gives $p=0.050$ and $d=0.098$. Mean slopes are $-0.91$ and $-1.00$ points per 30 days, a difference of 0.09 relative to an overall standard deviation of 0.89. Creatinine ($p=0.092$) and ALT ($p=0.097$) also do not meet the nominal threshold.
+
+The largest categorical association is study arm ($V=0.357$, $p<0.001$), while concomitant-medication count differs with $d=0.332$ ($p<0.001$). These results are compatible with variation in measurement protocols or recording density across the pooled trials. Riluzole has a nominal association ($p=0.015$, $V=0.065$), but its effect size is small and the result does not survive the Bonferroni threshold.
+
+Weight ($d=0.146$, $p=0.003$) and BMI ($d=0.468$, $p<0.001$) also differ between availability groups. Their collection may be related to FVC measurement, although this was not tested directly. Under the Bonferroni threshold, study arm, BMI, weight, and concomitant-medication count remain the clearest observed differences.
+
+The pattern is compatible with missingness related partly to trial-level collection practices, but observed-data comparisons cannot identify the missing-data mechanism. They do not prove that FVC is \gls{MAR}, and an \gls{MNAR} component cannot be excluded. Median imputation is therefore a pragmatic preprocessing decision rather than a consequence of a confirmed missingness assumption.
+
+
+% ============================================================
+\chapter{BMI Data-Quality Audit}
+\label{app:bmi_correction}
+% ============================================================
+
+This appendix documents the source-data issue that prompted the \gls{BMI} correction described in Section~\ref{sec:methods_bmi_correction}. The raw \gls{PRO-ACT} vital-sign table contains 147 height records labelled ``Centimeters'' with values between 14.5 and 19.3, which are not plausible adult heights. Multiplying these values by ten gives 145--193\,cm, so a misplaced decimal point is a plausible explanation, but the intended measurement cannot be confirmed from the available records.
+
+The feature-extraction function \texttt{to\_cm} passed values carrying the ``Centimeters'' unit through unchanged. The anomalous heights therefore reached the baseline feature file and produced impossible BMI values. For example, combining a height of 14.5\,cm with a weight of approximately 95\,kg gives a BMI close to 4{,}500 when calculated as
+\[
+  \text{BMI} = \frac{\text{weight (kg)}}{[\text{height (m)}]^2}.
+\]
+
+After the measurement closest to $t_0$ was selected for each participant, 132 of the 147 anomalous height records remained in \texttt{features\_vitals\_t0.csv} ($N=4{,}438$). Heights outside $[120,220]$\,cm and weights outside $[30,200]$\,kg were set to \texttt{NaN} rather than rescaled. This affected 132 selected heights and 31 weights. BMI was then recalculated only for records with a valid height and weight, while missing values were left for median imputation within each model's preprocessing pipeline.
+
+Following this correction, BMI ranges from 15.5 to 46.9 in the six-month cohort ($N=1{,}392$), which is compatible with reported distributions in \gls{ALS} clinical-trial populations~\cite{Anani2023}. All horizon-specific datasets used for tuning, ablation, and subsequent analyses were regenerated from the cleaned vital-sign features.
+
+
+% ============================================================
+\chapter{Exploratory Analysis of Treatment Variables}
+\label{app:treatment_eda}
+% ============================================================
+
+This appendix provides the complete exploratory analysis of the three treatment-related features used in Study~I: clinical trial arm, documented pre-baseline riluzole use, and the number of concomitant medications. The analysis uses all 1{,}392 participants in the six-month cohort and a descriptive rapid-progression label based on the global 30th-percentile slope cutoff (418 participants, 30.0\%). Model development does not use this global cutoff.
+
+\section{Analysis Design}
+\label{app:treatment_design}
+
+Active and Placebo participants are compared using a $\chi^2$ test for the binary progression label and a two-sided Mann--Whitney~$U$ test for the continuous slope. Participants without study-arm information remain in the descriptive summary but are excluded from these tests. The same comparisons are performed for participants with and without documented pre-baseline riluzole use. Study arm and riluzole are also cross-tabulated, although no formal interaction test is conducted.
+
+Concomitant-medication counts are grouped as 0, 1--2, 3--5, 6--9, and $\geq10$. The 15 most frequently recorded medications are identified from records beginning no later than each participant's $t_0$. Their progression rates are descriptive: no drug-level hypothesis tests or multiple-comparison claims are made.
+
+The pooled data do not support causal interpretation. ``Active'' combines experimental arms from different trials rather than one intervention, riluzole exposure is observational, and medication burden may also reflect comorbidity, symptom management, trial procedures, or recording intensity.
+
+\section{Study Arm}
+\label{subsec:results_eda_arm}
+
+Of the 1{,}392 participants, 506 belong to an Active arm, 762 to Placebo, and 124 have no arm information. The rapid-progression rates are 26.5\%, 31.6\%, and 34.7\%, respectively (Table~\ref{tab:eda_treat_arm}). Median slopes are similar in the Active and Placebo groups: $-0.791$ and $-0.819$ points per 30 days.
+
+\begin{table}[ht!]
+\centering
+\caption[Descriptive statistics by study arm]{Descriptive statistics by study arm in the six-month cohort.}
+\label{tab:eda_treat_arm}
+\small
+\begin{tabular}{lrccc}
+\toprule
+Group & $N$ & Rapid (\%) & Slope mean & Slope median \\
+\midrule
+Active   & 506 & 26.5 & $-0.901$ & $-0.791$ \\
+Placebo  & 762 & 31.6 & $-0.973$ & $-0.819$ \\
+Missing  & 124 & 34.7 & $-1.022$ & $-0.689$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figures~\ref{fig:eda_arm_dist} and~\ref{fig:eda_arm_rapid} show the overlapping slope distributions and the corresponding rapid-progression rates.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_arm_slope_dist.png}
+  \caption[ALSFRS-R slope distribution by study arm]{ALSFRS-R slope distribution by study arm: histogram (left) and boxplot (right). The dashed red line marks the 30th-percentile threshold ($P_{30} = -1.25$).}
+  \label{fig:eda_arm_dist}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.55\linewidth]{images/figures/eda_treat_arm_rapid_rate.png}
+  \caption[Rapid progression rate by study arm]{Rapid-progression rate by study arm. The dashed line indicates the global prevalence (30\%).}
+  \label{fig:eda_arm_rapid}
+\end{figure}
+
+\clearpage
+The test of the binary label, restricted to the 1{,}268 participants with known arm information, gives $\chi^2=3.62$ and $p=0.057$. The continuous slope comparison gives $U=200{,}472$ and $p=0.229$. Neither test provides evidence of a difference at the predefined $\alpha=0.05$ level, and the pooled arm labels do not permit treatment-specific interpretation.
+
+\section{Riluzole}
+\label{subsec:results_eda_riluzole}
+
+Documented pre-baseline riluzole use is present for 902 participants (64.8\%); the remaining 490 have no qualifying record. Rapid-progression rates are 30.8\% and 28.6\%, respectively, while the median slopes are $-0.807$ and $-0.777$ points per 30 days. Figure~\ref{fig:eda_riluzole} displays both comparisons.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_riluzole_slope_dist.png}
+  \caption[Slope distribution and progression rate by riluzole use]{Slope distribution (left) and rapid-progression rate (right) by riluzole use. Median slopes are annotated on each bar.}
+  \label{fig:eda_riluzole}
+\end{figure}
+
+Documented riluzole use is not associated with the binary label ($\chi^2=0.66$, $p=0.416$), and the continuous slope comparison leads to the same statistical decision ($U=216{,}535$, $p=0.534$). These coded exposure groups cannot be interpreted as an estimate of riluzole efficacy~\cite{Miller2012}.
+
+\section{Study Arm and Riluzole}
+\label{subsec:results_eda_interaction}
+
+The cross-tabulation in Figure~\ref{fig:eda_interaction} shows rates ranging from 25.7\% among Active participants with documented riluzole use ($n\!=\!315$) to 33.5\% in the corresponding Placebo subgroup ($n\!=\!526$). The groups without documented use have similar rates: 27.7\% for Active ($n\!=\!191$) and 27.5\% for Placebo ($n\!=\!236$).
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.55\linewidth]{images/figures/eda_treat_interaction.png}
+  \caption[Rapid progression rate by study arm and riluzole]{Rapid-progression rate by study arm $\times$ riluzole subgroup. The dashed line indicates the global prevalence (30\%).}
+  \label{fig:eda_interaction}
+\end{figure}
+
+No formal interaction test was performed. Differences between these four groups may reflect variation between trials or patient populations that is not represented in the cross-tabulation.
+
+\section{Concomitant Medications}
+\label{subsec:results_eda_conmeds}
+
+Participants with 1--2 pre-baseline concomitant medications have the lowest rapid-progression rate ($22.8$\%, $n\!=\!149$), while those with 6--9 have the highest ($34.2$\%, $n\!=\!310$). Medication count may capture comorbidity, symptom management, trial procedures, or record density, and the grouped rates do not separate these explanations.
+
+The 15 most frequently recorded medications are identified from \texttt{PROACT\_CONMEDS} using participant-specific baseline dates (Figure~\ref{fig:eda_top_meds}). Riluzole is the most common entry (673 participants, 48.3\%), followed by Vitamin~E (355, 25.5\%) and ascorbic acid (311, 22.3\%). Rapid-progression rates range from 25.4\% for Betacarotene to 37.3\% for Colecalciferol. The raw concomitant-medication entry for riluzole is distinct from the dedicated riluzole-use feature analysed above.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_top_meds.png}
+  \caption[Top 15 pre-baseline medications by prevalence]{Top 15 pre-baseline medications by cohort prevalence, coloured by whether their rapid-progression rate exceeds the global prevalence (30\%, red dashed line). Green bars fall below the global rate.}
+  \label{fig:eda_top_meds}
+\end{figure}
+
+\clearpage
+The variation across medication groups is unadjusted and was not used to infer pharmacological effects. The three treatment-related variables remain candidate predictors of patient and trial heterogeneity, and their contribution to prediction is assessed through the feature ablation analysis.
+
+
+% ============================================================
+\chapter{Hyperparameter Optimisation Details}
 \label{app:tuning}
 % ============================================================
 
-This appendix documents the search spaces explored during Bayesian hyperparameter optimisation with Optuna~\cite{optuna2019} and the best configurations obtained for each model family on the 6-month horizon.
-All experiments use 60 TPE trials, GroupKFold($k{=}5$) cross-validation on the DEV partition ($n{=}1{,}113$), and PR-AUC (average precision) as the objective.
+This appendix complements the optimisation protocol in Section~\ref{sec:methods_optuna} with the complete search spaces, operational diagnostics, and fitted parameter values needed to reproduce the selected six-month models.
 
-% ---------- Search spaces ----------
-\section{Search Spaces}
-\label{app:search_spaces}
+\section{Search Spaces and Tuning Diagnostics}
+\label{app:tuning_diagnostics}
 
-Table~\ref{tab:search_spaces} lists the hyperparameter ranges explored for each of the seven model families.
+\input{images/tables/optuna_search_spaces.tex}
 
-\begin{table}[htbp]
-\centering
-\caption[Optuna hyperparameter search spaces]{Hyperparameter search spaces used in Optuna TPE optimisation.}
-\label{tab:search_spaces}
-\small
-\begin{tabular}{l l l l}
-\toprule
-\textbf{Model} & \textbf{Hyperparameter} & \textbf{Range / Values} & \textbf{Scale} \\
-\midrule
-\multirow{3}{*}{KNN}
-  & \texttt{n\_neighbors}      & $[3,\,51]$, step=2       & linear \\
-  & \texttt{weights}           & \{uniform, distance\}    & categorical \\
-  & \texttt{metric}            & \{euclidean, manhattan\}  & categorical \\
-\midrule
-\multirow{4}{*}{Decision Tree}
-  & \texttt{max\_depth}        & $[2,\,20]$               & linear \\
-  & \texttt{min\_samples\_split} & $[2,\,50]$             & linear \\
-  & \texttt{min\_samples\_leaf}  & $[1,\,30]$             & linear \\
-  & \texttt{criterion}         & \{gini, entropy\}        & categorical \\
-\midrule
-\multirow{5}{*}{Random Forest}
-  & \texttt{n\_estimators}     & $[100,\,800]$, step=50   & linear \\
-  & \texttt{max\_depth}        & $[3,\,20]$               & linear \\
-  & \texttt{min\_samples\_split} & $[2,\,30]$             & linear \\
-  & \texttt{min\_samples\_leaf}  & $[1,\,20]$             & linear \\
-  & \texttt{max\_features}     & \{sqrt, log2\}           & categorical \\
-\midrule
-\multirow{3}{*}{SVM}
-  & \texttt{C}                 & $[10^{-2},\,100]$        & log \\
-  & \texttt{kernel}            & \{rbf, linear\}          & categorical \\
-  & \texttt{gamma} (if rbf)    & $[10^{-4},\,1]$          & log \\
-\midrule
-\multirow{2}{*}{Logistic Reg.}
-  & \texttt{C}                 & $[10^{-3},\,50]$         & log \\
-  & \texttt{penalty}           & \{l1, l2\}               & categorical \\
-\midrule
-\multirow{9}{*}{LightGBM}
-  & \texttt{n\_estimators}     & $[200,\,1200]$, step=50  & linear \\
-  & \texttt{learning\_rate}    & $[0.01,\,0.20]$          & log \\
-  & \texttt{num\_leaves}       & $[15,\,127]$             & linear \\
-  & \texttt{max\_depth}        & $[-1,\,12]$              & linear \\
-  & \texttt{min\_child\_samples} & $[5,\,50]$             & linear \\
-  & \texttt{subsample}\textsuperscript{a} & $[0.6,\,1.0]$            & linear \\
-  & \texttt{colsample\_bytree} & $[0.6,\,1.0]$            & linear \\
-  & \texttt{reg\_lambda}       & $[10^{-3},\,10]$         & log \\
-  & \texttt{reg\_alpha}        & $[10^{-6},\,1]$          & log \\
-\midrule
-\multirow{9}{*}{XGBoost}
-  & \texttt{n\_estimators}     & $[200,\,1200]$, step=50  & linear \\
-  & \texttt{learning\_rate}    & $[0.01,\,0.20]$          & log \\
-  & \texttt{max\_depth}        & $[2,\,8]$                & linear \\
-  & \texttt{min\_child\_weight}& $[1,\,20]$               & log \\
-  & \texttt{subsample}         & $[0.6,\,1.0]$            & linear \\
-  & \texttt{colsample\_bytree} & $[0.6,\,1.0]$            & linear \\
-  & \texttt{gamma}             & $[0,\,5]$                & linear \\
-  & \texttt{reg\_lambda}       & $[10^{-3},\,10]$         & log \\
-  & \texttt{reg\_alpha}        & $[10^{-6},\,1]$          & log \\
-\bottomrule
-\end{tabular}
-\par\smallskip
-{\scriptsize \textsuperscript{a}Sampled in the recorded LightGBM runs but inactive because \texttt{subsample\_freq} remained at its default value of 0.}
-\end{table}
+The 13 model--mode searches comprised 780 Optuna trials and 3,900 cross-validation fits. All trials completed successfully. The common budget of 60 trials was a computational choice rather than a convergence criterion: nine searches, including both XGBoost modes, found their final best value between trials 41 and 60. The histories therefore give no empirical basis for reducing the budget to 40 trials.
 
+The recorded optimisation time was approximately 34 minutes on one machine. Individual searches ranged from 8 seconds for the Decision Tree to 768 seconds for the unbalanced SVM. Trial histories were stored as \gls{CSV} files, while selected parameters and summary metrics were saved as \gls{JSON} files for the subsequent analyses.
 
-% ---------- Best hyperparameters ----------
+The search spaces ranged from two parameters for Logistic Regression to nine for LightGBM and XGBoost. One LightGBM dimension was ineffective: \texttt{subsample} was sampled, but row subsampling was disabled because \texttt{subsample\_freq} retained its default value of zero. The stored values are preserved for reproducibility but should not be read as an optimised source of variation.
+
+Figure~\ref{fig:metric_heatmap} places the four recorded metrics side by side for all 13 selected configurations. It makes visible the weak correspondence between the ranking metrics and $F_1$/$F_2$ at the fixed threshold of 0.5 discussed in Section~\ref{subsec:results_metric_correlation}.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=1\linewidth]{images/figures/step5v2_metric_heatmap.png}
+  \caption[Cross-validation metrics heatmap, 13 configurations]{Cross-validation metrics for all 13 model--mode configurations on the six-month DEV set, ordered by PR-AUC. PR-AUC and ROC-AUC are threshold-free; $F_1$ and $F_2$ use a threshold of 0.5.}
+  \label{fig:metric_heatmap}
+\end{figure}
+
 \section{Best Hyperparameters (6-Month Horizon)}
 \label{app:best_params}
 
@@ -176,115 +269,56 @@ The LightGBM \texttt{subsample} values are retained to reproduce the stored tria
 
 
 % ============================================================
-\chapter{Feature Ablation Study}
+\chapter{Three-Month Horizon Results}
+\label{app:three_month}
+% ============================================================
+
+This appendix provides the complete three-month tuning results and the additional outputs underlying the cross-horizon summary in Section~\ref{sec:results_3m}. The four retained model families were tuned independently on the three-month DEV set ($n\!=\!1{,}925$), in balanced and unbalanced modes, using 60 Optuna trials per configuration.
+
+\section{Three-Month Tuning}
+
+\input{images/tables/step5v2_tuning_comparison_3m.tex}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/step5v2_3m_prauc_barchart.png}
+  \caption[Cross-validation PR-AUC by model, 3-month]{PR-AUC for the eight Optuna-tuned configurations on the three-month DEV set. Error bars show one standard deviation across the five folds.}
+  \label{fig:prauc_barchart_3m}
+\end{figure}
+
+\clearpage
+Balanced XGBoost has the highest mean PR-AUC ($0.426 \pm 0.036$), followed by unbalanced XGBoost and unbalanced LightGBM (both 0.423). Weighting changes PR-AUC by 0.003 for XGBoost and 0.001 for LightGBM. Its larger effect on $F_1$ and $F_2$ at 0.5 reflects changes in the operating point rather than an equivalent change in ranking performance. XGBoost remains at the top and Logistic Regression at the lower end of the comparison, but LightGBM moves above Random Forest, so the ordering is not identical to the six-month result.
+
+\section{Complete Cross-Horizon Comparison}
+
+\input{images/tables/step5v2_3m_vs_6m_comparison.tex}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.65\linewidth]{images/figures/step5v2_3m_vs_6m_scatter.png}
+  \caption[Scatter plot: 3-month vs.\ 6-month PR-AUC]{Mean PR-AUC at three and six months for each matched model configuration. Points above the parity line favour three months; annotations show $\Delta = \text{PR-AUC}_{3\text{m}}-\text{PR-AUC}_{6\text{m}}$.}
+  \label{fig:3m_vs_6m_scatter}
+\end{figure}
+
+The comparison is descriptive. The two horizons use partly different eligible cohorts, DEV partitions, validation folds, and outcome estimates, so the observed differences cannot be attributed to follow-up duration alone.
+
+
+% ============================================================
+\chapter{Complete Feature Ablation Results}
 \label{app:ablation}
 % ============================================================
 
-This appendix presents the cumulative feature-block ablation experiment.
-Starting from a baseline of 15 demographic and ALSFRS-R features, successive blocks of clinical variables are added to assess their marginal contribution to model performance.
+Table~\ref{tab:ablation_v2} provides the mean cross-validated PR-AUC for all six feature configurations and four selected model configurations discussed in Section~\ref{sec:results_ablation_v2}. Hyperparameters remain fixed at the values selected with the full feature set; the comparison therefore measures sensitivity to feature availability rather than the best attainable result after retuning each subset.
 
-\begin{table}[htbp]
-\centering
-\caption[Feature block ablation PR-AUC, DEV set]{Feature block ablation (6-month, DEV set). PR-AUC with Optuna-tuned hyperparameters. Blocks are cumulative: each row adds new features to the previous.}
-\label{tab:app_ablation}
-\small
-\begin{tabular}{lccccc}
-\toprule
-Block & $n_\text{features}$ & XGB\textsubscript{unb} & RF\textsubscript{unb} & LGBM\textsubscript{bal} & LR\textsubscript{bal} \\
-\midrule
-A: Baseline              & 15 & 0.420 & 0.409 & 0.434 & 0.395 \\
-B: A + Vitals             & 27 & 0.420 & 0.408 & 0.420 & 0.405 \\
-C: A + FVC                & 18 & 0.430 & 0.434 & 0.432 & 0.400 \\
-D: A + Vitals + FVC       & 30 & 0.432 & 0.418 & 0.424 & 0.406 \\
-E: D + Treatment          & 33 & 0.423 & 0.417 & 0.425 & 0.407 \\
-F: Full v2                & 35 & 0.434 & 0.431 & 0.418 & 0.407 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The ablation results show that FVC-derived features (block~C) provide the most consistent individual gains across models, consistent with FVC's established role as a key prognostic marker in ALS.
-The full v2 feature set (block~F, 35~features) maximises XGBoost performance at 0.434 PR-AUC, the best overall configuration selected for final training.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\linewidth]{./images/figures/step5v2_ablation_prauc.png}
-  \caption[PR-AUC across cumulative feature blocks]{PR-AUC progression across cumulative feature blocks for four model families. FVC features (block~C) yield the largest marginal improvement.}
-  \label{fig:app_ablation}
-\end{figure}
+\input{images/tables/step5v2_ablation.tex}
 
 
 % ============================================================
-\chapter{Holdout Evaluation and Statistical Tests}
-\label{app:holdout}
-% ============================================================
-
-This appendix reports the full held-out test set evaluation and the statistical comparison of the seven tuned model configurations.
-
-% ---------- Test metrics ----------
-\section{Test Set Performance}
-\label{app:test_metrics}
-
-Table~\ref{tab:app_test_metrics} presents the performance of all seven models on the held-out TEST partition ($n{=}279$, 20\% of the 6-month cohort), which was not used during hyperparameter tuning or model selection.
-
-\begin{table}[htbp]
-\centering
-\caption[TEST set metrics, all 7 models (appendix)]{Held-out TEST set metrics (6-month horizon, $n{=}279$). PR-AUC and ROC-AUC are threshold-free; F$_1$ and F$_2$ use default $t{=}0.50$; Brier score measures calibration (lower is better).}
-\label{tab:app_test_metrics}
-\small
-\begin{tabular}{l c c c c c c}
-\toprule
-Model & Mode & PR-AUC & ROC-AUC & F$_1$ & F$_2$ & Brier \\
-\midrule
-  XGBoost          & unbalanced & 0.456 & 0.660 & 0.085 & 0.058 & 0.1971 \\
-  RandomForest     & unbalanced & \textbf{0.459} & 0.664 & 0.000 & 0.000 & 0.1986 \\
-  SVM              & balanced   & 0.447 & 0.675 & 0.000 & 0.000 & 0.1977 \\
-  LightGBM         & balanced   & 0.429 & 0.637 & 0.422 & 0.440 & 0.2241 \\
-  LogisticRegression & balanced & 0.421 & 0.671 & 0.484 & 0.520 & 0.2307 \\
-  DecisionTree     & balanced   & 0.373 & 0.569 & 0.417 & 0.417 & 0.2695 \\
-  KNeighbors       & unbalanced & 0.393 & 0.583 & 0.046 & 0.029 & 0.2062 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-% ---------- Diagnostic curves ----------
-\section{Diagnostic Curves}
-\label{app:curves}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\linewidth]{./images/figures/step6_pr_curves.png}
-  \caption[Precision--Recall curves, all 7 models]{Precision--Recall curves on the held-out TEST set for all seven models.}
-  \label{fig:app_pr}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\linewidth]{./images/figures/step6_roc_curves.png}
-  \caption[ROC curves, all 7 models]{ROC curves on the held-out TEST set.}
-  \label{fig:app_roc}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\linewidth]{./images/figures/step6_calibration.png}
-  \caption[Calibration plots, all 7 models]{Calibration plots (reliability diagrams) for all seven models on the TEST set.}
-  \label{fig:app_calibration}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\linewidth]{./images/figures/step6_confusion_matrix.png}
-  \caption[Confusion matrices at default threshold, all models]{Confusion matrices at the default threshold ($t{=}0.50$) on the TEST set.}
-  \label{fig:app_cm}
-\end{figure}
-
-
-% ---------- Statistical comparison ----------
-\section{Statistical Comparison}
+\chapter{Pairwise Statistical Comparisons}
 \label{app:stats}
+% ============================================================
 
-The Friedman test was the primary comparison of the per-fold PR-AUC ranks from 5-fold GroupKFold on the DEV set. As the omnibus test did not reject its null hypothesis, the pairwise Wilcoxon signed-rank tests below are included for descriptive completeness and are not treated as confirmatory post-hoc tests.
+The Friedman test is the primary comparison of the per-fold PR-AUC ranks from five-fold GroupKFold on the DEV set. Since the omnibus test does not reject its null hypothesis, the 21 pairwise Wilcoxon signed-rank comparisons below are retained for descriptive completeness rather than treated as confirmatory post-hoc tests.
 
 \begin{table}[htbp]
   \centering
@@ -321,3 +355,433 @@ The Friedman test was the primary comparison of the per-fold PR-AUC ranks from 5
 \end{table}
 
 The Friedman test yields $\chi^2_F(6)=12.43$ ($p=0.053$; Kendall's $W=0.414$), so the null hypothesis of equal rank distributions is not rejected at $\alpha=0.05$. All 21 exploratory pairwise comparisons have $p_\text{Bonf.}=1.000$. With only five pairs, the minimum exact two-sided Wilcoxon $p$-value is 0.0625, making this outcome unavoidable after correction. The table therefore provides no evidence of pairwise differences, but it also cannot establish that the models are equivalent.
+
+
+% ============================================================
+\chapter{Additional Local Explanations for Study I}
+\label{app:local_explanations}
+% ============================================================
+
+The main Study~I results retain one correctly detected and one missed rapid progressor (Section~\ref{subsec:results_shap_local}). This appendix completes the four-case analysis with the full profile table, the remaining SHAP waterfalls, all four LIME explanations, and the feature-level concordance results.
+
+\section{Case-Study Profiles}
+\label{app:local_profiles}
+
+One subject was selected from each confusion-matrix quadrant by choosing the case closest to the median predicted probability within that quadrant. Table~\ref{tab:case_study_profiles} records the baseline characteristics used to place the local explanations in context.
+
+\begin{table}[H]
+\centering
+\caption[Clinical profiles of four case-study subjects]{Clinical profiles of the four case-study subjects selected from each confusion-matrix quadrant.}
+\label{tab:case_study_profiles}
+\small
+\begin{tabular}{l c c c c}
+\toprule
+ & \textbf{TP} & \textbf{FP} & \textbf{FN} & \textbf{TN} \\
+\midrule
+Subject ID      & 672752 & 491257 & 330379 & 631435 \\
+$P(\text{rapid})$ & 0.334 & 0.284 & 0.169 & 0.177 \\
+ALSFRS-R (t0)   & 43     & 38     & 39     & 45     \\
+Age              & 54     & 28     & 56     & 39     \\
+FVC (\% normal)  & --     & --     & 79     & 87     \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Additional SHAP Waterfalls}
+\label{app:local_shap}
+
+\noindent\textbf{False Positive (Subject~491257).}
+This participant was classified as rapid despite the strong slow-class contribution associated with age 28 (Figure~\ref{fig:shap_wf_fp}). BMI, ALSFRS-R, the imputed FVC value, and respiratory rate collectively shift the prediction in the opposite direction and place it above the threshold.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.62\linewidth]{images/figures/shap_waterfall_FP.pdf}
+  \caption[SHAP waterfall: false positive case (Subject 491257)]{SHAP waterfall plot for the FP case study (Subject~491257). Several moderate contributions outweigh the slow-class contribution associated with younger age.}
+  \label{fig:shap_wf_fp}
+\end{figure}
+
+\noindent\textbf{True Negative (Subject~631435).}
+For this correctly classified slow progressor (Figure~\ref{fig:shap_wf_tn}), high ALSFRS-R (45), age 39, and pulse 60 provide the largest contributions towards the slow class. These effects outweigh the positive contributions from BMI, the imputed FVC value, and temperature.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.62\linewidth]{images/figures/shap_waterfall_TN.pdf}
+  \caption[SHAP waterfall: true negative case (Subject 631435)]{SHAP waterfall plot for the TN case study (Subject~631435). Baseline function, age, and pulse provide the largest contributions towards the slow class.}
+  \label{fig:shap_wf_tn}
+\end{figure}
+
+\section{LIME Explanations}
+\label{app:local_lime}
+
+LIME was applied to the same four case-study subjects as a complementary local approximation of the classifier. Each explanation used 2{,}000 perturbed samples around the instance and a sparse linear surrogate fitted to the resulting predictions. Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} show the explanation for each confusion-matrix quadrant.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/lime_local_TP.pdf}
+  \caption[LIME explanation: true positive case]{LIME explanation for the TP case study (Subject~672752). Respiratory rate shifts the local surrogate towards the rapid class, whereas high ALSFRS-R shifts it towards the slow class.}
+  \label{fig:lime_tp}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FP.pdf}
+  \caption[LIME explanation: false positive case]{LIME explanation for the FP case study (Subject~491257). The local surrogate assigns opposing contributions to age and several respiratory and anthropometric variables.}
+  \label{fig:lime_fp}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FN.pdf}
+  \caption[LIME explanation: false negative case]{LIME explanation for the FN case study (Subject~330379). Respiratory rate and several baseline variables shift the local approximation towards the slow class.}
+  \label{fig:lime_fn}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/lime_local_TN.pdf}
+  \caption[LIME explanation: true negative case]{LIME explanation for the TN case study (Subject~631435). High ALSFRS-R, lower respiratory rate, age, and pulse shift the local approximation towards the slow class.}
+  \label{fig:lime_tn}
+\end{figure}
+
+\clearpage
+\section{SHAP--LIME Concordance}
+\label{app:local_concordance}
+
+Table~\ref{tab:concordance} compares the ten highest-ranked features from SHAP and LIME for each subject. The overlap ranges from five features for the true positive to seven for the false negative.
+
+\begin{table}[ht!]
+\centering
+\caption[SHAP--LIME top-10 feature overlap]{Number of overlapping features in the top-10 SHAP vs.\ LIME rankings for each case-study subject.}
+\label{tab:concordance}
+\small
+\begin{tabular}{l c l}
+\toprule
+\textbf{Case} & \textbf{Overlap} & \textbf{Shared features} \\
+\midrule
+TP & 5 & ALSFRS-R, FVC (litres), Pulse, Resp.\ Rate, Temperature \\
+FP & 6 & ALSFRS-R, Age, BMI, FVC (litres), Pulse, Resp.\ Rate \\
+FN & 7 & ALSFRS-R, ALT, Age, BMI, FVC (\% normal), Resp.\ Rate, Temperature \\
+TN & 6 & ALSFRS-R, Age, BMI, FVC (litres), Pulse, Temperature \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The shared features indicate partial agreement about each local prediction. The remaining differences are expected because TreeSHAP distributes the fitted tree model's output among its features, whereas LIME approximates the decision surface in a perturbed neighbourhood around the selected subject.
+
+
+% ============================================================
+\chapter{Error Profiles for Study I}
+\label{app:error_profiles}
+% ============================================================
+
+This appendix expands the error analysis summarised in Section~\ref{subsec:results_error_profile}. All 279 \gls{TEST}-set participants are assigned to a confusion-matrix quadrant at the selected threshold ($t=0.21$) and stratified using four baseline variables:
+\begin{itemize}
+  \item \textbf{Age group:} $\leq49$, 50--57, 58--65, and $>65$ years;
+  \item \textbf{Sex:} female and male;
+  \item \textbf{\gls{ALSFRS-R} severity:} $\leq35$, 36--39, 40--42, and $>42$;
+  \item \textbf{\gls{FVC} percentage of normal:} $\leq77\%$, 78--87\%, 88--98\%, and $>98\%$.
+\end{itemize}
+The age and \gls{FVC} boundaries are based on quartiles among participants with observed values. Missing age or FVC is shown as a separate group, avoiding the exclusion of participants whose measurements are unavailable.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/error_profile_age.pdf}
+  \caption[Prediction outcomes by age group]{Distribution of prediction outcomes (TP, FP, FN, TN) by age group. Six of the 12 false negatives occur among participants aged 49 years or younger; missing age values are shown separately.}
+  \label{fig:error_age}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/error_profile_alsfrs.pdf}
+  \caption[Prediction outcomes by ALSFRS-R severity]{Distribution of prediction outcomes by ALSFRS-R severity. Seven of the 12 false negatives have a baseline ALSFRS-R score of at least 40, including five in the mildest group ($>42$).}
+  \label{fig:error_alsfrs}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/error_profile_sex.pdf}
+  \caption[Prediction outcomes by sex]{Distribution of prediction outcomes by sex. False negatives account for 4.7\% of female participants and 4.0\% of male participants.}
+  \label{fig:error_sex}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/error_profile_fvc.pdf}
+  \caption[Prediction outcomes by FVC percentage]{Distribution of prediction outcomes by FVC (\% of normal). FVC percentage is missing for 123 participants, who are retained as a separate group.}
+  \label{fig:error_fvc}
+\end{figure}
+\newpage
+
+Seven of the 12 false negatives have baseline \gls{ALSFRS-R} scores of at least 40, and five score above 42. Most missed rapid progressors therefore have relatively preserved baseline function, although errors also occur in the lower score groups. Six false negatives occur in the youngest age group ($\leq49$ years); the other six are distributed across the three older groups, and none occurs among the 33 participants with missing age.
+
+Only 156 participants have an observed \gls{FVC} percentage. Of the seven false negatives with an observed value, five have FVC above 77\%; the other five false negatives have missing FVC. These counts are too small and incomplete to support a firm conclusion about respiratory function. The false-negative proportions for female and male participants are also close (4.7\% and 4.0\%), but this descriptive comparison does not establish equivalent performance between sexes.
+
+False positives are frequent in every stratification. This is consistent with the selected operating point: the model detects 72 of 84 rapid progressors but classifies another 133 participants as rapid. The profiles therefore describe where the resulting errors occur rather than identifying independent causes of misclassification.
+
+
+% ============================================================
+\chapter{Subgroup Performance for Study I}
+\label{app:subgroup_performance}
+% ============================================================
+
+This appendix reports the subgroup analysis summarised in Section~\ref{subsec:results_subgroup}. \gls{PR-AUC}, recall, precision, and $F_1$ are calculated within the age, sex, baseline \gls{ALSFRS-R}, and \gls{FVC} strata used for error profiling. Groups with fewer than ten participants or three rapid progressors are excluded. Missing age and FVC values remain separate strata when they meet these criteria.
+
+The figures include the overall \gls{TEST}-set PR-AUC (0.456) and recall (0.857) as descriptive references. Comparisons between groups are not adjusted for differences in sample size or rapid-progressor prevalence, and no subgroup-specific confidence intervals or multiplicity-adjusted tests are calculated.
+
+\begin{table}[ht!]
+\centering
+\caption[Performance metrics by clinical subgroup]{Performance metrics by clinical subgroup on the TEST set ($t\!=\!0.21$).}
+\label{tab:subgroup_metrics}
+\small
+\begin{tabular}{l l r r c c c c}
+\toprule
+\textbf{Stratification} & \textbf{Group} & \textbf{N} & \textbf{N\textsubscript{rapid}} & \textbf{PR-AUC} & \textbf{Recall} & \textbf{Prec.} & \textbf{$F_1$} \\
+\midrule
+Age & $\leq$49      & 65  & 22 & 0.437 & 0.727 & 0.421 & 0.533 \\
+    & 50--57        & 68  & 22 & 0.567 & 0.955 & 0.382 & 0.545 \\
+    & 58--65        & 59  & 14 & 0.375 & 0.786 & 0.244 & 0.373 \\
+    & $>$65         & 54  & 15 & 0.365 & 0.867 & 0.310 & 0.456 \\
+    & Missing       & 33  & 11 & 0.770 & 1.000 & 0.440 & 0.611 \\
+\midrule
+Sex & Female        & 106 & 32 & 0.450 & 0.844 & 0.310 & 0.454 \\
+    & Male          & 173 & 52 & 0.473 & 0.865 & 0.381 & 0.529 \\
+\midrule
+ALSFRS-R & $\leq$35 & 72  & 36 & 0.558 & 0.972 & 0.522 & 0.680 \\
+         & 36--39    & 73  & 24 & 0.418 & 0.833 & 0.333 & 0.476 \\
+         & 40--42    & 60  & 13 & 0.380 & 0.846 & 0.244 & 0.379 \\
+         & $>$42     & 74  & 11 & 0.206 & 0.545 & 0.182 & 0.273 \\
+\midrule
+FVC (\%) & $\leq$77\% & 40  & 16 & 0.590 & 0.938 & 0.417 & 0.577 \\
+         & 78--87\%   & 34  & 15 & 0.678 & 0.800 & 0.462 & 0.585 \\
+         & 88--98\%   & 37  & 7  & 0.306 & 0.857 & 0.250 & 0.387 \\
+         & $>$98\%    & 45  & 9  & 0.317 & 0.778 & 0.304 & 0.438 \\
+         & Missing    & 123 & 37 & 0.420 & 0.865 & 0.333 & 0.481 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/subgroup_pr_auc.pdf}
+  \caption[TEST set PR-AUC by clinical subgroup]{PR-AUC by clinical subgroup on the TEST set. The dashed line indicates the overall TEST value (0.456). Missing age and FVC values are retained as separate groups. Differences should be interpreted alongside subgroup prevalence.}
+  \label{fig:subgroup_prauc}
+\end{figure}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/subgroup_recall.pdf}
+  \caption[TEST set recall by clinical subgroup]{Recall by clinical subgroup on the TEST set ($t\!=\!0.21$). The dashed line indicates overall TEST recall (0.857). The lowest values occur for ALSFRS-R $>42$ (0.545) and age $\leq49$ (0.727).}
+  \label{fig:subgroup_recall}
+\end{figure}
+\newpage
+
+Recall decreases from 97.2\% in the \gls{ALSFRS-R} $\leq35$ group to 54.5\% in the $>42$ group. This is the largest observed subgroup difference, although the estimates are based on 36 and 11 rapid progressors, respectively. The four observed-age groups range from 72.7\% to 95.5\% recall and from 0.365 to 0.567 PR-AUC. The missing-age group has higher point estimates, but missingness may reflect study or data-collection differences and is not interpreted as a clinical age effect.
+
+Female and male participants have similar point estimates: PR-AUC is 0.450 and 0.473, while recall is 84.4\% and 86.5\%. These values are descriptive and do not establish fairness or equivalent performance. For \gls{FVC}, PR-AUC is higher in the two lower-value groups (0.590--0.678), where rapid-progressor prevalence is also higher (40.0--44.1\%) than in the higher-FVC groups (18.9--20.0\%). PR-AUC cannot therefore be interpreted independently of prevalence.
+
+The 123 participants without an observed FVC percentage have PR-AUC 0.420 and recall 86.5\%. Retaining this group avoids reporting subgroup performance only for the 156 participants with an available measurement. Given the small outcome counts in several strata and the absence of confidence intervals, the analysis identifies patterns for further investigation rather than stable differences between patient groups.
+
+
+% ============================================================
+\chapter{Decision Curve Analysis for Study I}
+\label{app:dca}
+% ============================================================
+
+This appendix documents the Decision Curve Analysis summarised in Section~\ref{subsec:results_dca}. At threshold $t$, net benefit is defined as
+\begin{equation}
+  \text{NB}(t) = \frac{\text{TP}}{N} - \frac{\text{FP}}{N} \cdot \frac{t}{1-t},
+  \label{eq:net_benefit}
+\end{equation}
+where $t/(1-t)$ represents the threshold-implied relative cost of a false positive compared with a missed rapid progressor.
+
+The model is compared with two reference strategies: \textit{treat all}, which classifies every participant as rapid, and \textit{treat none}, which classifies none as rapid. Net benefit is evaluated from $t=0.01$ to $0.60$ in increments of 0.01. No participant has a predicted probability above 0.58, so higher thresholds reproduce the treat-none strategy and add no information.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/decision_curve.pdf}
+  \caption[Decision Curve Analysis, TEST set]{Decision Curve Analysis for XGBoost on the TEST set. The shaded region marks the main continuous interval ($t=0.18$--$0.47$) in which the model has higher estimated net benefit than both reference strategies.}
+  \label{fig:decision_curve}
+\end{figure}
+
+The main continuous interval in which the model exceeds both references is $t\in[0.18,\,0.47]$. Higher net benefit also occurs at the isolated grid points 0.13, 0.54, and 0.57. These points are not treated as stable intervals, particularly at 0.54 and 0.57, where only three and one participants are classified as positive.
+
+At the selected threshold of 0.21, the model's net benefit is 0.131, compared with 0.115 for treat all and 0 for treat none. The difference of 0.016 from treat all corresponds to approximately 1.6 additional net true-positive decisions per 100 participants under the weighting implied by this threshold.
+
+These estimates come from the same finite TEST set used for model evaluation and are reported without confidence intervals. Moreover, the reference terminology does not correspond to a specified clinical intervention in this study. The curve can therefore identify thresholds with favourable estimated net benefit in this sample, but it cannot establish clinical utility or transportability to another cohort.
+
+
+% ============================================================
+\chapter{Training-Size Sensitivity in Study I}
+\label{app:learning_curve}
+% ============================================================
+
+This appendix documents the learning-curve analysis summarised in Section~\ref{subsec:results_learning_curves}. The selected XGBoost configuration is fitted on progressively larger subsets of \gls{DEV}: 20\%, 30\%, and subsequent ten-percentage-point increments up to 100\%. Since DEV contains one row per participant, sampling is performed directly at participant level.
+
+Each fraction below 100\% is evaluated across 20 stratified random samples, preserving the rapid-progressor proportion at approximately 30\%. The full DEV fit is deterministic and is run once. Figure~\ref{fig:learning_curve} reports mean \gls{PR-AUC} and \gls{ROC-AUC} across the repeated subsets, with error bars showing one standard deviation rather than confidence intervals.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.72\linewidth]{images/figures/learning_curve.pdf}
+  \caption[XGBoost training-size sensitivity]{TEST-set performance after fitting XGBoost on progressively larger stratified subsets of DEV. Points below 100\% show the mean across 20 repetitions; error bars represent one standard deviation. The full DEV model is fitted once.}
+  \label{fig:learning_curve}
+\end{figure}
+
+Mean PR-AUC is 0.424 at 20\% of DEV ($n=222$), 0.440 at 60\% ($n=667$), and 0.446 at 90\% ($n=1{,}001$). The corresponding standard deviation falls from 0.029 at 20\% to 0.011 at 90\%. Fitting the model once on all 1{,}113 DEV participants gives a TEST PR-AUC of 0.456.
+
+The mean curve is not monotonic, and error bars overlap across most adjacent fractions. The observed pattern is therefore compatible with modest average gains and reduced variability as the training subset grows, but it does not identify a stable plateau. The full-data point has no repetition-based error bar and is not directly comparable with the variability estimated for the smaller fractions.
+
+The same TEST set is evaluated at every fraction, making this a post-evaluation sensitivity analysis rather than a new estimate of generalisation performance. It was not used to select the model or its hyperparameters, and it cannot determine how much performance would change in a larger independent cohort.
+
+
+% ============================================================
+\chapter{Partial Dependence Analysis for Study I}
+\label{app:pdp}
+% ============================================================
+
+This appendix documents the Partial Dependence Plots (PDPs) summarised in Section~\ref{subsec:results_pdp}. For a feature $x_j$, the partial dependence function is
+\begin{equation}
+  \hat{f}_j(x_j) = \frac{1}{N} \sum_{i=1}^{N} \hat{f}(x_j,\, \mathbf{x}_{i,\setminus j}),
+  \label{eq:pdp}
+\end{equation}
+where $\mathbf{x}_{i,\setminus j}$ contains the values of all features other than $x_j$ for participant $i$.
+
+PDPs are computed for the three features with the highest global \gls{SHAP} importance: baseline \gls{ALSFRS-R} total, \gls{FVC} in litres, and age. For each feature, the evaluation grid spans the 5th to 95th percentile of its observed \gls{TEST} values. Missing values are excluded when defining the grid and rug marks but remain median-imputed within the prediction pipeline. The rug marks show where observed values are concentrated and help identify sparsely supported regions of each curve.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/pdp_top3.pdf}
+  \caption[Partial Dependence Plots for top-3 SHAP features]{Partial dependence plots for the three highest-ranked global SHAP features: baseline ALSFRS-R total, FVC in litres, and age. Grids span the 5th--95th percentiles of observed TEST values; rug marks show observed data density.}
+  \label{fig:pdp_top3}
+\end{figure}
+\newpage
+
+For baseline \gls{ALSFRS-R}, the average predicted probability generally decreases across the observed range of 29--46, with several step changes characteristic of a tree ensemble. The total PDP range is 0.201. This direction is consistent with the global SHAP analysis, where higher baseline functional scores generally shift predictions towards the slow-progression class.
+
+The \gls{FVC} curve is relatively flat below approximately 3.7 litres, falls around 3.8--4.0 litres, and then stabilises, producing a total PDP range of 0.080. Only 162 of 279 TEST participants have an observed FVC value in litres, so the rug plot is important when judging which regions have direct data support. For age, the average prediction rises around the low 40s and remains broadly stable across much of the higher range. Its total PDP range is 0.104, with age observed for 246 participants.
+
+PDPs average over the joint distribution of all remaining variables. When predictors are correlated, replacing one feature across its grid can create combinations that are uncommon or clinically implausible in the observed cohort. The curves therefore describe the fitted model's marginal behaviour; they do not represent causal dose--response relationships or effects expected for an individual participant.
+
+
+% ============================================================
+\chapter{Patient Risk Report Demonstrator}
+\label{app:patient_report}
+% ============================================================
+
+This appendix documents the patient-level reporting demonstrator introduced in Section~\ref{sec:methods_patient_report}. It was developed after model evaluation to test how the persisted Study~I pipeline could present an individual prediction, its local explanation, and supporting context. The demonstrator is not a clinically validated decision-support tool.
+
+\section{Report Design}
+\label{app:patient_report_design}
+
+The tool loads the XGBoost pipeline refitted on the complete eligible cohort (Section~\ref{sec:methods_final_model}) together with its feature list, slope cutoff, and decision threshold. It accepts input from three sources:
+\begin{enumerate}
+  \item \textbf{Dataset lookup:} a subject \gls{ID} from the processed cohort;
+  \item \textbf{\gls{JSON} file:} a key--value file containing baseline feature values, which can represent an external or fictitious profile;
+  \item \textbf{Demo mode:} a randomly selected record from the processed cohort.
+\end{enumerate}
+
+Each report contains three components. First, the model output gives the estimated probability of rapid progression, $P(\text{rapid})$, and the classification obtained at the preselected operating threshold ($t=0.21$). For cohort records, the retrospectively derived outcome is displayed for context; it is not a held-out comparison because those records contributed to the final refit. Second, a local TreeSHAP explanation lists the five features with the largest absolute Shapley values, including their observed values and direction of influence. Contributions from one-hot encoded columns are aggregated under the source variable. Third, descriptive rules flag whether any of 13 variables appearing among the five main contributors lies beyond a predefined 25th- or 75th-percentile cutoff derived from \gls{DEV}.
+
+The percentile flags are distributional context rather than clinical reference ranges, alerts, or treatment recommendations. The report therefore includes a research-use disclaimer, and neither its predicted probabilities nor its review flags have undergone prospective clinical validation.
+
+\section{Fictitious Profile Generator}
+\label{subsec:methods_random_patient}
+
+A companion script generates fictitious profiles containing all 35 baseline features, allowing the interface to be tested without selecting a named cohort record. Continuous variables are sampled from bounded distributions calibrated to approximate summaries from the full \gls{PRO-ACT} cohort ($N=1{,}392$), while categorical variables follow approximate observed frequencies. Two dependencies are imposed explicitly: \gls{BMI} is calculated from sampled weight and height, and \gls{FVC} in litres is conditioned on sex.
+
+The remaining variables are sampled separately, so the profiles do not reproduce the clinical data's joint distribution. Their purpose is limited to testing data ingestion, prediction, and report formatting; they are unsuitable for clinical simulation, privacy assessment, or model validation.
+
+\section{Technical Verification}
+\label{app:patient_report_results}
+
+\subsection{Cohort Record Reports}
+\label{subsec:results_real_reports}
+
+Twelve reports were generated for records originally assigned to \gls{TEST}. Since the persisted model had been refitted on the complete cohort after held-out evaluation, these examples are in-sample with respect to the final artefact. Table~\ref{tab:real_patient_reports} records the main outputs.
+
+\begin{table}[ht!]
+\centering
+\caption[Reports for 12 cohort records]{Illustrative outputs for 12 cohort records originally assigned to TEST. P(rapid) denotes the probability produced by the full-cohort refit; Pred is the classification at $t=0.21$, and Outcome is the retrospectively derived target. These rows are descriptive examples, not held-out predictions.}
+\label{tab:real_patient_reports}
+\small
+\begin{tabular}{lcccl}
+\toprule
+Patient ID & P(rapid) & Pred & Outcome & Top SHAP Feature \\
+\midrule
+666     & 45.3\% & Rapid & Rapid & ALSFRS-R (33) \\
+524242  & 27.5\% & Rapid & Rapid & ALSFRS-R (39) \\
+1125    & 54.2\% & Rapid & Slow  & ALSFRS-R (32) \\
+476981  & 35.8\% & Rapid & Slow  & ALSFRS-R (37) \\
+48027   & 36.0\% & Rapid & Slow  & Age (40) \\
+326632  & 26.4\% & Rapid & Slow  & ALT (13) \\
+582861  & 39.8\% & Rapid & Slow  & ALSFRS-R (35) \\
+714820  & 20.8\% & Slow  & Slow  & ALSFRS-R (45) \\
+113562  & 15.3\% & Slow  & Slow  & ALSFRS-R (44) \\
+524909  & 18.1\% & Slow  & Slow  & Age (25) \\
+505201  & 13.0\% & Slow  & Slow  & ALSFRS-R (45) \\
+405398  & 14.2\% & Slow  & Slow  & ALSFRS-R (47) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The selected records span both sides of the operating threshold. Baseline \gls{ALSFRS-R} is the largest absolute \gls{SHAP} contributor in nine reports, age in two, and ALT in one. This pattern broadly follows the global ranking, while also showing that the dominant local attribution varies between records. Sensitivity, precision, and error rates are not calculated from these examples because the final model had already seen them.
+
+\subsection{Fictitious Profile Reports}
+\label{subsec:results_synthetic_reports}
+
+Ten fictitious profiles were processed through the report pipeline. Table~\ref{tab:synthetic_patient_reports} summarises the resulting outputs.
+
+\begin{table}[ht!]
+\centering
+\caption[Reports for 10 fictitious profiles]{Illustrative report outputs for 10 fictitious profiles generated from approximate marginal distributions calibrated on PRO-ACT. The profiles are software test inputs and do not represent a clinical validation cohort.}
+\label{tab:synthetic_patient_reports}
+\small
+\begin{tabular}{lccl}
+\toprule
+Patient & P(rapid) & Pred & Top SHAP Feature \\
+\midrule
+Random 001 & 30.7\% & Rapid & ALSFRS-R (29) \\
+Random 002 & 23.1\% & Rapid & Respiratory rate (11) \\
+Random 003 & 38.7\% & Rapid & Pulse (46) \\
+Random 004 & 54.3\% & Rapid & ALSFRS-R (33) \\
+Random 005 & 47.2\% & Rapid & ALSFRS-R (28) \\
+Random 006 & 18.3\% & Slow  & Age (36) \\
+Random 007 & 30.5\% & Rapid & Respiratory rate (11) \\
+Random 008 & 24.8\% & Rapid & FVC (4.0~L) \\
+Random 009 & 23.9\% & Rapid & FVC (4.9~L) \\
+Random 010 & 33.4\% & Rapid & Respiratory rate (14) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All ten profiles passed through preprocessing and prediction and produced a complete report. Their probabilities range from 18\% to 54\%, with nine above the selected threshold. That proportion cannot be compared with cohort prevalence or model sensitivity because the generator does not preserve dependencies between most variables. The leading contributor is \gls{ALSFRS-R} in three reports, respiratory rate in three, \gls{FVC} in two, and pulse and age in one each. These counts describe the generated examples rather than the behaviour expected in a clinical population.
+
+
+% ============================================================
+\chapter{Supplementary Analyses for Study II}
+\label{app:study2_supplementary}
+% ============================================================
+
+\section{Cross-Validation and Test ROC-AUC}
+
+Figure~\ref{fig:s2_cvtest} compares the mean cross-validation ROC-AUC used for model selection with ROC-AUC on the held-out test set. The values are similar for all seven selected configurations, suggesting that their ranking performance transferred to the internal holdout. This comparison does not assess calibration or the classifications produced at a threshold of 0.5, which are examined in Section~\ref{sec:s2r_decoupling}.
+
+\clearpage
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{images/figures/step6_cv_vs_test.png}
+  \caption[CV AUC vs.\ test AUC by classifier]{Cross-validation ROC-AUC versus held-out test ROC-AUC for the seven classifiers under their selected configurations.}
+  \label{fig:s2_cvtest}
+\end{figure}
+
+\section{Distributions of Leading SHAP Features}
+\label{app:study2_feature_distributions}
+
+Figure~\ref{fig:s2_featbars} shows the outcome-stratified distributions of diagnostic delay and Q8 walking slope, the two features with the highest mean absolute TreeSHAP values for LightGBM+ROS. Percentages are calculated within each survival group across the full 1,502-patient cohort. Because this is the same cohort from which the training and test partitions were drawn, the distributions help describe the fitted model's attributions but do not validate them independently.
+
+\clearpage
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.97\linewidth]{images/figures/fig_feature_bars.png}
+  \caption[Feature distributions by survival group]{Diagnostic-delay and Q8 walking-slope categories by survival group across the full Study II cohort.}
+  \label{fig:s2_featbars}
+\end{figure}
