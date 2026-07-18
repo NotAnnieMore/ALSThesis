@@ -8,11 +8,16 @@
 \markboth{Appendices}{}
 
 % ============================================================
-\chapter{FVC Missingness Analysis}
-\label{app:fvc_missingness}
+\chapter{Study I: Data Quality and Exploratory Analyses}
+\label{app:study1_data}
 % ============================================================
 
-This appendix reports the complete analysis of baseline \gls{FVC} availability summarised in Section~\ref{sec:results_fvc_missingness}. FVC in litres is missing for 43.7\% of the six-month cohort. Participants with and without an observed value are compared to determine whether availability is visibly associated with patient characteristics, trial attributes, or the target slope.
+This appendix brings together the supplementary data-quality checks and exploratory analyses conducted before model development in Study~I.
+
+\section{FVC Missingness Analysis}
+\label{app:fvc_missingness}
+
+This section reports the complete analysis of baseline \gls{FVC} availability summarised in Section~\ref{sec:results_fvc_missingness}. FVC in litres is missing for 43.7\% of the six-month cohort. Participants with and without an observed value are compared to determine whether availability is visibly associated with patient characteristics, trial attributes, or the target slope.
 
 Eight continuous variables are examined: baseline \gls{ALSFRS-R} total, age, six-month slope, creatinine, \gls{ALT}, \gls{BMI}, weight, and concomitant-medication count. Sex, study arm, and documented riluzole use are treated as categorical variables. Continuous distributions are compared using two-sided Mann--Whitney~$U$ tests and absolute Cohen's~$d$ values based on the pooled standard deviation. Categorical associations use Pearson's $\chi^2$ test and Cram\'er's~$V$:
 \[
@@ -34,11 +39,10 @@ The pattern is compatible with missingness related partly to trial-level collect
 
 
 % ============================================================
-\chapter{BMI Data-Quality Audit}
+\section{BMI Data-Quality Audit}
 \label{app:bmi_correction}
-% ============================================================
 
-This appendix documents the source-data issue that prompted the \gls{BMI} correction described in Section~\ref{sec:methods_bmi_correction}. The raw \gls{PRO-ACT} vital-sign table contains 147 height records labelled ``Centimeters'' with values between 14.5 and 19.3, which are not plausible adult heights. Multiplying these values by ten gives 145--193\,cm, so a misplaced decimal point is a plausible explanation, but the intended measurement cannot be confirmed from the available records.
+This section documents the source-data issue that prompted the \gls{BMI} correction described in Section~\ref{sec:methods_bmi_correction}. The raw \gls{PRO-ACT} vital-sign table contains 147 height records labelled ``Centimeters'' with values between 14.5 and 19.3, which are not plausible adult heights. Multiplying these values by ten gives 145--193\,cm, so a misplaced decimal point is a plausible explanation, but the intended measurement cannot be confirmed from the available records.
 
 The feature-extraction function \texttt{to\_cm} passed values carrying the ``Centimeters'' unit through unchanged. The anomalous heights therefore reached the baseline feature file and produced impossible BMI values. For example, combining a height of 14.5\,cm with a weight of approximately 95\,kg gives a BMI close to 4{,}500 when calculated as
 \[
@@ -51,13 +55,12 @@ Following this correction, BMI ranges from 15.5 to 46.9 in the six-month cohort 
 
 
 % ============================================================
-\chapter{Exploratory Analysis of Treatment Variables}
+\section{Exploratory Analysis of Treatment Variables}
 \label{app:treatment_eda}
-% ============================================================
 
-This appendix provides the complete exploratory analysis of the three treatment-related features used in Study~I: clinical trial arm, documented pre-baseline riluzole use, and the number of concomitant medications. The analysis uses all 1{,}392 participants in the six-month cohort and a descriptive rapid-progression label based on the global 30th-percentile slope cutoff (418 participants, 30.0\%). Model development does not use this global cutoff.
+This section provides the complete exploratory analysis of the three treatment-related features used in Study~I: clinical trial arm, documented pre-baseline riluzole use, and the number of concomitant medications. The analysis uses all 1{,}392 participants in the six-month cohort and a descriptive rapid-progression label based on the global 30th-percentile slope cutoff (418 participants, 30.0\%). Model development does not use this global cutoff.
 
-\section{Analysis Design}
+\subsection{Analysis Design}
 \label{app:treatment_design}
 
 Active and Placebo participants are compared using a $\chi^2$ test for the binary progression label and a two-sided Mann--Whitney~$U$ test for the continuous slope. Participants without study-arm information remain in the descriptive summary but are excluded from these tests. The same comparisons are performed for participants with and without documented pre-baseline riluzole use. Study arm and riluzole are also cross-tabulated, although no formal interaction test is conducted.
@@ -66,7 +69,7 @@ Concomitant-medication counts are grouped as 0, 1--2, 3--5, 6--9, and $\geq10$. 
 
 The pooled data do not support causal interpretation. ``Active'' combines experimental arms from different trials rather than one intervention, riluzole exposure is observational, and medication burden may also reflect comorbidity, symptom management, trial procedures, or recording intensity.
 
-\section{Study Arm}
+\subsection{Study Arm}
 \label{subsec:results_eda_arm}
 
 Of the 1{,}392 participants, 506 belong to an Active arm, 762 to Placebo, and 124 have no arm information. The rapid-progression rates are 26.5\%, 31.6\%, and 34.7\%, respectively (Table~\ref{tab:eda_treat_arm}). Median slopes are similar in the Active and Placebo groups: $-0.791$ and $-0.819$ points per 30 days.
@@ -106,7 +109,7 @@ Figures~\ref{fig:eda_arm_dist} and~\ref{fig:eda_arm_rapid} show the overlapping 
 \clearpage
 The test of the binary label, restricted to the 1{,}268 participants with known arm information, gives $\chi^2=3.62$ and $p=0.057$. The continuous slope comparison gives $U=200{,}472$ and $p=0.229$. Neither test provides evidence of a difference at the predefined $\alpha=0.05$ level, and the pooled arm labels do not permit treatment-specific interpretation.
 
-\section{Riluzole}
+\subsection{Riluzole}
 \label{subsec:results_eda_riluzole}
 
 Documented pre-baseline riluzole use is present for 902 participants (64.8\%); the remaining 490 have no qualifying record. Rapid-progression rates are 30.8\% and 28.6\%, respectively, while the median slopes are $-0.807$ and $-0.777$ points per 30 days. Figure~\ref{fig:eda_riluzole} displays both comparisons.
@@ -120,7 +123,7 @@ Documented pre-baseline riluzole use is present for 902 participants (64.8\%); t
 
 Documented riluzole use is not associated with the binary label ($\chi^2=0.66$, $p=0.416$), and the continuous slope comparison leads to the same statistical decision ($U=216{,}535$, $p=0.534$). These coded exposure groups cannot be interpreted as an estimate of riluzole efficacy~\cite{Miller2012}.
 
-\section{Study Arm and Riluzole}
+\subsection{Study Arm and Riluzole}
 \label{subsec:results_eda_interaction}
 
 The cross-tabulation in Figure~\ref{fig:eda_interaction} shows rates ranging from 25.7\% among Active participants with documented riluzole use ($n\!=\!315$) to 33.5\% in the corresponding Placebo subgroup ($n\!=\!526$). The groups without documented use have similar rates: 27.7\% for Active ($n\!=\!191$) and 27.5\% for Placebo ($n\!=\!236$).
@@ -134,7 +137,7 @@ The cross-tabulation in Figure~\ref{fig:eda_interaction} shows rates ranging fro
 
 No formal interaction test was performed. Differences between these four groups may reflect variation between trials or patient populations that is not represented in the cross-tabulation.
 
-\section{Concomitant Medications}
+\subsection{Concomitant Medications}
 \label{subsec:results_eda_conmeds}
 
 Participants with 1--2 pre-baseline concomitant medications have the lowest rapid-progression rate ($22.8$\%, $n\!=\!149$), while those with 6--9 have the highest ($34.2$\%, $n\!=\!310$). Medication count may capture comorbidity, symptom management, trial procedures, or record density, and the grouped rates do not separate these explanations.
@@ -153,13 +156,18 @@ The variation across medication groups is unadjusted and was not used to infer p
 
 
 % ============================================================
-\chapter{Hyperparameter Optimisation Details}
-\label{app:tuning}
+\chapter{Study I: Model Development and Sensitivity Analyses}
+\label{app:study1_development}
 % ============================================================
 
-This appendix complements the optimisation protocol in Section~\ref{sec:methods_optuna} with the complete search spaces, operational diagnostics, and fitted parameter values needed to reproduce the selected six-month models.
+This appendix reports the supplementary model-development results for Study~I, including optimisation details, the shorter prediction horizon, feature ablation, and exploratory statistical comparisons.
 
-\section{Search Spaces and Tuning Diagnostics}
+\section{Hyperparameter Optimisation Details}
+\label{app:tuning}
+
+This section complements the optimisation protocol in Section~\ref{sec:methods_optuna} with the complete search spaces, operational diagnostics, and fitted parameter values needed to reproduce the selected six-month models.
+
+\subsection{Search Spaces and Tuning Diagnostics}
 \label{app:tuning_diagnostics}
 
 \input{images/tables/optuna_search_spaces.tex}
@@ -179,7 +187,7 @@ Figure~\ref{fig:metric_heatmap} places the four recorded metrics side by side fo
   \label{fig:metric_heatmap}
 \end{figure}
 
-\section{Best Hyperparameters (6-Month Horizon)}
+\subsection{Best Hyperparameters (6-Month Horizon)}
 \label{app:best_params}
 
 Tables~\ref{tab:best_simple}--\ref{tab:best_boosting} report the best configuration found for each model on the 6-month DEV set.
@@ -269,13 +277,12 @@ The LightGBM \texttt{subsample} values are retained to reproduce the stored tria
 
 
 % ============================================================
-\chapter{Three-Month Horizon Results}
+\section{Three-Month Horizon Results}
 \label{app:three_month}
-% ============================================================
 
-This appendix provides the complete three-month tuning results and the additional outputs underlying the cross-horizon summary in Section~\ref{sec:results_3m}. The four retained model families were tuned independently on the three-month DEV set ($n\!=\!1{,}925$), in balanced and unbalanced modes, using 60 Optuna trials per configuration.
+This section provides the complete three-month tuning results and the additional outputs underlying the cross-horizon summary in Section~\ref{sec:results_3m}. The four retained model families were tuned independently on the three-month DEV set ($n\!=\!1{,}925$), in balanced and unbalanced modes, using 60 Optuna trials per configuration.
 
-\section{Three-Month Tuning}
+\subsection{Three-Month Tuning}
 
 \input{images/tables/step5v2_tuning_comparison_3m.tex}
 
@@ -289,7 +296,7 @@ This appendix provides the complete three-month tuning results and the additiona
 \clearpage
 Balanced XGBoost has the highest mean PR-AUC ($0.426 \pm 0.036$), followed by unbalanced XGBoost and unbalanced LightGBM (both 0.423). Weighting changes PR-AUC by 0.003 for XGBoost and 0.001 for LightGBM. Its larger effect on $F_1$ and $F_2$ at 0.5 reflects changes in the operating point rather than an equivalent change in ranking performance. XGBoost remains at the top and Logistic Regression at the lower end of the comparison, but LightGBM moves above Random Forest, so the ordering is not identical to the six-month result.
 
-\section{Complete Cross-Horizon Comparison}
+\subsection{Complete Cross-Horizon Comparison}
 
 \input{images/tables/step5v2_3m_vs_6m_comparison.tex}
 
@@ -304,9 +311,8 @@ The comparison is descriptive. The two horizons use partly different eligible co
 
 
 % ============================================================
-\chapter{Complete Feature Ablation Results}
+\section{Complete Feature Ablation Results}
 \label{app:ablation}
-% ============================================================
 
 Table~\ref{tab:ablation_v2} provides the mean cross-validated PR-AUC for all six feature configurations and four selected model configurations discussed in Section~\ref{sec:results_ablation_v2}. Hyperparameters remain fixed at the values selected with the full feature set; the comparison therefore measures sensitivity to feature availability rather than the best attainable result after retuning each subset.
 
@@ -314,9 +320,8 @@ Table~\ref{tab:ablation_v2} provides the mean cross-validated PR-AUC for all six
 
 
 % ============================================================
-\chapter{Pairwise Statistical Comparisons}
+\section{Pairwise Statistical Comparisons}
 \label{app:stats}
-% ============================================================
 
 The Friedman test is the primary comparison of the per-fold PR-AUC ranks from five-fold GroupKFold on the DEV set. Since the omnibus test does not reject its null hypothesis, the 21 pairwise Wilcoxon signed-rank comparisons below are retained for descriptive completeness rather than treated as confirmatory post-hoc tests.
 
@@ -358,13 +363,18 @@ The Friedman test yields $\chi^2_F(6)=12.43$ ($p=0.053$; Kendall's $W=0.414$), s
 
 
 % ============================================================
-\chapter{Additional Local Explanations for Study I}
-\label{app:local_explanations}
+\chapter{Study I: Performance Diagnostics and Model Interpretation}
+\label{app:study1_diagnostics}
 % ============================================================
 
-The main Study~I results retain one correctly detected and one missed rapid progressor (Section~\ref{subsec:results_shap_local}). This appendix completes the four-case analysis with the full profile table, the remaining SHAP waterfalls, all four LIME explanations, and the feature-level concordance results.
+This appendix groups the supplementary analyses used to inspect Study~I performance, errors, subgroup behaviour, decision value, training-size sensitivity, and model explanations.
 
-\section{Case-Study Profiles}
+\section{Additional Local Explanations}
+\label{app:local_explanations}
+
+The main Study~I results retain one correctly detected and one missed rapid progressor (Section~\ref{subsec:results_shap_local}). This section completes the four-case analysis with the full profile table, the remaining SHAP waterfalls, all four LIME explanations, and the feature-level concordance results.
+
+\subsection{Case-Study Profiles}
 \label{app:local_profiles}
 
 One subject was selected from each confusion-matrix quadrant by choosing the case closest to the median predicted probability within that quadrant. Table~\ref{tab:case_study_profiles} records the baseline characteristics used to place the local explanations in context.
@@ -387,7 +397,7 @@ FVC (\% normal)  & --     & --     & 79     & 87     \\
 \end{tabular}
 \end{table}
 
-\section{Additional SHAP Waterfalls}
+\subsection{Additional SHAP Waterfalls}
 \label{app:local_shap}
 
 \noindent\textbf{False Positive (Subject~491257).}
@@ -410,7 +420,7 @@ For this correctly classified slow progressor (Figure~\ref{fig:shap_wf_tn}), hig
   \label{fig:shap_wf_tn}
 \end{figure}
 
-\section{LIME Explanations}
+\subsection{LIME Explanations}
 \label{app:local_lime}
 
 LIME was applied to the same four case-study subjects as a complementary local approximation of the classifier. Each explanation used 2{,}000 perturbed samples around the instance and a sparse linear surrogate fitted to the resulting predictions. Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} show the explanation for each confusion-matrix quadrant.
@@ -444,7 +454,7 @@ LIME was applied to the same four case-study subjects as a complementary local a
 \end{figure}
 
 \clearpage
-\section{SHAP--LIME Concordance}
+\subsection{SHAP--LIME Concordance}
 \label{app:local_concordance}
 
 Table~\ref{tab:concordance} compares the ten highest-ranked features from SHAP and LIME for each subject. The overlap ranges from five features for the true positive to seven for the false negative.
@@ -470,11 +480,10 @@ The shared features indicate partial agreement about each local prediction. The 
 
 
 % ============================================================
-\chapter{Error Profiles for Study I}
+\section{Error Profiles}
 \label{app:error_profiles}
-% ============================================================
 
-This appendix expands the error analysis summarised in Section~\ref{subsec:results_error_profile}. All 279 \gls{TEST}-set participants are assigned to a confusion-matrix quadrant at the selected threshold ($t=0.21$) and stratified using four baseline variables:
+This section expands the error analysis summarised in Section~\ref{subsec:results_error_profile}. All 279 \gls{TEST}-set participants are assigned to a confusion-matrix quadrant at the selected threshold ($t=0.21$) and stratified using four baseline variables:
 \begin{itemize}
   \item \textbf{Age group:} $\leq49$, 50--57, 58--65, and $>65$ years;
   \item \textbf{Sex:} female and male;
@@ -520,11 +529,10 @@ False positives are frequent in every stratification. This is consistent with th
 
 
 % ============================================================
-\chapter{Subgroup Performance for Study I}
+\section{Subgroup Performance}
 \label{app:subgroup_performance}
-% ============================================================
 
-This appendix reports the subgroup analysis summarised in Section~\ref{subsec:results_subgroup}. \gls{PR-AUC}, recall, precision, and $F_1$ are calculated within the age, sex, baseline \gls{ALSFRS-R}, and \gls{FVC} strata used for error profiling. Groups with fewer than ten participants or three rapid progressors are excluded. Missing age and FVC values remain separate strata when they meet these criteria.
+This section reports the subgroup analysis summarised in Section~\ref{subsec:results_subgroup}. \gls{PR-AUC}, recall, precision, and $F_1$ are calculated within the age, sex, baseline \gls{ALSFRS-R}, and \gls{FVC} strata used for error profiling. Groups with fewer than ten participants or three rapid progressors are excluded. Missing age and FVC values remain separate strata when they meet these criteria.
 
 The figures include the overall \gls{TEST}-set PR-AUC (0.456) and recall (0.857) as descriptive references. Comparisons between groups are not adjusted for differences in sample size or rapid-progressor prevalence, and no subgroup-specific confidence intervals or multiplicity-adjusted tests are calculated.
 
@@ -583,11 +591,10 @@ The 123 participants without an observed FVC percentage have PR-AUC 0.420 and re
 
 
 % ============================================================
-\chapter{Decision Curve Analysis for Study I}
+\section{Decision Curve Analysis}
 \label{app:dca}
-% ============================================================
 
-This appendix documents the Decision Curve Analysis summarised in Section~\ref{subsec:results_dca}. At threshold $t$, net benefit is defined as
+This section documents the Decision Curve Analysis summarised in Section~\ref{subsec:results_dca}. At threshold $t$, net benefit is defined as
 \begin{equation}
   \text{NB}(t) = \frac{\text{TP}}{N} - \frac{\text{FP}}{N} \cdot \frac{t}{1-t},
   \label{eq:net_benefit}
@@ -611,11 +618,10 @@ These estimates come from the same finite TEST set used for model evaluation and
 
 
 % ============================================================
-\chapter{Training-Size Sensitivity in Study I}
+\section{Training-Size Sensitivity}
 \label{app:learning_curve}
-% ============================================================
 
-This appendix documents the learning-curve analysis summarised in Section~\ref{subsec:results_learning_curves}. The selected XGBoost configuration is fitted on progressively larger subsets of \gls{DEV}: 20\%, 30\%, and subsequent ten-percentage-point increments up to 100\%. Since DEV contains one row per participant, sampling is performed directly at participant level.
+This section documents the learning-curve analysis summarised in Section~\ref{subsec:results_learning_curves}. The selected XGBoost configuration is fitted on progressively larger subsets of \gls{DEV}: 20\%, 30\%, and subsequent ten-percentage-point increments up to 100\%. Since DEV contains one row per participant, sampling is performed directly at participant level.
 
 Each fraction below 100\% is evaluated across 20 stratified random samples, preserving the rapid-progressor proportion at approximately 30\%. The full DEV fit is deterministic and is run once. Figure~\ref{fig:learning_curve} reports mean \gls{PR-AUC} and \gls{ROC-AUC} across the repeated subsets, with error bars showing one standard deviation rather than confidence intervals.
 
@@ -634,11 +640,10 @@ The same TEST set is evaluated at every fraction, making this a post-evaluation 
 
 
 % ============================================================
-\chapter{Partial Dependence Analysis for Study I}
+\section{Partial Dependence Analysis}
 \label{app:pdp}
-% ============================================================
 
-This appendix documents the Partial Dependence Plots (PDPs) summarised in Section~\ref{subsec:results_pdp}. For a feature $x_j$, the partial dependence function is
+This section documents the Partial Dependence Plots (PDPs) summarised in Section~\ref{subsec:results_pdp}. For a feature $x_j$, the partial dependence function is
 \begin{equation}
   \hat{f}_j(x_j) = \frac{1}{N} \sum_{i=1}^{N} \hat{f}(x_j,\, \mathbf{x}_{i,\setminus j}),
   \label{eq:pdp}

@@ -61,6 +61,7 @@ At block level, 60.7\% of subjects ($n\!=\!845$) have at least one non-missing F
 Study arm is recorded for 91.1\% of subjects. The derived riluzole indicator and concomitant-medication count contain no missing values because subjects without a qualifying pre-baseline record are coded as zero.
 Labs are moderately available (creatinine: 64.7\%, ALT: 69.0\%).
 
+
 \begin{table}[ht]
 \centering
 \caption[Feature coverage, 6-month cohort]{Feature coverage for the 6-month cohort ($N\!=\!1{,}392$). Block-level coverage indicates the fraction of subjects with at least one non-missing feature in the block.}
@@ -81,7 +82,7 @@ All features & 35 & 100\textsuperscript{$\dagger$} \\
 \multicolumn{3}{l}{\footnotesize $\dagger$After median imputation, all subjects have complete feature vectors.}
 \end{tabular}
 \end{table}
-
+\break
 The heterogeneous coverage across blocks underscores the importance of an imputation strategy that does not introduce outcome-dependent bias, and supports the use of ablation to quantify whether blocks with lower coverage (e.g.\ FVC, Labs) contribute sufficient predictive signal to justify their inclusion.
 Note that the dataset contains 39 columns in total, but 4 columns are excluded before modelling: three temporal offsets (\texttt{t0\_delta\_days}, \texttt{vitals\_delta\_days}, \texttt{fvc\_delta\_days}) that encode measurement timing rather than clinical status, and \texttt{ALSFRS\_Responded\_By} which is near-constant ($>$93\% missing).
 The remaining 35 features constitute the model input after imputation.
@@ -303,6 +304,7 @@ Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sw
 The seven configurations selected within each model family are fitted on the full DEV partition and evaluated once on the held-out TEST partition ($n\!=\!279$, rapid prevalence $30.1$\%).
 Labels are defined using the 30th-percentile slope cutoff computed on the DEV set ($-1.243$~points per 30 days), ensuring no information leaks from the test set into the labelling process.
 
+\clearpage
 \subsection{Discrimination Metrics}
 
 Table~\ref{tab:step6_test_metrics} reports threshold-free metrics (PR-AUC, ROC-AUC) and threshold-dependent metrics at the default $t\!=\!0.50$.
@@ -325,7 +327,7 @@ Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
   DecisionTree  & bal.   & 0.373 & 0.569 & 0.417 & 0.417 & 0.270 \\
 \bottomrule
 \end{tabular}
-\end{table}\hfill \break
+\end{table}\hfill
 
 \noindent\textbf{Key observations:}
 \begin{enumerate}
@@ -370,7 +372,7 @@ Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the pre
   \label{fig:step6_roc_curves}
 \end{figure}
 
-
+\clearpage
 \subsection{Threshold Evaluation on TEST}
 
 $t=0.21$, selected from DEV OOF predictions (Section~\ref{sec:results_threshold_xgb}), is applied unchanged to the TEST set.
@@ -522,7 +524,7 @@ Numeric features are standardised prior to fitting, whereas one-hot encoded indi
 
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.80\linewidth]{images/figures/lr_coefficients.pdf}
+  \includegraphics[width=0.85\linewidth]{images/figures/lr_coefficients.pdf}
   \caption[Logistic regression coefficients]{Coefficients of the balanced Logistic Regression model (top~15 by absolute value). Numeric features are standardised before fitting, while one-hot encoded indicators remain binary. Negative coefficients (blue) reduce the predicted log-odds of rapid progression; positive coefficients (red) increase them.}
   \label{fig:lr_coefs}
 \end{figure}
@@ -560,7 +562,6 @@ All analyses use the held-out TEST set ($N\!=\!279$) at the $F_1$-optimal thresh
 
 At $t=0.21$, the model misses 12 of 84 rapid progressors and produces 133 false positives. Seven false negatives have a baseline \gls{ALSFRS-R} score of at least 40, including five in the mildest group ($>42$), while six occur among participants aged 49 years or younger. False-negative proportions are similar for female and male participants (4.7\% and 4.0\%), and the incomplete \gls{FVC} data do not support a clear respiratory pattern. The concentration of missed cases among participants with relatively preserved baseline function motivates the subgroup analysis that follows. Appendix~\ref{app:error_profiles} contains the four stratified error profiles and their detailed interpretation.
 
-\clearpage
 % ------------------------------------------------------------
 \subsection{Subgroup Performance}
 \label{subsec:results_subgroup}
@@ -570,7 +571,6 @@ Baseline functional status shows the clearest subgroup variation. Recall falls f
 
 PR-AUC varies across the \gls{FVC} strata, but the lower-FVC groups also contain a higher proportion of rapid progressors. The metric differences therefore cannot be separated from subgroup prevalence in this analysis. Appendix~\ref{app:subgroup_performance} reports all strata, including participants with missing age or FVC, together with the complete table and figures.
 
-\clearpage
 % ------------------------------------------------------------
 \subsection{Decision Curve Analysis}
 \label{subsec:results_dca}
@@ -644,7 +644,6 @@ The curves remain descriptive. FVC in litres is observed for only 162 of 279 \gl
 
 The generator described in Section~\ref{sec:methods_patient_report} produced complete reports for 12 cohort records and ten fictitious profiles. Baseline \gls{ALSFRS-R} was the largest absolute \gls{SHAP} contributor in nine of the 12 cohort examples, whereas the fictitious inputs produced a wider mix of leading features. These runs verified the path from input data to prediction, local explanation, and formatted output. They do not provide an additional performance estimate: the cohort records were seen during the final full-cohort refit, and the fictitious profiles do not preserve the clinical data's joint distribution. Appendix~\ref{app:patient_report} describes the demonstrator and reports the example outputs in full.
 
-\clearpage
 % ============================================================
 \section{Summary of Key Findings}
 \label{sec:results_summary}

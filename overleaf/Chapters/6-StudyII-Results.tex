@@ -129,6 +129,7 @@ The remaining classifiers illustrate why the ranking metric cannot be read as a 
 
 Cross-validation and test ROC-AUC remain broadly similar across the seven selected configurations (Appendix~\ref{app:study2_supplementary}). This agreement concerns ranking performance and does not imply comparable behaviour at the default decision threshold. Figure~\ref{fig:s2_decoupling} makes that distinction explicit by comparing cross-validation ROC-AUC with test sensitivity.
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/fig_auc_sensitivity_decoupling.png}
@@ -147,13 +148,14 @@ This is an example of ROC-AUC and operating-point performance becoming decoupled
 
 The precision--recall curves in Figure~\ref{fig:s2_pr} provide a second threshold-free view. MLP reached an average precision of 0.669, compared with 0.704 for LightGBM+ROS and 0.595 for SVM+SMOTEENN. Its ranking signal was therefore not absent. The confusion matrix, rather than the precision--recall curve, shows the consequence of applying the 0.50 threshold.
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.97\linewidth]{images/figures/fig_confusion_matrices.png}
   \caption[Confusion matrices for three highlighted classifiers]{Confusion matrices on the held-out test set for the three classifiers highlighted in the text. LightGBM+ROS and SVM+SMOTEENN correctly identify the majority of Short Survivors (TP), whereas MLP+None effectively classifies all patients as Standard Survival (FN\,$= 34$).}
   \label{fig:s2_cm}
 \end{figure}
-\clearpage
+
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.80\linewidth]{images/figures/fig_pr_curves.png}
@@ -169,12 +171,12 @@ As in Study~I (Section~\ref{sec:results_threshold_xgb}), ranking performance and
 % ============================================================
 
 The AUC--sensitivity gap motivates a systematic investigation of alternative decision thresholds.
-Three thresholds were derived from out-of-fold (OOF) CV predictions for each classifier ensuring no information from the held-out test set was used in their selection---and subsequently applied to the test set:
+For each classifier, three thresholds were derived from out-of-fold predictions generated during repeated cross-validation. This kept the held-out test set outside threshold selection. The thresholds were then applied to the test set:
 (i)~Youden's J~\cite{youden1950} (maximises sensitivity $+$ specificity $- 1$);
 (ii)~sensitivity-constrained (highest threshold achieving $\geq 0.90$ sensitivity on OOF predictions);
 and (iii)~$F_1$-optimal (maximises minority-class $F_1$ on OOF predictions).
 Table~\ref{tab:s2_threshold} reports results for the two most instructive classifiers.
-\clearpage
+
 \begin{table}[ht!]
   \centering
   \caption[Decision threshold analysis: MLP and LightGBM]{Test-set performance for MLP and LightGBM+ROS at the default threshold and at three thresholds selected from pooled out-of-fold training predictions. The sensitivity-constrained threshold was the highest OOF value achieving sensitivity $\geq 0.90$; this constraint was not guaranteed to transfer unchanged to the held-out test set. TP/FN counts refer to the 35 Short Survivors.}
@@ -214,7 +216,7 @@ The MLP result shows that its failure at 0.50 was largely an operating-point pro
 % ============================================================
 
 Table~\ref{tab:s2_bonferroni} reports mean balanced accuracy for each classifier under single-model and BalancedBagging configurations, along with the statistical comparison.
-\clearpage
+
 \begin{table}[ht!]
   \centering
   \caption[BalancedBagging vs.\ single classifier (CV balanced accuracy)]{Cross-validation balanced accuracy under single-model and BalancedBagging configurations, with per-fold Wilcoxon signed-rank tests (Bonferroni-corrected for 7 comparisons). $^{***}p \leq 0.001$; $^{**}p \leq 0.01$; n.s.\ = not significant.}

@@ -16,8 +16,8 @@ Figure~\ref{fig:pipeline_overview} shows the nine stages of the analysis, from c
   \includegraphics[width=\textwidth,height=0.88\textheight,keepaspectratio]{images/figures/study1_pipeline.png}
   \caption[Study I end-to-end pipeline overview]{Pipeline for Study~I.
   Stages~1--4 construct the horizon-specific datasets and development/test partitions.
-  Stages~5--6 use only the DEV set for cross-validation, hyperparameter optimisation, and model selection.
-  Stage~7 evaluates the selected model on the reserved TEST set, stage~8 examines its predictions with SHAP and LIME, and stage~9 produces a prototype patient-level report.}
+  Stages~5--6 use only the development set for cross-validation, hyperparameter optimisation, and model selection.
+  Stage~7 evaluates the selected model on the reserved test set, stage~8 examines its predictions using global and local explanation methods, and stage~9 produces a prototype patient-level report.}
   \label{fig:pipeline_overview}
 \end{figure}
 
