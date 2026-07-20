@@ -139,6 +139,13 @@ FEATURE_LABELS = {
     "creatinine_t0":                   "Creatinine (baseline)",
 }
 
+ONE_HOT_PREFIXES = {
+    "Sex_":                    "Sex: ",
+    "Ethnicity_":              "Ethnicity: ",
+    "Mode_of_Administration_": "Administration: ",
+    "study_arm_":              "Study arm: ",
+}
+
 
 # ─────────────────────────────────────────────────────────────
 # Helpers
@@ -159,7 +166,12 @@ def save_fig(fig, name):
 
 def readable(name):
     """Return a readable label for a feature name."""
-    return FEATURE_LABELS.get(name, name)
+    if name in FEATURE_LABELS:
+        return FEATURE_LABELS[name]
+    for prefix, label in ONE_HOT_PREFIXES.items():
+        if name.startswith(prefix):
+            return f"{label}{name[len(prefix):].replace('_', ' ')}"
+    return name.replace("_", " ")
 
 
 def recolour_directional_bars(fig):
@@ -303,7 +315,7 @@ def pick_case_studies(y_true, y_pred, proba):
 # ─────────────────────────────────────────────────────────────
 # SHAP analysis
 # ─────────────────────────────────────────────────────────────
-def run_shap(pipe, X_test, feat_cols, case_indices):
+def run_shap(pipe, X_test, feat_cols, case_indices, subject_ids):
     """Compute SHAP values using TreeExplainer on the XGBoost model."""
     print("\n-- SHAP analysis --")
 
@@ -334,6 +346,7 @@ def run_shap(pipe, X_test, feat_cols, case_indices):
     # TreeSHAP (exact, fast)
     explainer = shap.TreeExplainer(clf)
     shap_values = explainer(X_df)
+    shap_values.feature_names = [readable(name) for name in transformed_names]
 
     # ── Global: mean |SHAP| bar chart ──
     mean_abs = np.abs(shap_values.values).mean(axis=0)
@@ -363,18 +376,23 @@ def run_shap(pipe, X_test, feat_cols, case_indices):
     save_fig(fig, "shap_bar_global")
 
     # ── Global: beeswarm ──
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig, ax = plt.subplots(figsize=(11, 8))
     shap.plots.beeswarm(
         shap_values,
         max_display=N_TOP_FEATURES,
         color=SHAP_CMAP,
+        plot_size=None,
         show=False,
     )
-    plt.title("SHAP Beeswarm — XGBoost (6-month, TEST set)",
-              fontsize=12, fontweight="bold")
     fig = plt.gcf()
-    for axis in fig.axes:
-        style_axis(axis, "x")
+    ax.set_title("SHAP Beeswarm — XGBoost (6-month, TEST set)",
+                 fontsize=13, fontweight="bold")
+    ax.tick_params(axis="both", labelsize=10)
+    ax.xaxis.label.set_size(11)
+    style_axis(ax, "x")
+    for axis in fig.axes[1:]:
+        axis.tick_params(labelsize=9)
+        axis.grid(False)
     fig.tight_layout()
     save_fig(fig, "shap_beeswarm")
 
@@ -382,7 +400,8 @@ def run_shap(pipe, X_test, feat_cols, case_indices):
     for label, idx in case_indices.items():
         fig, ax = plt.subplots(figsize=(8, 6))
         shap.plots.waterfall(shap_values[idx], max_display=12, show=False)
-        plt.title(f"SHAP Waterfall — {label} (patient index {idx})",
+        subject_id = int(subject_ids.iloc[idx])
+        plt.title(f"SHAP Waterfall — {label} (Subject ID {subject_id})",
                   fontsize=11, fontweight="bold")
         fig = plt.gcf()
         recolour_directional_bars(fig)
@@ -395,7 +414,7 @@ def run_shap(pipe, X_test, feat_cols, case_indices):
 # ─────────────────────────────────────────────────────────────
 # LIME analysis
 # ─────────────────────────────────────────────────────────────
-def run_lime(pipe, X_test, X_dev, case_indices, transformed_names):
+def run_lime(pipe, X_test, X_dev, case_indices, transformed_names, subject_ids):
     """Generate LIME explanations for the same 4 case-study patients.
 
     LIME requires numeric input, so we operate on the preprocessed
@@ -455,7 +474,8 @@ def run_lime(pipe, X_test, X_dev, case_indices, transformed_names):
         fig = explanation.as_pyplot_figure(label=1)
         recolour_directional_bars(fig)
         fig.set_size_inches(9, 6)
-        fig.suptitle(f"LIME Explanation — {label} (patient index {idx})",
+        subject_id = int(subject_ids.iloc[idx])
+        fig.suptitle(f"LIME Explanation — {label} (Subject ID {subject_id})",
                      fontsize=11, fontweight="bold", y=1.02)
         fig.tight_layout()
         save_fig(fig, f"lime_local_{label}")
@@ -643,11 +663,11 @@ def main():
 
     # ── SHAP ──
     shap_values, shap_imp, X_proc, transformed_names = run_shap(
-        pipe_xgb, X_test, feat_cols, case_indices)
+        pipe_xgb, X_test, feat_cols, case_indices, ids_test)
 
     # ── LIME ──
     lime_rankings = run_lime(
-        pipe_xgb, X_test, X_dev, case_indices, transformed_names
+        pipe_xgb, X_test, X_dev, case_indices, transformed_names, ids_test
     )
 
     # ── Concordance ──

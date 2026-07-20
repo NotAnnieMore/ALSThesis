@@ -144,6 +144,7 @@ Participants with 1--2 pre-baseline concomitant medications have the lowest rapi
 
 The 15 most frequently recorded medications are identified from \texttt{PROACT\_CONMEDS} using participant-specific baseline dates (Figure~\ref{fig:eda_top_meds}). Riluzole is the most common entry (673 participants, 48.3\%), followed by Vitamin~E (355, 25.5\%) and ascorbic acid (311, 22.3\%). Rapid-progression rates range from 25.4\% for Betacarotene to 37.3\% for Colecalciferol. The raw concomitant-medication entry for riluzole is distinct from the dedicated riluzole-use feature analysed above.
 
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_top_meds.png}
@@ -151,7 +152,6 @@ The 15 most frequently recorded medications are identified from \texttt{PROACT\_
   \label{fig:eda_top_meds}
 \end{figure}
 
-\clearpage
 The variation across medication groups is unadjusted and was not used to infer pharmacological effects. The three treatment-related variables remain candidate predictors of patient and trial heterogeneity, and their contribution to prediction is assessed through the feature ablation analysis.
 
 
@@ -180,9 +180,10 @@ The search spaces ranged from two parameters for Logistic Regression to nine for
 
 Figure~\ref{fig:metric_heatmap} places the four recorded metrics side by side for all 13 selected configurations. It makes visible the weak correspondence between the ranking metrics and $F_1$/$F_2$ at the fixed threshold of 0.5 discussed in Section~\ref{subsec:results_metric_correlation}.
 
+\clearpage
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=1\linewidth]{images/figures/step5v2_metric_heatmap.png}
+  \includegraphics[width=1\linewidth]{images/figures/step5v2_metric_heatmap.pdf}
   \caption[Cross-validation metrics heatmap, 13 configurations]{Cross-validation metrics for all 13 model--mode configurations on the six-month DEV set, ordered by PR-AUC. PR-AUC and ROC-AUC are threshold-free; $F_1$ and $F_2$ use a threshold of 0.5.}
   \label{fig:metric_heatmap}
 \end{figure}
@@ -194,7 +195,8 @@ Tables~\ref{tab:best_simple}--\ref{tab:best_boosting} report the best configurat
 For models evaluated in both balanced and unbalanced modes, the configuration with the higher PR-AUC is indicated in bold.
 The LightGBM \texttt{subsample} values are retained to reproduce the stored trial records, but were inactive because \texttt{subsample\_freq=0}.
 
-\begin{table}[htbp]
+\clearpage
+\begin{table}[ht!]
 \centering
 \caption[Best hyperparameters: simple models]{Best hyperparameters --- simple models (6-month horizon).}
 \label{tab:best_simple}
@@ -239,7 +241,7 @@ The LightGBM \texttt{subsample} values are retained to reproduce the stored tria
 \end{table}
 
 
-\begin{table}[htbp]
+\begin{table}[ht!]
 \centering
 \caption[Best hyperparameters: gradient boosting models]{Best hyperparameters --- gradient boosting models (6-month horizon).}
 \label{tab:best_boosting}
@@ -275,7 +277,7 @@ The LightGBM \texttt{subsample} values are retained to reproduce the stored tria
 \end{tabular}
 \end{table}
 
-
+\clearpage
 % ============================================================
 \section{Three-Month Horizon Results}
 \label{app:three_month}
@@ -302,7 +304,7 @@ Balanced XGBoost has the highest mean PR-AUC ($0.426 \pm 0.036$), followed by un
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.65\linewidth]{images/figures/step5v2_3m_vs_6m_scatter.png}
+  \includegraphics[width=0.60\linewidth]{images/figures/step5v2_3m_vs_6m_scatter.png}
   \caption[Scatter plot: 3-month vs.\ 6-month PR-AUC]{Mean PR-AUC at three and six months for each matched model configuration. Points above the parity line favour three months; annotations show $\Delta = \text{PR-AUC}_{3\text{m}}-\text{PR-AUC}_{6\text{m}}$.}
   \label{fig:3m_vs_6m_scatter}
 \end{figure}
@@ -325,6 +327,7 @@ Table~\ref{tab:ablation_v2} provides the mean cross-validated PR-AUC for all six
 
 The Friedman test is the primary comparison of the per-fold PR-AUC ranks from five-fold GroupKFold on the DEV set. Since the omnibus test does not reject its null hypothesis, the 21 pairwise Wilcoxon signed-rank comparisons below are retained for descriptive completeness rather than treated as confirmatory post-hoc tests.
 
+\clearpage
 \begin{table}[htbp]
   \centering
   \caption[Exploratory pairwise Wilcoxon comparisons]{Exploratory pairwise Wilcoxon signed-rank comparisons with Bonferroni correction (Friedman $\chi^2_F(6) = 12.43$, $p = 0.0531$).}
@@ -406,7 +409,7 @@ This participant was classified as rapid despite the strong slow-class contribut
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.62\linewidth]{images/figures/shap_waterfall_FP.pdf}
-  \caption[SHAP waterfall: false positive case (Subject 491257)]{SHAP waterfall plot for the FP case study (Subject~491257). Several moderate contributions outweigh the slow-class contribution associated with younger age.}
+  \caption[SHAP waterfall: false positive case (Subject 491257)]{SHAP waterfall plot for the FP case study (Subject~491257). Several moderate contributions outweigh the slow-class contribution associated with younger age. The horizontal scale is the XGBoost raw margin (log-odds) for rapid progression; the corresponding probability is reported in Table~\ref{tab:case_study_profiles}.}
   \label{fig:shap_wf_fp}
 \end{figure}
 
@@ -416,7 +419,7 @@ For this correctly classified slow progressor (Figure~\ref{fig:shap_wf_tn}), hig
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.62\linewidth]{images/figures/shap_waterfall_TN.pdf}
-  \caption[SHAP waterfall: true negative case (Subject 631435)]{SHAP waterfall plot for the TN case study (Subject~631435). Baseline function, age, and pulse provide the largest contributions towards the slow class.}
+  \caption[SHAP waterfall: true negative case (Subject 631435)]{SHAP waterfall plot for the TN case study (Subject~631435). Baseline function, age, and pulse provide the largest contributions towards the slow class. The horizontal scale is the XGBoost raw margin (log-odds) for rapid progression; the corresponding probability is reported in Table~\ref{tab:case_study_profiles}.}
   \label{fig:shap_wf_tn}
 \end{figure}
 
@@ -512,14 +515,13 @@ The age and \gls{FVC} boundaries are based on quartiles among participants with 
   \caption[Prediction outcomes by sex]{Distribution of prediction outcomes by sex. False negatives account for 4.7\% of female participants and 4.0\% of male participants.}
   \label{fig:error_sex}
 \end{figure}
-
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/error_profile_fvc.pdf}
   \caption[Prediction outcomes by FVC percentage]{Distribution of prediction outcomes by FVC (\% of normal). FVC percentage is missing for 123 participants, who are retained as a separate group.}
   \label{fig:error_fvc}
 \end{figure}
-\newpage
 
 Seven of the 12 false negatives have baseline \gls{ALSFRS-R} scores of at least 40, and five score above 42. Most missed rapid progressors therefore have relatively preserved baseline function, although errors also occur in the lower score groups. Six false negatives occur in the youngest age group ($\leq49$ years); the other six are distributed across the three older groups, and none occurs among the 33 participants with missing age.
 
@@ -770,7 +772,6 @@ All ten profiles passed through preprocessing and prediction and produced a comp
 
 Figure~\ref{fig:s2_cvtest} compares the mean cross-validation ROC-AUC used for model selection with ROC-AUC on the held-out test set. The values are similar for all seven selected configurations, suggesting that their ranking performance transferred to the internal holdout. This comparison does not assess calibration or the classifications produced at a threshold of 0.5, which are examined in Section~\ref{sec:s2r_decoupling}.
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step6_cv_vs_test.png}
@@ -783,7 +784,6 @@ Figure~\ref{fig:s2_cvtest} compares the mean cross-validation ROC-AUC used for m
 
 Figure~\ref{fig:s2_featbars} shows the outcome-stratified distributions of diagnostic delay and Q8 walking slope, the two features with the highest mean absolute TreeSHAP values for LightGBM+ROS. Percentages are calculated within each survival group across the full 1,502-patient cohort. Because this is the same cohort from which the training and test partitions were drawn, the distributions help describe the fitted model's attributions but do not validate them independently.
 
-\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.97\linewidth]{images/figures/fig_feature_bars.png}

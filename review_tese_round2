@@ -1,0 +1,49 @@
+Relatório de Revisão — 2.ª Ronda
+
+Uma pequena incoerência nova (a corrigir)
+§4.2 lista três diferenças; o Apêndice A.1 lista quatro
+Localização: §4.2 (p. 43, versão condensada) vs. Apêndice A.1 (p. 104).
+
+Ao condensar o §4.2, ficou escrito que «the largest observed differences concern study arm (V = 0.357), BMI (d =
+0.468), and medication count (d = 0.332)» — três variáveis. Mas o Apêndice A.1 mantém: «Under the Bonferroni
+threshold, study arm, BMI, weight, and concomitant-medication count remain the clearest observed differences»
+— quatro variáveis. O peso (weight, d = 0.146, p = 0.003) sobrevive efetivamente à correção de Bonferroni (0.003
+< 0.0045), pelo que A.1 está correto.
+
+Sugestão: harmonizar. Ou acrescentar «weight» à lista do §4.2, ou reformular para «…concern study arm, BMI
+and medication count (com uma diferença de peso menor mas ainda significativa)». Basta uma linha para os dois
+pontos ficarem alinhados.
+
+Organização da estrutura
+Dimensão das subsecções (o foco pedido)
+Medi a dimensão de cada subsecção-folha (contagem de palavras entre cabeçalhos, no corpo). O padrão dominante
+é «uma subsecção por figura/análise» — ótimo para navegação, mas gera muitas subsecções muito curtas (várias
+de um único parágrafo ou apenas um apontador para o apêndice). Há cerca de 25 subsecções-folha com menos de
+~130 palavras. Não é um defeito grave, mas a granularidade x.y.z para blocos de 3–5 linhas fragmenta a leitura e
+infla o índice.
+
+Casos mais evidentes (candidatos a fundir / converter em parágrafo)
+
+Subsecção | Dimensão | Observação e sugestão
+§4.10.5 ≈41 pal. «Confusion Matrix» — uma única frase + Figura 4.11. Fundir em
+§4.10.3 (Threshold Evaluation on TEST).
+§4.11.3 ≈48 pal. «LIME — Local Explanations» — essencialmente um apontador
+para o Apêndice C.1.3. Converter em parágrafo run-in dentro de
+§4.11.2.
+§3.17.3 ≈62 pal. «SHAP–LIME Concordance» (no plano XAI). Fundir com §3.17.4
+ou com o parágrafo do SHAP/LIME.
+§4.3 ≈75 pal. «BMI Correction» — já condensado; pode passar a parágrafo final
+de §4.2 (ambos «Data Quality»).
+§4.10.2 ≈86 pal. «PR and ROC Curves» — duas figuras e pouco texto; agrupar com
+§4.10.1 (Discrimination Metrics).
+§5.5 ≈86 pal. «Data Partitioning» — pode ser parágrafo dentro de §5.4 ou
+abertura de §5.6.
+§4.11.4 ≈96 pal. «SHAP–LIME Concordance» — curto; run-in dentro de §4.11
+basta.
+§3.17.4 ≈99 pal. «Logistic Regression Coefficients» (plano) — parágrafo dentro de
+§3.17.
+
+Aglomerados a rever em conjunto: §4.10 tem quatro subsecções curtas seguidas (4.10.2/4.10.4/4.10.5/4.10.6);
+§4.12 tem três (4.12.1/4.12.3/4.12.4); §3.17 duas (3.17.3/3.17.4). Nestes blocos, uma boa regra é: se a subsecção
+não chega a meia página nem tem uma tabela própria, transforma-a num parágrafo com título a negrito (run-in)
+dentro da secção-mãe. O conteúdo mantém-se; o índice e o ritmo de leitura melhoram.

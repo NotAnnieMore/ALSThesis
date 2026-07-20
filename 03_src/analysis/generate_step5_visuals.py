@@ -158,21 +158,23 @@ heat_df = df.set_index("label")[["pr_auc_mean", "roc_auc_mean", "f1_mean", "f2_m
 heat_df.columns = ["PR-AUC", "ROC-AUC", "F1@0.5", "F2@0.5"]
 heat_df = heat_df.iloc[::-1]  # best on top
 
-fig, ax = plt.subplots(figsize=(7, 8))
+fig, ax = plt.subplots(figsize=(8.5, 8.5))
 im = ax.imshow(heat_df.values, aspect="auto", cmap=SEQUENTIAL_CMAP)
 ax.set_xticks(range(len(heat_df.columns)))
-ax.set_xticklabels(heat_df.columns, fontsize=10)
+ax.set_xticklabels(heat_df.columns, fontsize=11)
 ax.set_yticks(range(len(heat_df)))
-ax.set_yticklabels(heat_df.index, fontsize=9)
+ax.set_yticklabels(heat_df.index, fontsize=10)
 # Annotate cells
 for i in range(len(heat_df)):
     for j in range(len(heat_df.columns)):
         val = heat_df.iloc[i, j]
         txt_color = "white" if val > 0.42 else FIGURE_INK
         ax.text(j, i, f"{val:.3f}", ha="center", va="center",
-                fontsize=8, color=txt_color, fontweight="bold")
-ax.set_title("Cross-Validation Metrics — 6m Horizon (DEV)", fontsize=12, fontweight="bold")
-fig.colorbar(im, ax=ax, shrink=0.6, label="Score")
+                fontsize=9.5, color=txt_color, fontweight="bold")
+ax.set_title("Cross-Validation Metrics — 6m Horizon (DEV)", fontsize=13, fontweight="bold")
+cbar = fig.colorbar(im, ax=ax, shrink=0.7)
+cbar.set_label("Score", fontsize=11)
+cbar.ax.tick_params(labelsize=10)
 style_axis(ax)
 ax.grid(False)
 fig.tight_layout()
@@ -332,6 +334,7 @@ for f in [
     "step5v2_prauc_barchart.png",
     "step5v2_balanced_vs_unbalanced.png",
     "step5v2_metric_heatmap.png",
+    "step5v2_metric_heatmap.pdf",
     "step5v2_fvc_missingness_forest.png",
 ]:
     shutil.copy2(os.path.join(FIG_DIR, f), os.path.join(OVERLEAF_FIG, f))

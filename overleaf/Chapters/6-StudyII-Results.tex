@@ -24,7 +24,7 @@ Table~\ref{tab:s2_cv} reports the configuration selected for each classifier. Se
 \clearpage
 \begin{table}[ht!]
   \centering
-  \caption[Selected cross-validation configuration per classifier (Study II)]{Selected configuration for each classifier after Optuna optimisation of all 70 classifier--imbalance combinations. ROC-AUC is reported as mean $\pm$ standard deviation across the 15 validation folds. Sensitivity is the recall of Short Survivors, whereas specificity is the recall of Standard Survival patients. G-Mean $= \sqrt{\text{Sensitivity} \times \text{Specificity}}$.}
+  \caption[Selected cross-validation configuration per classifier (Study II)]{Selected configuration for each classifier after Optuna optimisation of all 70 classifier--imbalance combinations. ROC-AUC is reported as mean $\pm$ standard deviation across the 15 validation folds. Sensitivity is the recall of Short Survivors, whereas specificity is the recall of Standard Survival patients. G-Mean is calculated within each fold as $\sqrt{\text{Sensitivity} \times \text{Specificity}}$ and then averaged; it therefore need not equal the value obtained from the two displayed column means.}
   \label{tab:s2_cv}
   \resizebox{\linewidth}{!}{%
   \begin{tabular}{llcccc}
@@ -47,8 +47,6 @@ Table~\ref{tab:s2_cv} reports the configuration selected for each classifier. Se
 MLP produced the highest mean ROC-AUC (0.915), followed by LightGBM+ROS (0.914) and SVM+SMOTEENN (0.911). These differences are small relative to the variation across folds, so the ordering should not be interpreted as evidence that MLP was consistently better than the other two models. Their behaviour at the default threshold was also markedly different. MLP identified 42.7\% of Short Survivors, whereas LightGBM+ROS identified 78.0\% and SVM+SMOTEENN 90.4\%. SVM consequently achieved the highest G-Mean in the table (0.842), despite ranking third by ROC-AUC.
 
 The selection rule had a similar effect within individual classifier families. For MLP, SMOTE obtained a mean ROC-AUC of 0.914, less than 0.002 below the selected unbalanced configuration, while increasing sensitivity from 0.427 to 0.835 and G-Mean from 0.641 to 0.837. Random Forest showed the same pattern: ROS reduced mean ROC-AUC from 0.906 to 0.905 but increased sensitivity from 0.276 to 0.736. Since ROC-AUC was the optimisation criterion, neither resampled alternative was selected.
-
-This distinction is central to the interpretation of Study~II. The selected configurations are those with the strongest average ranking performance, not necessarily those with the most favourable sensitivity--specificity balance at a threshold of 0.5. The held-out evaluation therefore retains both threshold-free and threshold-dependent metrics rather than treating the cross-validation ranking as a final model comparison.
 
 % ============================================================
 \section{Held-Out Test Set Evaluation}
@@ -127,7 +125,7 @@ LightGBM+ROS achieved the highest test ROC-AUC (0.923), balanced accuracy (0.844
 
 The remaining classifiers illustrate why the ranking metric cannot be read as a complete account of test performance. Random Forest and MLP obtained ROC-AUC values of 0.919 and 0.918, respectively, but identified only 9 and 1 Short Survivors at the default threshold. KNN, by contrast, had a lower ROC-AUC of 0.886 but detected 28 Short Survivors and achieved a balanced accuracy of 0.812. Model preference therefore depends on the intended error trade-off rather than on ROC-AUC alone.
 
-Cross-validation and test ROC-AUC remain broadly similar across the seven selected configurations (Appendix~\ref{app:study2_supplementary}). This agreement concerns ranking performance and does not imply comparable behaviour at the default decision threshold. Figure~\ref{fig:s2_decoupling} makes that distinction explicit by comparing cross-validation ROC-AUC with test sensitivity.
+Cross-validation and test ROC-AUC remain broadly similar across the seven selected configurations (Appendix~\ref{app:study2_supplementary}). Figure~\ref{fig:s2_decoupling} compares these development estimates with the much more variable test sensitivity observed at the default threshold.
 
 \clearpage
 \begin{figure}[ht!]
@@ -159,11 +157,9 @@ The precision--recall curves in Figure~\ref{fig:s2_pr} provide a second threshol
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.80\linewidth]{images/figures/fig_pr_curves.png}
-  \caption[Precision--Recall curves for three classifiers (Study II)]{Precision--recall curves on the held-out test set for the three highlighted classifiers (LightGBM+ROS: \gls{AP} 0.704; MLP: \gls{AP} 0.669; SVM+SMOTEENN: \gls{AP} 0.595). The dashed line marks the Short Survivor prevalence in the test set (0.116), which is the expected average precision of a random ranking.}
+  \caption[Precision--Recall curves for three classifiers (Study II)]{Precision--recall curves on the held-out test set for the three highlighted classifiers (average precision: LightGBM+ROS 0.704; MLP 0.669; SVM+SMOTEENN 0.595). The dashed line marks the Short Survivor prevalence in the test set (0.116), which is the expected average precision of a random ranking.}
   \label{fig:s2_pr}
 \end{figure}
-
-As in Study~I (Section~\ref{sec:results_threshold_xgb}), ranking performance and the final classification rule answer different questions. In the intended prognostic setting, a false negative could delay recognition of a patient at risk of short survival. A high ROC-AUC is therefore insufficient unless the operating threshold produces an acceptable balance between missed Short Survivors and false alerts.
 
 % ============================================================
 \section{Decision Threshold Analysis}
@@ -219,7 +215,7 @@ Table~\ref{tab:s2_bonferroni} reports mean balanced accuracy for each classifier
 
 \begin{table}[ht!]
   \centering
-  \caption[BalancedBagging vs.\ single classifier (CV balanced accuracy)]{Cross-validation balanced accuracy under single-model and BalancedBagging configurations, with per-fold Wilcoxon signed-rank tests (Bonferroni-corrected for 7 comparisons). $^{***}p \leq 0.001$; $^{**}p \leq 0.01$; n.s.\ = not significant.}
+  \caption[BalancedBagging vs.\ single classifier (CV balanced accuracy)]{Cross-validation balanced accuracy under single-model and BalancedBagging configurations, with per-fold Wilcoxon signed-rank tests (Bonferroni-corrected for 7 comparisons). Differences are calculated from the unrounded means and may not equal subtraction of the displayed values. $^{***}p \leq 0.001$; $^{**}p \leq 0.01$; n.s.\ = not significant.}
   \label{tab:s2_bonferroni}
   \resizebox{\linewidth}{!}{%
   \begin{tabular}{lcccc}

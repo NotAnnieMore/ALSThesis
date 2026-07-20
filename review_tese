@@ -1,0 +1,68 @@
+O Cap. 3 tem uma segmentação muito fina: por exemplo, §3.3.1 «Baseline Timepoint» e §3.3.2 «Why Baseline Matters» (p. 21) têm cerca de um parágrafo cada; §3.19 (p. 37–39) abre 7 subsecções muito curtas. Recomendo fundir subsecções de um só parágrafo (p. ex. 3.3.1+3.3.2; e condensar 3.19.1–3.19.7 em texto corrido com títulos em negrito), o que melhora a fluidez sem perder informação.
+
+Repetições e conteúdo duplicado (com localização)
+•	Mensagem central repetida em excesso. A ideia «uma métrica de ordenação não determina o desempenho num limiar» aparece em §1.2 (p. 2), §2.6 (p. 11), §3.8 (p. 29), §4.5.2 (p. 47), §4.9 (p. 51), §4.10.1 (p. 53), §6.4 (p. 84), §6.11 (p. 93), §7.4 (p. 97) e §7.7 (p. 100). Sendo a tese central, alguma repetição é intencional, mas 10 reformulações é demasiado — sugiro reduzir para uma enunciação forte na Introdução, uma no Estado da Arte e as retomas estritamente necessárias nos resultados.
+•	Análise de missingness da FVC descrita três vezes: §3.5.4 (p. 26), §4.2 (p. 43) e Apêndice A.1 (p. 103–104). O §4.2 do texto principal reproduz quase integralmente a Tabela A.1 sem acrescentar interpretação nova. Sugiro que o §4.2 fique com 2–3 frases de síntese e remeta para A.1.
+•	Correção do IMC (BMI) descrita três vezes: §3.5.5 (p. 26), §4.3 (p. 43) e Apêndice A.2 (p. 105). Mesma recomendação: manter o essencial no corpo e o detalhe no apêndice.
+•	Definição das quatro fontes de limiar / matrizes de confusão é reapresentada em §3.11, §3.16, §4.9 e §4.10.3 — aceitável, mas verificar que não há redundância textual literal.
+
+Rácio de desequilíbrio do estudo de referência não bate com as contagens
+Localização: Tabela 5.1 (p. 74); texto §5.3.3 (p. 73); Tabela 6.5 (p. 88).
+A Tabela 5.1 atribui a Papaiz et al. 1 711 «Standard Survival» e 256 «Short Survivors», mas um rácio de desequilíbrio de 6.9. Ora 1 711 ÷ 256 = 6.68 ≈ 6.7, não 6.9. O texto do §5.3.3 repete «6.9 na coorte de referência», herdando o mesmo valor. Como o rácio do Estudo II (7.6 = 1 328 ÷ 174) está correto, a incoerência é apenas do lado da referência.
+Sugestão: acertar o rácio para 6.7 (coerente com as contagens da tabela) ou, se o valor 6.9 vier diretamente do artigo original, indicar em nota de rodapé que as contagens 1 711/256 são a reconstrução do autor e que 6.9 é o valor reportado por Papaiz et al., para não parecer erro aritmético.
+
+«Margem de 0.002» contradiz os valores exibidos na tabela
+Localização: §4.10.1, ponto «Relation to model selection» (p. 53–54).
+O texto afirma que o Random Forest supera o XGBoost no PR-AUC de TESTE «by a margin of 0.002». Contudo, a Tabela 4.4 mostra RF = 0.459 e XGBoost = 0.456, cuja diferença exibida é 0.003, não 0.002. Curiosamente, o §7.4 (p. 98) resolve o ponto ao escrever «led the held-out comparison by approximately 0.002 using the unrounded estimates» — ou seja, 0.002 é a diferença nos valores não arredondados.
+Sugestão: no §4.10.1, escrever «by ~0.002 in the unrounded estimates (0.459 vs. 0.456 as displayed)», replicando a formulação já usada no Cap. 7. Assim o leitor que subtrai 0.459 − 0.456 não fica com a impressão de erro.
+
+«147» vs. «132» registos de altura corrigidos
+Localização: §4.14, ponto 1 (p. 67) diz «147 raw records»; §3.5.5 (p. 26) e §4.3 (p. 43) dizem «132 selected height measurements»; Apêndice A.2 (p. 105) reconcilia.
+O Apêndice A.2 explica corretamente que existiam 147 registos brutos de altura anómalos na tabela de sinais vitais, dos quais 132 sobreviveram à seleção do «último registo pré-baseline» e chegaram às features (e foram anulados, com 31 pesos). O resumo do §4.14 diz que a auditoria «corrigiu 147 registos brutos», o que é impreciso: no modelo foram efetivamente tratadas 132 alturas. É o único ponto do documento onde os dois números aparecem sem a devida distinção.
+Sugestão: no §4.14 escrever «…a systematic height-unit error affecting 147 raw records (132 of which reached the selected feature set)», alinhando com A.2.
+
+Pequenos desvios de arredondamento no Δ da exatidão balanceada
+Localização: Tabela 6.4 (p. 87).
+•	KNN: 0.788 − 0.566 = 0.222, mas a coluna Δ indica +0.221.
+•	Decision Tree: 0.777 − 0.653 = 0.124, mas a coluna Δ indica +0.125.
+Os restantes cinco Δ fecham exatamente. Estas diferenças de 0.001 resultam de arredondar as colunas «Single-Model» e «BalancedBagging» a três casas e depois subtrair valores já arredondados. Não é erro grave, mas é o tipo de detalhe que um júri atento nota. Sugestão: calcular o Δ a partir dos valores não arredondados e, idealmente, acrescentar uma nota de rodapé a dizer que Δ é computado antes do arredondamento.
+
+«Abaixo de 0.01» quando o valor é exatamente 0.010
+Localização: §4.5.1 (p. 46).
+O texto diz que as diferenças entre modos são «below 0.01 PR-AUC for Random Forest, LightGBM, and XGBoost». Para o XGBoost, porém, 0.434 − 0.424 = 0.010 exatamente — não «abaixo» de 0.01. Sugestão: usar «≤ 0.01» ou «about 0.01».
+
+G-Mean da Tabela 6.1 não é reproduzível a partir das colunas exibidas
+Localização: Tabela 6.1 (p. 82).
+A legenda define G-Mean = √(Sensibilidade × Especificidade). Aplicando essa fórmula às médias exibidas, obtêm-se valores ligeiramente diferentes dos tabelados, por exemplo: Decision Tree √(0.413 × 0.948) = 0.626 (tabela: 0.621); Random Forest √(0.276 × 0.983) = 0.521 (tabela: 0.517); MLP √(0.427 × 0.969) = 0.643 (tabela: 0.641). Isto acontece porque, na validação cruzada, o G-Mean foi (corretamente) calculado por fold e depois médio, ao passo que a sensibilidade e a especificidade exibidas são médias — e média(√(a·b)) ≠ √(média(a)·média(b)).
+Nota: não é um erro, é um subtileza estatística correta. Mas o leitor que tentar reproduzir a coluna vai encontrar discrepância. Sugestão: acrescentar uma nota de rodapé à Tabela 6.1: «G-Mean é a média por fold; não coincide exatamente com √(Sens.·Espec.) das médias colunares.» (Na Tabela 6.2, de TESTE, os valores são de um único conjunto e reproduzem-se diretamente — está correto.)
+
+Contagens de participantes da PRO-ACT com denominadores diferentes
+Localização: §1.1 (p. 1): «≈10 000 participantes»; §3.2.1 (p. 19): 5 436 com ALSFRS-R; §5.3.1 (p. 72): 12 504 IDs demográficos, 9 483 utilizáveis.
+São todos números do mesmo extrato da base, mas correspondem a denominadores distintos (registos demográficos totais, registos utilizáveis, e participantes com ALSFRS-R). A afirmação «approximately 10,000 participants» no §1.1 fica em tensão aparente com os «12 504 unique patient identifiers» do §5.3.1. Sugestão: uniformizar a narrativa — por exemplo, no §1.1 dizer «~10 000 participantes com dados clínicos utilizáveis (o extrato demográfico contém 12 504 identificadores)», e reforçar no §5.3.1 que 9 483 é o subconjunto com idade/sexo. Assim os três números deixam de parecer contraditórios.
+
+
+
+Bloco de features com nomes trocados entre texto e tabelas
+Localização: §3.5.1 (p. 23), Tabela 3.1 (p. 25), Tabela 4.2 (p. 43), §3.12 (p. 32).
+Os blocos são nomeados de forma inconsistente: no §3.5.1 chamam-se «Baseline, Vitals, Respiratory, Treatment, Laboratory»; na Tabela 3.1 são «Baseline, Vitals, FVC, Treatment, Labs»; na Tabela 4.2 «…Respiratory (FVC)…Labs». Há um risco real de confusão: os itens respiratórios do ALSFRS-R (R-1 Dyspnea, R-2 Orthopnea, R-3 Respiratory Insufficiency) estão no bloco Baseline, mas o bloco chamado «Respiratory» no texto contém apenas a FVC. Um leitor pode julgar que «Respiratory» inclui os itens respiratórios do ALSFRS-R, o que não é o caso.
+Sugestão: fixar um nome único por bloco em todo o documento — recomendo «Baseline», «Vitals», «FVC», «Treatment», «Labs» (como na Tabela 3.1) — e evitar «Respiratory» como nome de bloco, precisamente porque os itens respiratórios do ALSFRS-R vivem no bloco Baseline.
+
+Rótulo «Full v2» na Tabela B.6
+Localização: Tabela B.6, linha F (p. 118). A configuração completa aparece como «F: Full v2». O sufixo «v2» é claramente um resíduo do desenvolvimento iterativo e não deve constar de uma versão final. Sugestão: renomear para «F: Full (35)».
+•	«ELA — Esclerose Lateral Amiotrófica» (p. xxix) é um resíduo do Resumo em português numa lista de abreviaturas em inglês; ou se remove, ou se assinala que corresponde ao acrónimo português.
+•	«AP — Average Precision» é listado, mas ao longo do texto usa-se sobretudo «PR-AUC (average precision)»; confirmar que AP e PR-AUC não são usados como se fossem coisas diferentes.
+•	Algumas abreviaturas listadas têm uso mínimo ou nulo no corpo (p. ex. CNN, RMSE, MAR/MNAR aparecem, mas convém confirmar que cada entrada da lista é efetivamente usada pelo menos uma vez).
+
+Escala dos gráficos SHAP waterfall (log-odds vs. probabilidade)
+Localização: Fig. 4.14–4.15 (p. 60–61), Fig. C.1–C.2 (p. 122–123) e Tabela C.1 (p. 121).
+Os waterfalls mostram valores de base E[f(X)] = 0.837 e saídas f(x) como 0.69 (TP) ou 1.59 (FN), ou seja em escala de margem/log-odds do XGBoost. Já a Tabela C.1 reporta P(rapid) em probabilidade (0.334 TP, 0.169 FN). Um leitor pode estranhar que o TP tenha f(x) = 0.69 no waterfall e P(rapid) = 0.334 na tabela. Sugestão: acrescentar às legendas dos waterfalls que os valores estão em escala de margem (log-odds) e que a probabilidade correspondente consta da Tabela C.1.
+
+«patient index» nos títulos das figuras vs. «Subject ID» nas legendas
+Localização: Fig. 4.14 (título «patient index 186» / legenda «Subject 672752»), e análogas em 4.15, C.1–C.6. Os títulos gerados pelo código mostram o índice interno da linha, mas as legendas usam o ID clínico do sujeito. Sugestão: harmonizar — de preferência mostrar o Subject ID também no título, ou remover o «patient index» dos títulos para não introduzir dois identificadores para o mesmo caso.
+Legibilidade de figuras densas
+•	Fig. 4.5 (per-fold PR-AUC, p. 50) tem muitos rótulos numéricos sobrepostos; considerar aumentar o tamanho ou usar apenas a média + caixa.
+•	Beeswarm (Fig. 4.13, p. 59) e heatmap (Fig. B.1, p. 113) beneficiam de resolução mais alta / fonte maior nos eixos; verificar a legibilidade em impressão a preto e branco.
+•	Tabela 4.1 (p. 41): a célula «720» (Both horizons) abrange visualmente duas linhas; confirmar que a fusão de células fica clara no PDF final e não parece um desalinhamento.
+
+Ordenação de secções no Cap. 3
+Localização: §3.6 «Exploratory Analysis: Treatment Variables» (p. 27), antes de §3.7 «Modelling Setup». A análise exploratória das variáveis de tratamento surge antes da definição do setup de modelação. É defensável (é uma análise pré-modelação), mas quebra um pouco o fio «dados → alvo → features → modelação». Considerar mover §3.6 para junto de §3.5 (engenharia de features) ou para o apêndice A.3, deixando no corpo apenas a síntese.

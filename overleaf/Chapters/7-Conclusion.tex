@@ -12,7 +12,7 @@ Study~I developed the dissertation's original modelling pipeline. Thirty-five ba
 
 Study~II moved from original model development to partial replication. It reconstructed the fixed-horizon survival task and 23-feature representation reported by Papaiz et al.~\cite{Papaiz2024}, re-examined the effect of BalancedBagging, and extended the comparison to LightGBM and ten imbalance-handling strategies. \gls{ROC-AUC} was retained as the optimisation criterion to align with the replication design, but held-out sensitivity, specificity, balanced accuracy, uncertainty intervals, and alternative thresholds were required to interpret the selected models.
 
-The shared contribution is therefore methodological rather than a single prognostic model. Across two outcomes, strong ranking performance did not determine the classifications produced at a particular operating point, and plausible feature attributions did not remove the need for separated validation or cautious clinical interpretation.
+The shared contribution is therefore methodological rather than a single prognostic model: both studies link explicit outcome construction and separated evaluation with uncertainty estimates and cautious interpretation of post-hoc explanations.
 
 % ============================================================
 \section{Main Findings from Study~I}
@@ -38,7 +38,7 @@ BalancedBagging increased mean cross-validated balanced accuracy for six of the 
 
 LightGBM with random oversampling gave the strongest balance at the default threshold on the held-out test set ($n=301$, 35 Short Survivors). Its \gls{ROC-AUC} was 0.923 (95\% \gls{CI}: $[0.868,\,0.966]$), with sensitivity of 0.857 and specificity of 0.831. SVM with SMOTEENN detected one additional Short Survivor, reaching sensitivity of 0.886, but its specificity was lower at 0.767. The overlapping intervals do not establish a clear sensitivity difference between these configurations.
 
-The MLP result exposed the limitation of selecting and reporting models through ranking metrics alone. It achieved cross-validated and test \gls{ROC-AUC} values of 0.915 and 0.918, yet detected only one of 35 Short Survivors at the default threshold. A sensitivity-constrained threshold selected from out-of-fold training predictions increased test sensitivity to 0.771 while retaining specificity of 0.883. The scores still ranked patients effectively; the failure occurred when the default boundary converted those scores into classes.
+The MLP achieved cross-validated and test \gls{ROC-AUC} values of 0.915 and 0.918, yet detected only one of 35 Short Survivors at the default threshold. A sensitivity-constrained threshold selected from out-of-fold training predictions increased test sensitivity to 0.771 while retaining specificity of 0.883.
 
 Diagnosis delay had the largest \gls{SHAP} attribution in both LightGBM and MLP, followed by different combinations of \gls{ALSFRS-R} item slopes. Agreement across the full rankings was moderate ($\rho=0.389$, $p=0.066$). Diagnosis delay also shares symptom onset as a temporal anchor with the survival target, so its prominence should be read as part of the fitted prediction rule rather than as an independently established causal effect.
 
@@ -93,7 +93,5 @@ The replication framework used in Study~II can be applied to other published \gl
 % ============================================================
 
 Study~I produced a separated and reproducible evaluation of rapid functional progression, with held-out \gls{PR-AUC} of 0.456 and recall of 85.7\% at its selected threshold. Study~II reproduced the qualitative BalancedBagging pattern for the comparable classifiers and obtained a held-out \gls{ROC-AUC} of 0.923 with LightGBM+ROS. Neither result identifies a universally best classifier, and neither is evidence of readiness for clinical deployment.
-
-The clearest result appears in the gap between ranking and classification. In Study~I, lowering the operating threshold recovered most rapid progressors but generated many false alerts. In Study~II, the MLP ranked patients well while missing 34 of 35 Short Survivors at 0.5. Model assessment changed when the decision boundary and its errors were examined rather than inferred from AUC.
 
 Explainable and reproducible \gls{ALS} prognosis modelling is possible with public clinical-trial data, but credibility rests on the analysis surrounding the model: a defensible target, strict separation of development and evaluation, imbalance-aware metrics, explicit threshold selection, uncertainty reporting, and explanations treated as descriptions of fitted behaviour. The two studies establish that workflow and its limitations. External and prospective evaluation remain necessary before either pipeline can support individual care.

@@ -24,12 +24,12 @@ Nevertheless, the 6-month horizon provides greater temporal support for slope es
 \caption[Cohort size by prediction horizon]{Cohort size and data partition by prediction horizon.}
 \label{tab:eligibility}
 \small
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccc}
 \toprule
-Horizon & $N$ & \% of PRO-ACT & DEV & TEST & Both horizons \\
+Horizon & $N$ & \% of PRO-ACT & DEV & TEST \\
 \midrule
-3 months & 2{,}407 & 44.3\% & 1{,}925 & 482 & \multirow{2}{*}{720} \\
-6 months & 1{,}392 & 25.6\% & 1{,}113 & 279 & \\
+3 months & 2{,}407 & 44.3\% & 1{,}925 & 482 \\
+6 months & 1{,}392 & 25.6\% & 1{,}113 & 279 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -73,7 +73,7 @@ Feature Block & Features ($n$) & Coverage (\%) \\
 \midrule
 Baseline (demographics + ALSFRS-R) & 15 & $\sim$100 \\
 Vitals & 12 & 80.6 \\
-Respiratory (FVC) & 3 & 60.7 \\
+FVC & 3 & 60.7 \\
 Treatment & 3 & $\sim$100 \\
 Labs & 2 & 64.7--69.0 \\
 \midrule
@@ -93,9 +93,7 @@ The remaining 35 features constitute the model input after imputation.
 \label{sec:results_fvc_missingness}
 % ============================================================
 
-FVC in litres is available for 56.3\% of the six-month cohort. Its availability shows no clear association with baseline \gls{ALSFRS-R}, age, or sex: the corresponding effect sizes are $d=0.027$, $d=0.031$, and $V=0.022$. The target slope comparison gives $p=0.050$ and $d=0.098$, which neither survives the Bonferroni threshold of 0.0045 nor indicates a large observed difference.
-
-Study arm ($V=0.357$), \gls{BMI} ($d=0.468$), weight ($d=0.146$), and concomitant-medication count ($d=0.332$) remain the clearest differences after correction. This pattern is compatible with variation in measurement and recording practices across pooled trials, but it does not establish the reason for missing FVC. Median imputation is retained as a pragmatic preprocessing choice rather than as a consequence of a confirmed missing-data mechanism; \gls{MNAR} cannot be excluded. Appendix~\ref{app:fvc_missingness} reports all eleven comparisons.
+FVC in litres is available for 56.3\% of the six-month cohort. Availability shows no clear association with baseline \gls{ALSFRS-R}, age, sex, or the target slope after Bonferroni correction, while the largest observed differences concern study arm ($V=0.357$), \gls{BMI} ($d=0.468$), and medication count ($d=0.332$). This pattern may reflect trial-specific measurement and recording practices, but it does not establish the missing-data mechanism; Appendix~\ref{app:fvc_missingness} reports all eleven comparisons.
 
 
 % ============================================================
@@ -103,7 +101,7 @@ Study arm ($V=0.357$), \gls{BMI} ($d=0.468$), weight ($d=0.146$), and concomitan
 \label{sec:results_bmi_fix}
 % ============================================================
 
-The plausibility filter described in Section~\ref{sec:methods_bmi_correction} set 132 selected height measurements and 31 weights to missing before \gls{BMI} was recalculated. In the six-month cohort ($N=1{,}392$), the corrected BMI values range from 15.5 to 46.9, consistent with values reported for \gls{ALS} clinical-trial populations~\cite{Anani2023}. The horizon-specific datasets were regenerated from the cleaned vital-sign features before tuning, ablation, and all subsequent analyses. Appendix~\ref{app:bmi_correction} provides the full data-quality audit.
+The plausibility filter described in Section~\ref{sec:methods_bmi_correction} set 132 selected height measurements and 31 weights to missing before \gls{BMI} was recalculated; corrected values in the six-month cohort range from 15.5 to 46.9. The horizon-specific datasets were then regenerated from the cleaned vital-sign features before modelling, with the full audit reported in Appendix~\ref{app:bmi_correction}.
 
 
 % ============================================================
@@ -143,7 +141,7 @@ Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the
   \item \textbf{Top-ranked model.} XGBoost (unbalanced) achieves the highest PR-AUC ($0.434 \pm 0.049$), closely followed by Random Forest (unbalanced, $0.431 \pm 0.042$) and SVM (balanced, $0.425 \pm 0.049$).
     The small differences among the leading configurations show that several model families achieve similar internal validation performance; they do not, by themselves, establish a performance ceiling.
   \item \textbf{Effect of class balancing on PR-AUC.} Weighting produces small changes for Random Forest ($0.431 \to 0.425$), LightGBM ($0.415 \to 0.418$), and XGBoost ($0.434 \to 0.424$). The largest change occurs for SVM, whose PR-AUC increases from $0.389$ to $0.425$. The effect is therefore model-dependent rather than uniformly beneficial or detrimental.
-  \item \textbf{Threshold-dependent metrics.} At the default threshold of 0.5, $F_1$ and $F_2$ are low for most unbalanced models, although Decision Tree is a clear exception. Weighting substantially increases these scores for Decision Tree, Random Forest, Logistic Regression, LightGBM, and XGBoost; for example, Logistic Regression $F_2$ increases from $0.028$ to $0.527$. Balanced SVM remains near zero at this cutoff despite its improved PR-AUC. These results show that performance at a fixed threshold depends on the probability scale as well as on ranking ability (Section~\ref{sec:results_threshold_xgb}).
+  \item \textbf{Threshold-dependent metrics.} At the default threshold of 0.5, $F_1$ and $F_2$ are low for most unbalanced models, although Decision Tree is a clear exception. Weighting substantially increases these scores for Decision Tree, Random Forest, Logistic Regression, LightGBM, and XGBoost; for example, Logistic Regression $F_2$ increases from $0.028$ to $0.527$. Balanced SVM remains near zero at this cutoff despite its improved PR-AUC.
   \item \textbf{Interpretable baselines.} Logistic Regression balanced ($\text{PR-AUC} = 0.407$) performs only $0.027$ below XGBoost unbalanced, making it a competitive interpretable alternative.
     Its coefficients can be directly analysed to understand feature directionality.
 \end{enumerate}
@@ -155,9 +153,9 @@ Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the
 % ────────────────────────────────────────────────────────────
 
 Figure~\ref{fig:bal_vs_unbal} presents a paired (dumbbell) comparison of PR-AUC and ROC-AUC for each model family across the two class-weighting modes.
-The differences between modes are below 0.01 PR-AUC for Random Forest, LightGBM, and XGBoost. Decision Tree improves by 0.016 with weighting, while Logistic Regression changes by 0.006. SVM shows the largest difference, increasing by 0.036 in balanced mode. Thus, class weighting has little effect on ranking performance for most model families in this experiment, but the SVM result shows that this cannot be assumed for every classifier.
+The differences between modes are approximately 0.01 or less for Random Forest, LightGBM, and XGBoost. Decision Tree improves by 0.016 with weighting, while Logistic Regression changes by 0.006. SVM shows the largest difference, increasing by 0.036 in balanced mode. Thus, class weighting has little effect on ranking performance for most model families in this experiment, but the SVM result shows that this cannot be assumed for every classifier.
 
-The much larger differences in $F_1$ and $F_2$ at threshold 0.5 reflect changes in the scale and distribution of predicted probabilities. They should not be interpreted as equivalent changes in threshold-free discrimination. This distinction motivates selecting the model by PR-AUC and choosing its operating threshold separately on development data.
+The larger differences in $F_1$ and $F_2$ describe how class weighting changes predictions at the common threshold of 0.5; Section~\ref{sec:results_threshold_xgb} evaluates the operating threshold selected for XGBoost.
 
 \begin{figure}[ht!]
   \centering
@@ -256,7 +254,7 @@ Mean PR-AUC ranges from 0.434 for unbalanced XGBoost to 0.387 for unbalanced KNN
   \centering
   \includegraphics[width=0.88\linewidth]{images/figures/step7_fold_prauc_boxplot.pdf}
   \caption[Per-fold PR-AUC distribution, 5-fold CV]{Per-fold PR-AUC for the seven best-per-family models across 5-fold GroupKFold on the DEV set (6-month horizon).
-  Individual fold values are annotated; red dashed lines indicate the mean.
+  Points show individual folds and diamonds mark the mean.
   XGBoost (unbalanced) has the highest mean PR-AUC (0.434), and the distributions overlap across models.}
   \label{fig:step7_fold_boxplot}
 \end{figure}
@@ -343,7 +341,7 @@ Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
 \end{enumerate}
 
 \noindent\textbf{Relation to model selection.}
-XGBoost (unbalanced) had already been selected from the \gls{DEV} results, where it achieved the highest cross-validated PR-AUC. Random Forest obtains the highest TEST PR-AUC by a margin of 0.002, but the held-out results are not used to repeat model selection. XGBoost therefore remains the prespecified model for the subsequent analyses. Its Brier score ($0.197$) is also the lowest point estimate among the seven TEST evaluations, although it is nearly identical to SVM ($0.198$) and Random Forest ($0.199$).
+XGBoost (unbalanced) had already been selected from the \gls{DEV} results, where it achieved the highest cross-validated PR-AUC. Random Forest obtains the highest TEST PR-AUC by approximately 0.002 using the unrounded estimates (0.459 versus 0.456 as displayed), but the held-out results are not used to repeat model selection. XGBoost therefore remains the prespecified model for the subsequent analyses. Its Brier score ($0.197$) is also the lowest point estimate among the seven TEST evaluations, although it is nearly identical to SVM ($0.198$) and Random Forest ($0.199$).
 Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC across all models.
 
 \begin{figure}[H]
@@ -484,7 +482,7 @@ This is offset by respiratory rate, the imputed FVC value, temperature, and seve
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.63\linewidth]{images/figures/shap_waterfall_TP.pdf}
-  \caption[SHAP waterfall: true positive case (Subject 672752)]{SHAP waterfall plot for the TP case study (Subject~672752). Respiratory rate and several smaller contributions offset the effect of a high baseline ALSFRS-R score.}
+  \caption[SHAP waterfall: true positive case (Subject 672752)]{SHAP waterfall plot for the TP case study (Subject~672752). Respiratory rate and several smaller contributions offset the effect of a high baseline ALSFRS-R score. The horizontal scale is the XGBoost raw margin (log-odds) for rapid progression; the corresponding probability is reported in Table~\ref{tab:case_study_profiles}.}
   \label{fig:shap_wf_tp}
 \end{figure} \break
 
@@ -496,7 +494,7 @@ The case illustrates that the baseline profile can appear insufficiently suggest
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.62\linewidth]{images/figures/shap_waterfall_FN.pdf}
-  \caption[SHAP waterfall: false negative case (Subject 330379)]{SHAP waterfall plot for the FN case study (Subject~330379). The combined baseline contributions shift the prediction below the selected threshold.}
+  \caption[SHAP waterfall: false negative case (Subject 330379)]{SHAP waterfall plot for the FN case study (Subject~330379). The combined baseline contributions shift the prediction below the selected threshold. The horizontal scale is the XGBoost raw margin (log-odds) for rapid progression; the corresponding probability is reported in Table~\ref{tab:case_study_profiles}.}
   \label{fig:shap_wf_fn}
 \end{figure}
 
@@ -655,7 +653,7 @@ Its main findings can be summarised as follows:
 \begin{enumerate}
   \item \textbf{The cohort supported the intended analysis, but data quality required active review.}
     The six-month cohort included 1,392 participants, and 99.8\% of the slopes were estimated from at least three \gls{ALSFRS-R} measurements.
-    The preprocessing audit corrected a systematic height-unit error affecting 147 raw records and showed that \gls{FVC} availability varied across trials.
+    The preprocessing audit identified a systematic height-unit error affecting 147 raw records, 132 of which reached the selected feature set, and showed that \gls{FVC} availability varied across trials.
     The source of the missingness could not be established from the available data.
 
   \item \textbf{No single classifier was clearly superior.}

@@ -55,7 +55,7 @@ DIVERGING_CMAP = LinearSegmentedColormap.from_list(
 )
 SHAP_CMAP = LinearSegmentedColormap.from_list(
     "study1_shap",
-    [PALETTE["glaucous"], PALETTE["soft_mauve"], PALETTE["bubblegum_pink"]],
+    [FIGURE_INK, PALETTE["soft_mauve"], PALETTE["powder_blush"]],
 )
 
 

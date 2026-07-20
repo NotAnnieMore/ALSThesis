@@ -73,7 +73,7 @@ This target differs from the short-term functional progression outcome used in S
 
 After outcome classification and the exclusion of non-binary site-of-onset categories, 5,802 patients remained. Complete-case filtering across all 23 predictors reduced the final cohort to 1,502 patients. The largest source of feature missingness was FVC, which was unavailable for 62.3\% of the 5,802 records; BMI was missing for 20.0\%. Missing values in the remaining predictors also contributed to the reduction.
 
-The final cohort is 23.6\% smaller than the 1,967-patient cohort reported in the reference study. This difference may reflect variation in the public data extract and in the availability of the variables required to reconstruct the original feature set. The resulting class imbalance is also slightly greater, with 7.6 Standard Survival patients per Short Survivor compared with 6.9 in the reference cohort. Table~\ref{tab:s2_dataset} provides the full comparison.
+The final cohort is 23.6\% smaller than the 1,967-patient cohort reported in the reference study. This difference may reflect variation in the public data extract and in the availability of the variables required to reconstruct the original feature set. The resulting class imbalance is also slightly greater, with 7.6 Standard Survival patients per Short Survivor compared with 6.7 when calculated from the reference counts. Papaiz et al. report an imbalance ratio of 6.9~\cite{Papaiz2024}; Table~\ref{tab:s2_dataset} distinguishes that reported value from the count-derived ratio.
 
 \begin{table}[ht!]
   \centering
@@ -86,10 +86,12 @@ The final cohort is 23.6\% smaller than the 1,967-patient cohort reported in the
     Total patients         & 1,967          & 1,502          \\
     Short Survivors (\%)   & 13.0\% (256)   & 11.6\% (174)   \\
     Standard Survival (\%) & 87.0\% (1,711) & 88.4\% (1,328) \\
-    Imbalance ratio        & 6.9            & 7.6            \\
+    Imbalance ratio\textsuperscript{a} & 6.7            & 7.6            \\
     Features               & 23             & 23             \\
     \bottomrule
   \end{tabular}
+  \par\smallskip
+  {\footnotesize \textsuperscript{a}Calculated from the displayed class counts. Papaiz et al.~\cite{Papaiz2024} report an imbalance ratio of 6.9.}
 \end{table}
 
 % ============================================================

@@ -70,12 +70,8 @@ The six-month partition contains 1,113 development and 279 test participants; th
 
 \section{Baseline Definition and Leakage-Free Protocol}
 \label{sec:methods_baseline}
-\subsection{Baseline Timepoint ($t_0$)}
-\label{sec:methods_t0}
 For each subject, the baseline timepoint $t_0$ is the earliest recorded day with a non-missing \gls{ALSFRS-R} total score. This definition gives every trajectory a reproducible starting point without requiring participants to survive or remain under observation until a later visit. Of the 5,436 subjects in the initial analytical pool, 4,144 (76.2\%) have their first valid score at the \gls{PRO-ACT} reference day ($\Delta=0$); for the remainder, $t_0$ is the earliest valid assessment available in their record. The reference day should therefore be understood as a database time origin rather than an exact proxy for diagnosis or symptom onset.
 
-\subsection{Why Baseline Matters}
-\label{sec:methods_baseline_why}
 The prediction task is anchored at $t_0$. Predictors are constructed from information recorded at or before this point, whereas later observations are used only to derive the outcome. The baseline \gls{ALSFRS-R} score is an exception only in appearance: it is available at prediction time and is also the first observation in the subsequent slope calculation. No measurement recorded after $t_0$ is used as a predictor. This prevents future laboratory, respiratory, or functional measurements from entering the feature set and inflating performance. Figure~\ref{fig:temporal_separation} shows the resulting temporal arrangement for both horizons.
 
 \begin{figure}[ht!]
@@ -295,9 +291,9 @@ The model uses 35 predictors grouped into five clinical blocks:
 \begin{itemize}
   \item \textbf{Baseline} ($n\!=\!15$): age, sex, ethnicity, seven race indicators, total \gls{ALSFRS-R}, its three respiratory items, and mode of administration;
   \item \textbf{Vitals} ($n\!=\!12$): weight, height, \gls{BMI}, pulse, respiratory rate, temperature, and six blood-pressure measurements;
-  \item \textbf{Respiratory} ($n\!=\!3$): best \gls{FVC} in litres, best percentage of normal, and the recorded subject-normal value;
+  \item \textbf{FVC} ($n\!=\!3$): best \gls{FVC} in litres, best percentage of normal, and the recorded subject-normal value;
   \item \textbf{Treatment} ($n\!=\!3$): pre-baseline riluzole use, clinical-trial study arm, and number of concomitant medications recorded before baseline;
-  \item \textbf{Laboratory} ($n\!=\!2$): creatinine and \gls{ALT}.
+  \item \textbf{Labs} ($n\!=\!2$): creatinine and \gls{ALT}.
 \end{itemize}
 The subject identifier, three temporal offsets, both horizon-specific slopes, and \texttt{ALSFRS\_Responded\_By} are excluded from the model matrix. The slopes are outcomes rather than predictors; the offsets are retained only to verify temporal selection; and the response-source field is missing for more than 93\% of the cohort. Table~\ref{tab:feature_summary} lists the predictors, their data types, and their coverage in the six-month cohort. The same block definitions are used in the ablation analysis (Section~\ref{sec:methods_ablation}).
 
@@ -313,7 +309,7 @@ Laboratory values are selected separately for each test, using the most recent c
 \label{sec:methods_coverage}
 Coverage is defined as the proportion of the six-month cohort with a non-missing value. It varies considerably within blocks. Total \gls{ALSFRS-R} and sex are complete, age is available for 87.1\%, and the three respiratory scale items for 93.8\%; by contrast, mode of administration is recorded for only 17.0\%. At least one vital-sign feature is present for 80.6\% of subjects, but individual coverage ranges from 79.2\% for weight to 5.5\% for standing and supine blood-pressure fields.
 
-FVC in litres is available for 56.3\% of subjects, percentage of normal for 54.5\%, and the subject-normal value for 33.3\%. At least one of the three respiratory features is present for 60.7\% of the cohort. Study arm is available for 91.1\%, while the operationally constructed riluzole indicator and medication count contain no missing values. Creatinine and \gls{ALT} coverage is 64.7\% and 69.0\%, respectively. These differences are reported per feature in Table~\ref{tab:feature_summary} and motivate the fold-specific imputation described later.
+FVC in litres is available for 56.3\% of subjects, percentage of normal for 54.5\%, and the subject-normal value for 33.3\%. At least one of the three FVC features is present for 60.7\% of the cohort. Study arm is available for 91.1\%, while the operationally constructed riluzole indicator and medication count contain no missing values. Creatinine and \gls{ALT} coverage is 64.7\% and 69.0\%, respectively. These differences are reported per feature in Table~\ref{tab:feature_summary} and motivate the fold-specific imputation described later.
 
 \subsection{FVC Missingness Analysis}
 \label{subsec:methods_fvc_missingness}
@@ -323,7 +319,7 @@ Because FVC in litres is absent for 43.7\% of the six-month cohort, participants
 \label{sec:methods_bmi_correction}
 During baseline feature construction, height values outside $[120,220]$\,cm and weight values outside $[30,200]$\,kg were set to \texttt{NaN}. The anomalous heights were compatible with a misplaced decimal point, but the intended values could not be verified from the source data; treating them as missing avoids introducing an assumed correction. This rule affected 132 selected height measurements and 31 weights. \gls{BMI} was recalculated only when both measurements remained valid, with missing values subsequently handled within the model pipeline. Appendix~\ref{app:bmi_correction} documents the original records and the checks performed after cleaning.
 
-\section{Exploratory Analysis: Treatment Variables and Progression}
+\subsection{Exploratory Review of Treatment Variables}
 \label{sec:methods_eda_treatment}
 The treatment block is examined descriptively before modelling using the complete six-month cohort and a rapid-progression label based on the global 30th-percentile slope cutoff. Active and Placebo arms, as well as participants with and without documented pre-baseline riluzole use, are compared using a $\chi^2$ test for the binary label and a two-sided Mann--Whitney~$U$ test for the continuous slope. Medication burden and the most frequently recorded pre-baseline drugs are summarised without drug-level hypothesis testing. This exploratory label is not used during model development, where cutoffs remain derived from the training data.
 
@@ -374,9 +370,9 @@ In the unbalanced mode, both classes retain the model's default contribution to 
 \end{itemize}
 Validation-fold labels and class counts are not used to determine these weights.
 
-\gls{PR-AUC}, implemented as average precision, is the primary optimisation and model-ranking metric because it summarises the precision--recall trade-off for the minority class without requiring a decision threshold. \gls{ROC-AUC} is reported as a secondary threshold-free measure. During model comparison, $F_1$ and $F_2$ are calculated at the default threshold of 0.5 for descriptive purposes only and do not determine the selected model. Spearman correlations across the 13 configurations are used to compare the rankings produced by the threshold-free and fixed-threshold metrics.
+\gls{PR-AUC}, implemented as average precision, is the primary optimisation and model-ranking metric. \gls{ROC-AUC} is reported as a secondary ranking measure, while $F_1$ and $F_2$ at the default threshold of 0.5 are retained for descriptive comparison. Spearman correlations across the 13 configurations are used to compare the rankings produced by these metrics.
 
-The operating threshold is selected only after model selection, using out-of-fold predictions from the development set as described in Section~\ref{sec:methods_threshold_final}. Synthetic over- or under-sampling is not used in Study~I; the imbalance analysis is restricted to the native weighting options above so that every model is trained on the observed development records.
+The operating threshold is selected only after model selection, using out-of-fold predictions from the development set as described in Section~\ref{sec:methods_threshold}. Synthetic over- or under-sampling is not used in Study~I; the imbalance analysis is restricted to the native weighting options above so that every model is trained on the observed development records.
 
 \section{Evaluation Metrics}
 \label{sec:methods_metrics}
@@ -422,13 +418,7 @@ Cross-validation performance is reported as the arithmetic mean and standard dev
 
 \section{Decision Threshold Selection}
 \label{sec:methods_threshold}
-\subsection{Thresholds During Model Comparison}
-\label{sec:methods_threshold_foldwise}
-During hyperparameter optimisation and model comparison, $F_1$ and $F_2$ are calculated at the default threshold of 0.5. These values describe the behaviour of each fitted configuration at a common cutoff, but they are not used to optimise hyperparameters or select the final model. The operating threshold is chosen only after model selection.
-
-\subsection{Operating Threshold for the Selected Model}
-\label{sec:methods_threshold_final}
-After XGBoost is selected, the global rapid-progression cutoff is fixed at the 30th percentile of the full \gls{DEV} slope distribution. Five-fold \texttt{GroupKFold} is then used to generate one out-of-fold probability for each development participant with the tuned unbalanced configuration. These predictions are used only for threshold selection; the model is not refitted or selected using the \gls{TEST} partition.
+During model comparison, $F_1$ and $F_2$ are calculated at the common threshold of 0.5 but are not used for optimisation or model selection. After XGBoost is selected, the global rapid-progression cutoff is fixed at the 30th percentile of the full \gls{DEV} slope distribution. Five-fold \texttt{GroupKFold} is then used to generate one out-of-fold probability for each development participant with the tuned unbalanced configuration. These predictions are used only for threshold selection; the model is not refitted or selected using the \gls{TEST} partition.
 
 Candidate thresholds from 0.05 to 0.95, in increments of 0.01, are compared using precision, recall, $F_1$, $F_2$, and Youden's $J$. The threshold that maximises $F_1$ is $0.21$ and is retained as the primary operating point for the prototype report. The $F_2$ optimum and Youden threshold are also reported to show how the preferred cutoff changes with the criterion. No clinical utility function or externally specified cost ratio was available; consequently, $t=0.21$ should be interpreted as a data-derived development choice rather than a clinically validated threshold. It is applied unchanged to the held-out \gls{TEST} predictions.
 
@@ -554,31 +544,25 @@ Comparing the \gls{LR} coefficient ranking with \gls{SHAP} importance serves as 
 \section{Supplementary Analyses}
 \label{sec:methods_supplementary}
 
-\subsection{Error Profiling}
-\label{subsec:methods_error_profile}
+\noindent\textbf{Error profiling.}
 All \gls{TEST}-set participants are assigned to a confusion-matrix quadrant (\gls{TP}, \gls{FP}, \gls{FN}, or \gls{TN}) at the selected threshold and stratified by age, sex, baseline \gls{ALSFRS-R} severity, and \gls{FVC} percentage of normal. Absolute counts and within-group proportions are reported, with particular attention to false negatives because missed rapid progressors are the main concern at a screening-oriented operating point. Missing age and \gls{FVC} values are retained as separate groups. Appendix~\ref{app:error_profiles} gives the stratum definitions and complete profiles; the main findings are summarised in Section~\ref{subsec:results_error_profile}.
 
-\subsection{Subgroup Performance Analysis}
-\label{subsec:methods_subgroup}
+\noindent\textbf{Subgroup performance analysis.}
 \gls{PR-AUC}, recall, precision, and $F_1$ are computed separately for the age, sex, baseline \gls{ALSFRS-R}, and \gls{FVC} strata used in the error profiles. Groups with fewer than ten participants or three rapid progressors are excluded, while missing age and FVC remain separate strata when these criteria are met. Since no multiplicity-adjusted tests or subgroup-specific confidence intervals are calculated, the comparisons are exploratory and do not establish fairness or equivalent performance. Appendix~\ref{app:subgroup_performance} documents the complete results and the variation in outcome prevalence between groups.
 
-\subsection{Decision Curve Analysis}
-\label{subsec:methods_dca}
+\noindent\textbf{Decision curve analysis.}
 Decision Curve Analysis (\gls{DCA})~\cite{vickers2006dca} estimates net benefit across threshold probabilities from 0.01 to 0.60 and compares the model with \textit{treat-all} and \textit{treat-none} reference strategies. The analysis uses the same finite \gls{TEST} set as the performance evaluation and does not include confidence intervals, so interpretation focuses on continuous threshold intervals rather than isolated points. Appendix~\ref{app:dca} provides the net-benefit definition, complete curve, and threshold-level results.
 
-\subsection{Calibration Analysis}
-\label{subsec:methods_calibration}
+\noindent\textbf{Calibration analysis.}
 A well-calibrated model produces predicted probabilities that match observed event frequencies: among patients assigned $P(\text{rapid}) \approx 0.30$, roughly 30\% should indeed experience rapid progression.
 To assess calibration visually, we construct a \textit{reliability diagram} by binning the \gls{TEST}-set predicted probabilities into ten equal-width bins (0.0--0.1, 0.1--0.2, \ldots, 0.9--1.0) and plotting the mean predicted probability in each bin against the observed proportion of rapid progressors.
 A perfectly calibrated model lies on the diagonal; systematic deviations above or below indicate under-confidence or over-confidence, respectively.
 Calibration is additionally summarised numerically by the Brier score (Table~\ref{tab:metrics}).
 
-\subsection{Learning Curves}
-\label{subsec:methods_learning_curves}
+\noindent\textbf{Learning curves.}
 The selected XGBoost configuration is trained on progressively larger participant-level subsets of \gls{DEV} (20\% to 100\%) and evaluated on the fixed \gls{TEST} set. Fractions below 100\% use 20 stratified repetitions; the full DEV fit is run once. Mean \gls{PR-AUC} and \gls{ROC-AUC} are reported with one-standard-deviation error bars. Since TEST is evaluated repeatedly, this is a post-evaluation sensitivity analysis rather than an additional validation step, and it is not used for model or hyperparameter selection. Appendix~\ref{app:learning_curve} provides the full procedure and curve.
 
-\subsection{Bootstrap Confidence Intervals}
-\label{subsec:methods_bootstrap}
+\noindent\textbf{Bootstrap confidence intervals.}
 To quantify sampling uncertainty in the \gls{TEST}-set performance estimates, we compute 95\% confidence intervals via the non-parametric bootstrap~\cite{efron1993bootstrap}.
 For each of $B\!=\!2{,}000$ iterations, a sample of size $N_{\text{test}}$ is drawn with replacement from the \gls{TEST} participants and seven metrics are recomputed: \gls{PR-AUC}, \gls{ROC-AUC}, recall, precision, $F_1$, $F_2$, and the Brier score.
 The fitted model and operating threshold ($t=0.21$) remain fixed across resamples.
@@ -587,8 +571,7 @@ Degenerate bootstrap samples (single-class) are discarded.
 This approach avoids a parametric sampling-distribution assumption and describes uncertainty due to the composition of the finite TEST sample.
 It is conditional on the fitted model and selected threshold and therefore does not incorporate uncertainty from DEV sampling, hyperparameter optimisation, model selection, or threshold selection.
 
-\subsection{Partial Dependence Plots}
-\label{subsec:methods_pdp}
+\noindent\textbf{Partial dependence plots.}
 Partial Dependence Plots (PDPs)~\cite{friedman2001pdp} are computed for the three features with the highest global \gls{SHAP} importance: baseline \gls{ALSFRS-R} total, \gls{FVC} in litres, and age. Each grid spans the 5th to 95th percentile of observed \gls{TEST} values, with rug marks indicating data density. Since PDPs average predictions over the remaining covariates, they may evaluate uncommon feature combinations when predictors are correlated. They are interpreted as summaries of the fitted model rather than causal or individual-level effects. Appendix~\ref{app:pdp} provides the mathematical definition, complete procedure, and resulting curves.
 
 \section{Patient Risk Report Generator}

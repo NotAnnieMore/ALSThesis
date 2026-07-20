@@ -11,7 +11,7 @@ Feature configurations:
   C : A + FVC
   D : A + Vitals + FVC
   E : D + Treatment     (riluzole_pre_t0, study_arm, n_conmeds_pre_t0)
-  F : D + Treatment + Labs  (alt_t0, creatinine_t0)      ← full v2
+  F : D + Treatment + Labs  (alt_t0, creatinine_t0)      ← full set (35 features)
 
 Models evaluated: top performers from tuning — XGB(unb), RF(unb), LGBM(bal), LR(bal)
 
@@ -100,7 +100,7 @@ BLOCKS = {
     "C: +FVC":                   lambda all_c: [c for c in all_c if c not in META_COLS | VITALS_COLS | TREATMENT_COLS | LABS_COLS],
     "D: +Vitals+FVC":            lambda all_c: [c for c in all_c if c not in META_COLS | TREATMENT_COLS | LABS_COLS],
     "E: +Treatment":             lambda all_c: [c for c in all_c if c not in META_COLS | LABS_COLS],
-    "F: Full v2":                lambda all_c: [c for c in all_c if c not in META_COLS],
+    "F: Full (35)":              lambda all_c: [c for c in all_c if c not in META_COLS],
 }
 
 # Models to evaluate (key, balanced, needs_scaling)
@@ -201,7 +201,7 @@ def plot_ablation(res_df):
         "C: +FVC": r"$\bf{C}$" + "\n+FVC (N=18)",
         "D: +Vitals+FVC": r"$\bf{D}$" + "\n+Vitals+FVC (N=30)",
         "E: +Treatment": r"$\bf{E}$" + "\n+Treatment (N=33)",
-        "F: Full v2": r"$\bf{F}$" + "\nAll Features (N=35)",
+        "F: Full (35)": r"$\bf{F}$" + "\nAll Features (N=35)",
     }
     x = np.arange(len(blocks_order))
 

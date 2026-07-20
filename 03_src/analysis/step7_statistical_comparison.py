@@ -287,11 +287,8 @@ def pairwise_wilcoxon_bonferroni(score_matrix: np.ndarray, labels: list[str]):
 # ═════════════════════════════════════════════════════════════
 def plot_fold_boxplot(fold_df: pd.DataFrame, out_path: str):
     """
-    Boxplot + individual fold dots for PR-AUC per model, ordered by mean.
-    Every point has its numeric value annotated (auto-repelled to avoid overlap).
+    Boxplot with individual fold points and a mean marker, ordered by mean.
     """
-    from adjustText import adjust_text
-
     models = fold_df.groupby("model")["pr_auc"].mean().sort_values(ascending=False).index.tolist()
     n = len(models)
 
@@ -316,37 +313,24 @@ def plot_fold_boxplot(fold_df: pd.DataFrame, out_path: str):
         patch.set_edgecolor(FIGURE_INK)
         patch.set_alpha(0.55)
 
-    # Scatter individual dots with jitter and collect annotation texts
+    # Scatter individual fold values with light horizontal jitter.
     np.random.seed(SEED)
-    texts = []
     for i, (m, vals) in enumerate(zip(models, data_list)):
         x_jitter = np.random.uniform(-0.15, 0.15, size=len(vals))
         xs = (i + 1) + x_jitter
         colour = model_colour(m.split()[0])
         ax.scatter(xs, vals, s=55, zorder=5, edgecolors=FIGURE_INK, linewidth=0.6,
                    color=colour, alpha=0.9)
-        for xj, v in zip(xs, vals):
-            texts.append(ax.text(xj, v, f"{v:.3f}", fontsize=7, ha="center",
-                                 va="bottom", fontweight="bold"))
 
-    # Auto-repel annotations to avoid overlap
-    adjust_text(texts, ax=ax, force_text=(0.4, 0.6),
-                arrowprops=dict(arrowstyle="-", color=FIGURE_INK, lw=0.5, alpha=0.6),
-                expand=(1.4, 1.8), only_move={"text": "y"})
-
-    # Mean line
-    for i, mu in enumerate(means):
-        ax.hlines(mu, i + 0.7, i + 1.3, color=FIGURE_INK, linewidth=1.2,
-                  linestyle="--", zorder=4)
-        ax.annotate(f"μ = {mu:.3f}", xy=(i + 1.3, mu),
-                    xytext=(8, 0), textcoords="offset points",
-                    fontsize=7.5, color=FIGURE_INK, fontweight="bold",
-                    va="center", ha="left")
+    ax.scatter(range(1, n + 1), means, marker="D", s=48, zorder=6,
+               facecolors="white", edgecolors=FIGURE_INK, linewidth=1.3,
+               label="Mean")
 
     ax.set_ylabel("PR-AUC (average precision)", fontsize=11)
     ax.set_title("Per-fold PR-AUC — 5-fold GroupKFold (6 m horizon, DEV set)",
                  fontsize=12, fontweight="bold")
     style_axis(ax, "y")
+    ax.legend(loc="upper right", fontsize=9)
 
     fig.tight_layout()
     fig.savefig(out_path, dpi=300, bbox_inches="tight")
