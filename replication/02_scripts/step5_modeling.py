@@ -28,6 +28,7 @@ import warnings
 import optuna
 
 from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
@@ -230,6 +231,11 @@ def run_cv(clf_name, params, sampler_name, X, y, return_all=False):
         X_tr, X_val = X[train_idx], X[val_idx]
         y_tr, y_val = y[train_idx], y[val_idx]
 
+        # Fit preprocessing within the training portion of each CV fold.
+        scaler = MinMaxScaler()
+        X_tr = scaler.fit_transform(X_tr)
+        X_val = scaler.transform(X_val)
+
         # Apply resampling to training fold only
         if sampler is not None:
             try:
@@ -301,7 +307,7 @@ if __name__ == '__main__':
     print("=" * 70)
 
     # Load data
-    data = np.load(os.path.join(PROCESSED_DIR, 'step4_arrays.npz'),
+    data = np.load(os.path.join(PROCESSED_DIR, 'step4_arrays_unscaled.npz'),
                    allow_pickle=True)
     X_train = data['X_train']
     y_train = data['y_train']

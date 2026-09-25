@@ -55,7 +55,7 @@ The study has four objectives:
 
 The general structure of the PRO-ACT database~\cite{PROACT} was described in Section~\ref{sec:methods_proact_sources}. The public extract used here contains 16 source tables. Its demographic table contains 12,504 unique patient identifiers, of which 9,483 have usable age and sex records and form the patient-level starting set for Study~II. The remaining variables were drawn from disease history, ALSFRS-R, forced vital capacity (FVC), vital signs, riluzole, and death records.
 
-Following the feature engineering protocol of Papaiz et al.~\cite{Papaiz2024}, repeated measurements were reduced to values at or near diagnosis, except where longitudinal records were required to estimate functional decline. This produced 23 categorical and ordinal predictors.
+Following the feature engineering protocol of Papaiz et al.~\cite{Papaiz2024}, repeated measurements were reduced using their distance from the recorded diagnosis date, except where longitudinal records were required to estimate functional decline. This produced 23 categorical and ordinal predictors. The timing of the selected records was audited because proximity to diagnosis does not establish that a measurement was available by that date.
 
 \subsection{Target Definition}
 \label{subsec:s2_target}
@@ -72,6 +72,8 @@ This target differs from the short-term functional progression outcome used in S
 \label{subsec:s2_cohort}
 
 After outcome classification and the exclusion of non-binary site-of-onset categories, 5,802 patients remained. Complete-case filtering across all 23 predictors reduced the final cohort to 1,502 patients. The largest source of feature missingness was FVC, which was unavailable for 62.3\% of the 5,802 records; BMI was missing for 20.0\%. Missing values in the remaining predictors also contributed to the reduction.
+
+A separate post-hoc sensitivity analysis retained all 5,802 outcome-eligible patients and the selected LightGBM+ROS hyperparameters. This expanded cohort received a new stratified 80/20 split. Median imputation was compared with five stochastic iterative imputations; each imputer, scaler, and oversampler was fitted on training data only. Imputed values were constrained to the observed ordinal ranges, and predictions from the five fitted models were averaged. The primary complete-case analysis was not replaced or re-optimised. Since the expanded and complete-case partitions contain different patients, their estimates are descriptive rather than paired comparisons. Multiple imputation can examine dependence on complete-case filtering, but it cannot by itself rule out \gls{MNAR} missingness or recover information that was never recorded~\cite{white2011mice,sterne2009multiple}.
 
 The final cohort is 23.6\% smaller than the 1,967-patient cohort reported in the reference study. This difference may reflect variation in the public data extract and in the availability of the variables required to reconstruct the original feature set. The resulting class imbalance is also slightly greater, with 7.6 Standard Survival patients per Short Survivor compared with 6.7 when calculated from the reference counts. Papaiz et al. report an imbalance ratio of 6.9~\cite{Papaiz2024}; Table~\ref{tab:s2_dataset} distinguishes that reported value from the count-derived ratio.
 
@@ -106,6 +108,8 @@ Feature construction followed the definitions reported by Papaiz et al.~\cite{Pa
 
 For longitudinal clinical variables, the available measurement closest to the diagnosis date was selected by absolute time difference. This rule allows the selected record to fall either before or after diagnosis. FVC was expressed as percentage predicted, using the largest of the available trial measurements or, when percentage values were absent, the ratio between measured and expected volume. Values below 80\% were coded as abnormal. BMI was calculated from the weight measurement closest to diagnosis and the median valid height recorded for that patient. It was grouped as underweight ($<18.5$), normal (18.5--24.9), overweight (25.0--29.9), or obesity ($\geq 30$).
 
+The temporal audit showed that the selected records were usually obtained well after diagnosis. In the final cohort, 1,496 of 1,502 ALSFRS assessments (99.6\%), 1,492 FVC assessments (99.3\%), and 1,494 weight measurements (99.5\%) occurred after the diagnosis date. Their median offsets were 314, 310.5, and 311 days, respectively. Only five patients had selected records at or before diagnosis for all three sources. These variables therefore represent trial measurements selected relative to diagnosis, rather than a strict diagnosis-time baseline.
+
 Functional decline was represented separately for the ten ALSFRS items Q1--Q10. For records collected with the revised scale, the dyspnoea item was used as the compatible respiratory item Q10; Q11 and Q12 were not included. At the selected assessment, each item slope was calculated as
 \[
   \frac{4 - \text{item score}}{\text{months from symptom onset}}.
@@ -114,7 +118,7 @@ Slopes were classified as slow ($<0.05$), average ($0.05$--$0.13$), or rapid ($\
 
 Four indicators described regional involvement at the same assessment. Bulbar involvement was present when the sum of Q1--Q3 was below 12, upper-limb involvement when Q4 and Q5 summed to less than 8, lower-limb involvement when Q8 and Q9 summed to less than 8, and respiratory involvement when Q10 was below 4. Their sum gave the number of involved regions, from zero to four. Gastrostomy was identified from the presence of the gastrostomy-specific Q5 response.
 
-After complete-case filtering, categorical and ordinal values were converted to integer codes following the reference study. The 23 coded predictors were then scaled to the $[0,1]$ interval before data partitioning, matching the order used in the published pipeline.
+After complete-case filtering, categorical and ordinal values were converted to integer codes following the reference study. Scaling was deferred until after data partitioning. MinMax parameters were estimated from the training partition for final model fitting and from the corresponding training fold during cross-validation.
 
 \subsection{Feature Set}
 \label{subsec:s2_featureset}
@@ -123,30 +127,27 @@ The final representation uses the same 23 feature definitions as the reference s
 
 \begin{itemize}
   \item \textbf{Patient characteristics, treatment, and timing (5):} sex, site of onset, age at onset, riluzole use, and diagnostic delay;
-  \item \textbf{Clinical status at diagnosis (8):} FVC, BMI, gastrostomy, number of involved regions, and four binary indicators for bulbar, upper-limb, lower-limb, and respiratory involvement; and
+  \item \textbf{Clinical measurements and regional status (8):} FVC, BMI, gastrostomy, number of involved regions, and four binary indicators for bulbar, upper-limb, lower-limb, and respiratory involvement; and
   \item \textbf{Functional decline (10):} the discretised slopes of Q1 speech, Q2 salivation, Q3 swallowing, Q4 handwriting, Q5 cutting food, Q6 dressing and hygiene, Q7 turning in bed, Q8 walking, Q9 climbing stairs, and Q10 respiratory function.
 \end{itemize}
 
 Unlike the mainly continuous or mixed-type variables used in Study~I, this representation deliberately reduces the clinical measurements to binary and ordinal categories. This preserves comparability with the reference study, although some information within the original continuous measurements is lost.
 
 % ============================================================
-\section{Data Partitioning}
-\label{sec:s2_split}
-% ============================================================
-
-The 1,502 patients were divided by stratified random sampling into an 80\% training partition ($n = 1{,}201$; 139 Short Survivors and 1,062 Standard Survival patients) and a 20\% test partition ($n = 301$; 35 and 266, respectively). A fixed random seed of 42 was used. After partitioning, only the training data were used for hyperparameter optimisation, model selection, and threshold selection. As noted in Section~\ref{sec:s2r_limitations}, however, MinMax scaling had already been fitted to the complete cohort before this split.
-
-% ============================================================
 \section{Experimental Design}
 \label{sec:s2_experiment}
 % ============================================================
+
+\phantomsection\label{sec:s2_split}
+\noindent\textbf{Data partitioning.}
+The 1,502 patients were divided by stratified random sampling into an 80\% training partition ($n = 1{,}201$; 139 Short Survivors and 1,062 Standard Survival patients) and a 20\% test partition ($n = 301$; 35 and 266, respectively). A fixed random seed of 42 was used. The MinMax scaler was fitted on the training partition and then applied to the test predictors. Test outcomes and predictors were not used for hyperparameter optimisation, model selection, or threshold selection.
 
 Figure~\ref{fig:s2_workflow} provides an overview of the complete experimental pipeline.
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=\linewidth]{images/figures/experimental_pipeline.png}
-  \caption[Study II experimental pipeline overview]{Overview of the Study~II experimental pipeline. The dashed border delimits the cross-validation loop, applied exclusively to the training partition. Following the split, test outcomes and predictions were not used during hyperparameter optimisation, model selection, or threshold selection; the earlier cohort-level scaling step is discussed as a limitation in Section~\ref{sec:s2r_limitations}.}
+  \caption[Study II experimental pipeline overview]{Overview of the Study~II experimental pipeline. In the diagram, ``at or near diagnosis'' refers to selection by absolute distance from diagnosis, not to availability at the diagnosis encounter; the temporal audit showed that the selected assessments were predominantly post-diagnosis. The dashed border delimits model selection within the training partition. MinMax scaling and resampling are fitted separately within each cross-validation training fold, and the selected configuration for each classifier is refitted before held-out evaluation. The test partition is used only after model selection.}
   \label{fig:s2_workflow}
 \end{figure}
 
@@ -169,7 +170,7 @@ The combination with the highest mean cross-validation ROC-AUC was retained for 
 \subsection{Cross-Validation Strategy}
 \label{subsec:s2_cv}
 
-Model selection used repeated stratified five-fold cross-validation with three repeats, producing 15 validation scores for each Optuna trial. Stratification maintained the Short Survivor proportion in each fold. The same folds were generated from the training partition with random seed 42.
+Model selection used repeated stratified five-fold cross-validation with three repeats, producing 15 validation scores for each Optuna trial. Stratification maintained the Short Survivor proportion in each fold. The same folds were generated from the training partition with random seed 42. Within each iteration, MinMax parameters were fitted on the fold's training observations before resampling and model fitting, then applied unchanged to the validation observations.
 
 Study~I required grouped folds because several records could belong to the same patient. Here, each row represents one patient, so repeated stratified cross-validation was sufficient to prevent patient overlap while retaining the validation structure of the reference study.
 

@@ -383,9 +383,10 @@ def plot_paper_fig3_balanced_bagging(out_path):
     from imblearn.ensemble import BalancedBaggingClassifier
     from sklearn.model_selection import RepeatedStratifiedKFold
     from sklearn.metrics import recall_score, balanced_accuracy_score
+    from sklearn.preprocessing import MinMaxScaler
 
     # Load data
-    data_arrays = np.load(os.path.join(PROCESSED_DIR, 'step4_arrays.npz'),
+    data_arrays = np.load(os.path.join(PROCESSED_DIR, 'step4_arrays_unscaled.npz'),
                           allow_pickle=True)
     X_train = data_arrays['X_train']
     y_train = data_arrays['y_train']
@@ -444,6 +445,10 @@ def plot_paper_fig3_balanced_bagging(out_path):
         for train_idx, val_idx in cv.split(X_train, y_train):
             Xtr, Xval = X_train[train_idx], X_train[val_idx]
             ytr, yval = y_train[train_idx], y_train[val_idx]
+
+            scaler = MinMaxScaler()
+            Xtr = scaler.fit_transform(Xtr)
+            Xval = scaler.transform(Xval)
 
             # Single-Model
             est = make_estimator(clf_name, params)

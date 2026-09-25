@@ -1,15 +1,13 @@
+\begin{center}
+\textbf{Explainable and Reproducible Machine Learning for ALS Prognosis: Functional Progression Classification and Survival Prediction}
+\end{center}
+
 \section*{Abstract}
 \label{sec:abstract}
 
-Amyotrophic lateral sclerosis (ALS) follows a highly variable clinical course, making functional decline and survival difficult to predict from information available near diagnosis. Machine-learning results in this setting depend not only on the fitted classifier, but also on how the outcome, class imbalance, validation procedure, and decision threshold are defined.
-
-This dissertation examines these issues through two studies using the Pooled Resource Open-Access ALS Clinical Trials (PRO-ACT) database. Study~I classifies rapid functional progression at three- and six-month horizons from 35 baseline clinical features. Patients were separated before model development, target cutoffs were estimated within the training data, and hyperparameters were optimised through Bayesian search. In the primary six-month cohort ($N=1{,}392$), the selected XGBoost model achieved a held-out area under the precision--recall curve (PR-AUC) of 0.456 (95\% confidence interval: $[0.364,\,0.568]$). At the development-derived threshold, it detected 72 of 84 rapid progressors, giving 85.7\% recall and 35.1\% precision. Shapley-based feature attribution assigned the largest contributions to baseline ALS Functional Rating Scale-Revised (ALSFRS-R) and forced vital capacity.
-
-Study~II partially replicates and extends a published framework for identifying patients who die within 24 months of symptom onset. Seven classifiers and ten imbalance-handling strategies were evaluated using 23 features from 1,502 patients. LightGBM with random oversampling achieved the highest held-out area under the receiver operating characteristic curve (ROC-AUC), 0.923 (95\% confidence interval: $[0.868,\,0.966]$), and detected 30 of 35 Short Survivors. A multi-layer perceptron reached a similar ROC-AUC of 0.918 but detected only one Short Survivor at the default threshold. Applying a sensitivity-constrained threshold selected from development predictions raised its test recall to 0.771 while retaining specificity of 0.883. BalancedBagging increased balanced accuracy for six of seven classifiers and reproduced the qualitative reference pattern in four of the five directly comparable families.
-
-The studies address different prognosis outcomes but reach the same methodological conclusion: a ranking metric alone does not determine performance at a particular operating point. Outcome construction, patient separation, imbalance handling, and threshold-dependent errors changed how the models were interpreted. Both studies provide internal validation within a clinical-trial database; external and prospective evaluation would be required before clinical use.
+Amyotrophic lateral sclerosis follows a variable course, making functional decline and survival difficult to predict. This dissertation uses the PRO-ACT database in two studies of class imbalance, validation, and threshold selection. Study~I predicted rapid functional progression at three- and six-month horizons from baseline clinical features. In the six-month test set, XGBoost achieved a PR-AUC of 0.456 and detected 72 of 84 rapid progressors, with 85.7\% recall and 35.1\% precision. SHAP highlighted baseline ALSFRS-R and forced vital capacity. Study~II examined death within 24 months of symptom onset. LightGBM with random oversampling achieved a test ROC-AUC of 0.923 and detected 30 of 35 Short Survivors. Across both studies, ranking performance did not determine behaviour at the selected threshold. Outcome definition, imbalance handling, data separation, and threshold choice all affected interpretation. External, prospective validation is required before clinical use.
 
 \section*{Keywords}
 \label{sec:keywords}
 
-Amyotrophic lateral sclerosis, functional progression, survival prognosis, explainable machine learning, class imbalance, threshold selection, PRO-ACT, reproducibility.
+Amyotrophic lateral sclerosis, functional progression, survival prognosis, class imbalance, threshold selection.

@@ -38,6 +38,30 @@ Weight ($d=0.146$, $p=0.003$) and BMI ($d=0.468$, $p<0.001$) also differ between
 The pattern is compatible with missingness related partly to trial-level collection practices, but observed-data comparisons cannot identify the missing-data mechanism. They do not prove that FVC is \gls{MAR}, and an \gls{MNAR} component cannot be excluded. Median imputation is therefore a pragmatic preprocessing decision rather than a consequence of a confirmed missingness assumption.
 
 
+\section{Missing-Data Sensitivity Analysis}
+\label{app:study1_missing_sensitivity}
+
+The tuned unbalanced XGBoost configuration was re-evaluated without changing its hyperparameters. Numeric predictors used either fold-fitted median imputation, median imputation with missingness indicators, or five stochastic iterative imputations. In the latter condition, five models were fitted and their probabilities averaged. Categorical variables retained most-frequent imputation and one-hot encoding. Table~\ref{tab:study1_missing_sensitivity} reports the results.
+
+\begin{table}[ht!]
+\centering
+\caption[Study I missing-data sensitivity]{Post-hoc missing-data sensitivity for the selected Study~I XGBoost configuration. DEV values are means and standard deviations across the original five GroupKFold splits. TEST was not used to retune the model or select an imputation strategy.}
+\label{tab:study1_missing_sensitivity}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Numeric strategy} & \textbf{DEV PR-AUC} & \textbf{TEST PR-AUC} & \textbf{TEST ROC-AUC} \\
+\midrule
+Median (primary)             & $0.434\pm0.049$ & 0.456 & 0.660 \\
+Median + missing indicators & $0.421\pm0.047$ & 0.460 & 0.662 \\
+Iterative imputation ($m=5$)& $0.426\pm0.044$ & 0.499 & 0.682 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The development estimates differ by at most 0.013 PR-AUC. Iterative imputation gives the highest TEST value, but this was observed after the primary evaluation and on the same TEST partition. It is therefore evidence of sensitivity to preprocessing, not an independently validated improvement. Stochastic imputation also relies on modelling assumptions and does not establish whether the underlying missingness is \gls{MAR} or \gls{MNAR}.
+
+
 % ============================================================
 \section{BMI Data-Quality Audit}
 \label{app:bmi_correction}
@@ -767,6 +791,29 @@ All ten profiles passed through preprocessing and prediction and produced a comp
 \chapter{Supplementary Analyses for Study II}
 \label{app:study2_supplementary}
 % ============================================================
+
+\section{Missing-Data Sensitivity Analysis}
+\label{app:study2_missing_sensitivity}
+
+The primary Study~II analysis follows the reference study's complete-case design. A post-hoc analysis instead retained all 5,802 patients remaining after outcome classification and exclusion of the two non-binary onset-site categories. The fixed LightGBM+ROS configuration was evaluated after median imputation and after five stochastic iterative imputations. The expanded cohort received its own stratified split, so its test estimates are not paired with those from the 1,502-patient complete-case cohort.
+
+\begin{table}[ht!]
+\centering
+\caption[Study II missing-data sensitivity]{Missing-data sensitivity for the fixed LightGBM+ROS configuration. The primary and expanded analyses use different test partitions. Sensitivity and specificity use a threshold of 0.50.}
+\label{tab:study2_missing_sensitivity}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Analysis} & \textbf{Cohort} & \textbf{Test} & \textbf{ROC-AUC} & \textbf{PR-AUC} & \textbf{Sens.} & \textbf{Spec.} \\
+\midrule
+Complete cases (primary) & 1,502 & 301   & 0.923 & 0.704 & 0.857 & 0.831 \\
+Expanded, median         & 5,802 & 1,161 & 0.903 & 0.515 & 0.813 & 0.828 \\
+Expanded, iterative ($m=5$) & 5,802 & 1,161 & 0.906 & 0.523 & 0.797 & 0.833 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The expanded analyses contain 123 Short Survivors in their test partition, compared with 35 in the primary test set. Their lower PR-AUC is not attributable to one imputation algorithm, since median and iterative results are close. The comparison instead shows that the complete-case cohort and expanded cohort yield different performance estimates. It cannot determine which missing values would have been observed or eliminate selection bias under an \gls{MNAR} process.
 
 \section{Cross-Validation and Test ROC-AUC}
 

@@ -5,11 +5,11 @@ Generates fig_workflow.png: a top-to-bottom flowchart of the full pipeline.
 
 Outputs saved to:
   - 03_outputs/step10/
-  - overleaf/figures/
 """
 
 import os
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyArrowPatch
@@ -18,9 +18,7 @@ matplotlib.rcParams.update({'font.family': 'sans-serif', 'font.size': 9})
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), '..')
 OUT_DIR  = os.path.join(BASE_DIR, '03_outputs', 'step10')
-FIG_DIR  = os.path.join(BASE_DIR, 'overleaf', 'figures')
 os.makedirs(OUT_DIR, exist_ok=True)
-os.makedirs(FIG_DIR, exist_ok=True)
 
 # ── Colour palette ─────────────────────────────────────────────────────────
 C_DATA   = '#E3F2FD'   # light blue  — data sources
@@ -116,7 +114,7 @@ box(ax, cx, Y['proact'], BW, BH,
 arrow(ax, cx, Y['proact'] - BH/2, cx, Y['feat_eng'] + BH/2)
 box(ax, cx, Y['feat_eng'], BW, BH,
     'Feature Engineering',
-    subtext='23 ordinal/binary features per patient at diagnosis',
+    subtext='23 ordinal/binary trial-record features',
     facecolor=C_PROC)
 
 # side note — feature types
@@ -130,7 +128,7 @@ bracket_arrow(ax, cx + BW/2, Y['feat_eng'],
 arrow(ax, cx, Y['feat_eng'] - BH/2, cx, Y['exclusion'] + BH/2)
 box(ax, cx, Y['exclusion'], BW, BH,
     'Filtering & Exclusions',
-    subtext='Censored · Missing FVC/BMI · Ambiguous site-of-onset',
+    subtext='Censoring · Missing predictors · Onset-site exclusions',
     facecolor=C_PROC)
 
 # side note — result
@@ -144,7 +142,7 @@ bracket_arrow(ax, cx + BW/2, Y['exclusion'],
 arrow(ax, cx, Y['exclusion'] - BH/2, cx, Y['split'] + BH/2)
 box(ax, cx, Y['split'], BW, BH,
     'Stratified Train / Test Split  (80 / 20)',
-    subtext='Train: 1,201 pts · Test: 301 pts  (sealed)',
+    subtext='Train: 1,201 pts · Test: 301 pts  (sealed)\nMinMax fitted on training data only',
     facecolor=C_PROC)
 
 # ── 5. CV Loop dashed border ──────────────────────────────────────────────
@@ -162,17 +160,17 @@ cv_rect = mpatches.FancyBboxPatch(
     linewidth=1.2, linestyle='dashed', zorder=1
 )
 ax.add_patch(cv_rect)
-ax.text(loop_left + 0.01, loop_top - 0.012,
+ax.text(loop_left + 0.01, loop_top - 0.006,
         'Repeated Stratified 5-Fold CV  (×3 repeats)',
-        fontsize=7.5, color='#546E7A', style='italic', zorder=4)
+        fontsize=7.5, color='#546E7A', style='italic', va='top', zorder=4)
 
 # Arrow into CV loop
 arrow(ax, cx, Y['split'] - BH/2, cx, Y['resamp'] + SBH/2)
 
 # Boxes inside CV loop
 box(ax, cx, Y['resamp'], BW - 0.06, SBH,
-    'Class-Imbalance Resampling',
-    subtext='10 strategies (ROS, SMOTE, RUS, SMOTEENN, …)',
+    'Fold-Specific Preprocessing & Resampling',
+    subtext='MinMax fitted within fold · 10 imbalance strategies',
     facecolor=C_PROC, fontsize=8)
 
 arrow(ax, cx, Y['resamp'] - SBH/2, cx, Y['train_clf'] + SBH/2)
@@ -224,16 +222,15 @@ legend_items = [
     mpatches.Patch(facecolor=C_MODEL,  edgecolor=C_BORDER, label='Modelling / Evaluation'),
     mpatches.Patch(facecolor=C_OUT,    edgecolor=C_BORDER, label='Outputs'),
 ]
-ax.legend(handles=legend_items, loc='lower left', fontsize=7.5,
-          framealpha=0.9, edgecolor='#B0BEC5',
-          bbox_to_anchor=(0.01, 0.01))
+ax.legend(handles=legend_items, loc='upper center', fontsize=7.5,
+          framealpha=0.9, edgecolor='#B0BEC5', ncol=2,
+          bbox_to_anchor=(0.5, -0.005))
 
 plt.tight_layout(pad=0.3)
 
-for dest in (OUT_DIR, FIG_DIR):
-    path = os.path.join(dest, 'fig_workflow.png')
-    fig.savefig(path, dpi=200, bbox_inches='tight')
-    print(f'Saved: {path}')
+path = os.path.join(OUT_DIR, 'fig_workflow.png')
+fig.savefig(path, dpi=200, bbox_inches='tight')
+print(f'Saved: {path}')
 
 plt.close(fig)
 print('Done.')

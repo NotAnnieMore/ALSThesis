@@ -61,7 +61,7 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
   Each horizon-specific cohort is subsequently divided into development (DEV, 80\%) and test (TEST, 20\%) partitions.}
   \label{fig:consort_flowchart}
 \end{figure}
-
+\clearpage
 \subsection{Held-Out Data Partitioning}
 \label{sec:methods_holdout}
 Before model development, each horizon-specific cohort is divided into development (\gls{DEV}, 80\%) and test (\gls{TEST}, 20\%) partitions with a fixed random seed. Stratification uses a provisional rapid/slow label obtained from the 30th percentile of the complete horizon-specific slope distribution. This provisional label is used only to preserve the approximate class proportion in the split. It is not used for training or final evaluation: after partitioning, the operative slope threshold is recomputed from \gls{DEV} data and then applied unchanged to \gls{TEST}.
@@ -73,7 +73,7 @@ The six-month partition contains 1,113 development and 279 test participants; th
 For each subject, the baseline timepoint $t_0$ is the earliest recorded day with a non-missing \gls{ALSFRS-R} total score. This definition gives every trajectory a reproducible starting point without requiring participants to survive or remain under observation until a later visit. Of the 5,436 subjects in the initial analytical pool, 4,144 (76.2\%) have their first valid score at the \gls{PRO-ACT} reference day ($\Delta=0$); for the remainder, $t_0$ is the earliest valid assessment available in their record. The reference day should therefore be understood as a database time origin rather than an exact proxy for diagnosis or symptom onset.
 
 The prediction task is anchored at $t_0$. Predictors are constructed from information recorded at or before this point, whereas later observations are used only to derive the outcome. The baseline \gls{ALSFRS-R} score is an exception only in appearance: it is available at prediction time and is also the first observation in the subsequent slope calculation. No measurement recorded after $t_0$ is used as a predictor. This prevents future laboratory, respiratory, or functional measurements from entering the feature set and inflating performance. Figure~\ref{fig:temporal_separation} shows the resulting temporal arrangement for both horizons.
-
+\clearpage
 \begin{figure}[ht!]
   \centering
   \begin{tikzpicture}[
@@ -350,6 +350,8 @@ The 35 predictors comprise 31 numeric and four categorical variables: sex, ethni
   \item Categorical variables are imputed using the most frequent training-fold category and one-hot encoded. Categories not observed during fitting are ignored when new data are transformed.
 \end{itemize}
 Median imputation provides a simple and reproducible treatment of the uneven feature coverage without estimating additional multivariable imputation models from this moderate-sized cohort. It does not resolve possible informative missingness, particularly for FVC, and this limitation is considered alongside the missingness analysis in Section~\ref{sec:results_fvc_missingness}. Both numeric and categorical imputers are fitted within each training fold rather than on the complete dataset.
+
+A post-hoc sensitivity analysis retained the selected unbalanced XGBoost hyperparameters and compared three numeric-data strategies: the primary median imputation, median imputation with missingness indicators, and five stochastic iterative imputations. For the third strategy, a separate model was fitted to each imputed training set and the five validation or test probabilities were averaged. Numeric imputers were fitted within each cross-validation training fold and on \gls{DEV} before application to \gls{TEST}; categorical processing remained unchanged. This analysis tests whether the main ranking estimates depend on one simple imputation rule. It does not identify the missing-data mechanism or make an \gls{MNAR} process ignorable~\cite{white2011mice,sterne2009multiple}.
 The categorical variables contain between two and four observed levels. One-hot encoding is therefore practical and avoids imposing an ordinal relationship between categories. Decision Tree, Random Forest, LightGBM, and XGBoost use the same imputation and encoding steps but do not use numeric standardisation.
 The preprocessing transformer and classifier are combined in a \texttt{scikit-learn} \texttt{Pipeline}. Within each cross-validation fold, this pipeline is fitted only on the training partition and then applied to the held-out fold. Imputation values, scaling parameters, and encoded categories are therefore estimated without access to the validation data.
 
@@ -381,7 +383,7 @@ Performance is assessed using complementary threshold-free, threshold-dependent,
 \gls{PR-AUC} is implemented using \texttt{average\_precision\_score}. Average precision forms a stepwise summary of the precision--recall curve and gives greater weight to improvements in recall achieved at high precision. Its no-skill reference depends on the proportion of rapid progressors, which is approximately 0.30 in this study. \gls{ROC-AUC} measures the probability that a randomly selected rapid progressor receives a higher score than a randomly selected slow progressor and is less directly affected by class prevalence.
 
 Precision, recall, $F_1$, and $F_2$ require a decision threshold. $F_1$ weights precision and recall equally, whereas $F_2$ gives recall greater weight. The Brier score measures the mean squared error of the predicted probabilities. It reflects overall probabilistic accuracy and is influenced by both calibration and discrimination; it is therefore interpreted together with the reliability diagram rather than as a standalone proof of calibration.
-
+\clearpage
 \begin{table}[ht!]
 \centering
 \caption[Evaluation metrics definitions]{Evaluation metrics used in this work. All metrics are computed with respect to the positive class (\textit{rapid} progression) unless stated otherwise.}
@@ -529,13 +531,13 @@ The resulting feature weights indicate which variables drive the local decision 
 Because the XGBoost pipeline includes imputation and one-hot encoding, \gls{LIME} is applied to the \textit{preprocessed} (fully numeric) feature matrix rather than the raw data, wrapping only the final classifier as a black-box predictor.
 This avoids type-conversion errors and ensures that the perturbation distribution matches the feature space seen by the model.
 
-\subsection{SHAP--LIME Concordance}
-\label{subsec:methods_concordance}
+\phantomsection\label{subsec:methods_concordance}
+\noindent\textbf{SHAP--LIME concordance.}
 For each case study, the top-10 features ranked by absolute local \gls{SHAP} value are compared with the top-10 features ranked by absolute \gls{LIME} weight.
 The number of shared features provides a descriptive measure of agreement between two methods with different assumptions; it is not treated as evidence of causal relevance or explanation validity.
 
-\subsection{Logistic Regression Coefficients}
-\label{subsec:methods_lr_coefs}
+\phantomsection\label{subsec:methods_lr_coefs}
+\noindent\textbf{Logistic Regression coefficients.}
 The balanced Logistic Regression model (trained with \texttt{class\_weight=balanced}) provides a model-intrinsic form of explainability:
 each coefficient describes the direction and magnitude of a feature's linear association with the predicted log-odds of rapid progression.
 Numeric variables are standardised before fitting, so their coefficients represent a one-standard-deviation change; one-hot encoded categorical indicators retain their binary scale.

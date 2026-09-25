@@ -1,0 +1,4 @@
+source,available_n,before_or_at_diagnosis_n,after_diagnosis_n,after_diagnosis_pct,median_days_from_diagnosis,q1_days_from_diagnosis,q3_days_from_diagnosis
+ALSFRS assessment,1502,6,1496,99.6005326231691,314.0,164.0,562.0
+FVC assessment,1502,10,1492,99.33422103861518,310.5,158.25,559.75
+Weight assessment,1502,8,1494,99.46737683089214,311.0,159.0,559.75

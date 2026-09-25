@@ -1,6 +1,17 @@
-# Raw data (large files, not versioned)
+# PRO-ACT source and patient-level derived data
 01_data/raw/
+01_data/interim/
+01_data/processed/
 replication/01_data/raw/
+replication/01_data/interim/
+replication/01_data/processed/
+
+# Participant-level predictions, reports, and explanation matrices
+04_outputs/reports/
+04_outputs/tables/step8_xai/case_study_profiles.csv
+04_outputs/tables/step8_xai/test_predictions.csv
+04_outputs/tables/step9_supplementary/error_profile_summary.csv
+replication/03_outputs/step7/step7_*_shap_values.csv
 
 # Context files (internal, not versioned)
 contexts/
@@ -18,6 +29,10 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Local presentation workspace and generated editing artefacts
+apresentação/
+.codex-presentation-*/
 
 # Compiled outputs
 *.joblib

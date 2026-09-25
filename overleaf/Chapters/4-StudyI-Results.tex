@@ -54,7 +54,7 @@ For the 6-month horizon, the global 30th percentile corresponds to a slope of $-
 \label{subsec:results_coverage}
 Feature availability varies substantially across blocks (Table~\ref{tab:feature_coverage}).
 The baseline block has effectively complete coverage: ALSFRS-R total and sex are available for 100\% of subjects, while age is present for 87.1\% ($n\!=\!1{,}212$).
-The 180 subjects without recorded age correspond to clinical trials in which age was not collected or was anonymised; because this missingness is administrative rather than outcome-dependent, median imputation is applied without risk of introducing prognostic bias.
+The 180 subjects without recorded age are concentrated in clinical trials in which age was not collected or was anonymised. This pattern suggests an administrative source of missingness, but it does not rule out differences between the affected trials and the remainder of the cohort. Age is therefore retained through fold-fitted median imputation rather than complete-case exclusion.
 Vital signs are available for 80.6\% of subjects at a block level ($n\!=\!1{,}122$), with individual features ranging from 44.9\% (height) to 79.2\% (weight).
 FVC data are available for 56.3\% (litres) to 54.5\% (percent of normal), motivating the missingness analysis in Section~\ref{sec:results_fvc_missingness}.
 At block level, 60.7\% of subjects ($n\!=\!845$) have at least one non-missing FVC feature.
@@ -89,18 +89,19 @@ The remaining 35 features constitute the model input after imputation.
 
 
 % ============================================================
-\section{Data Quality: FVC Missingness Analysis}
+\section{Data Quality Checks}
 \label{sec:results_fvc_missingness}
 % ============================================================
 
-FVC in litres is available for 56.3\% of the six-month cohort. Availability shows no clear association with baseline \gls{ALSFRS-R}, age, sex, or the target slope after Bonferroni correction, while the largest observed differences concern study arm ($V=0.357$), \gls{BMI} ($d=0.468$), and medication count ($d=0.332$). This pattern may reflect trial-specific measurement and recording practices, but it does not establish the missing-data mechanism; Appendix~\ref{app:fvc_missingness} reports all eleven comparisons.
+\noindent\textbf{FVC missingness.}
+FVC in litres is available for 56.3\% of the six-month cohort. Availability shows no clear association with baseline \gls{ALSFRS-R}, age, sex, or the target slope after Bonferroni correction. Differences remain for study arm ($V=0.357$), \gls{BMI} ($d=0.468$), medication count ($d=0.332$), and weight ($d=0.146$), although the difference in weight is smaller than the other three. This pattern may reflect trial-specific measurement and recording practices, but it does not establish the missing-data mechanism; Appendix~\ref{app:fvc_missingness} reports all eleven comparisons.
+
+\noindent\textbf{Missing-data sensitivity.}
+With the tuned XGBoost configuration held fixed, primary median imputation reproduced the development \gls{PR-AUC} of $0.434\pm0.049$ and the TEST value of 0.456. Adding missingness indicators reduced mean development PR-AUC to $0.421\pm0.047$ and gave TEST PR-AUC 0.460. Five stochastic iterative imputations produced $0.426\pm0.044$ on development folds and 0.499 on TEST. The last value was obtained post hoc from the same held-out partition already used for the primary evaluation, so it does not replace the prespecified result or justify selecting a new preprocessing strategy. Its narrower implication is that performance did not deteriorate sharply under multivariable imputation. Appendix~\ref{app:study1_missing_sensitivity} reports the complete comparison.
 
 
-% ============================================================
-\section{Data Quality: BMI Correction}
-\label{sec:results_bmi_fix}
-% ============================================================
-
+\phantomsection\label{sec:results_bmi_fix}
+\noindent\textbf{BMI correction.}
 The plausibility filter described in Section~\ref{sec:methods_bmi_correction} set 132 selected height measurements and 31 weights to missing before \gls{BMI} was recalculated; corrected values in the six-month cohort range from 15.5 to 46.9. The horizon-specific datasets were then regenerated from the cleaned vital-sign features before modelling, with the full audit reported in Appendix~\ref{app:bmi_correction}.
 
 
@@ -352,8 +353,7 @@ Figure~\ref{fig:step6_test_prauc_bar} presents a visual comparison of PR-AUC acr
   \label{fig:step6_test_prauc_bar}
 \end{figure} 
 
-\subsection{PR and ROC Curves}
-
+\noindent\textbf{Precision--recall and ROC curves.}
 Figures~\ref{fig:step6_pr_curves} and~\ref{fig:step6_roc_curves} present the precision--recall and ROC curves for all models on the TEST set.
 
 \begin{figure}[ht!]
@@ -403,8 +403,7 @@ $t$ & Precision & Recall & $F_1$ & $F_2$ & TP & FP & FN & TN \\
 \noindent At the DEV-derived Youden threshold ($t\!=\!0.35$), TEST precision rises to 50.0\%, but recall falls to 40.5\%. The comparison illustrates the consequence of the selected operating point: $t=0.21$ retains substantially more rapid progressors at the cost of many additional false positives. Whether this trade-off is acceptable would require an externally defined clinical use case and prospective assessment; those conditions are not established in the present retrospective study.
 
 
-\subsection{Calibration Analysis}
-
+\noindent\textbf{Calibration.}
 The probabilistic predictions of the DEV-fitted XGBoost model are examined using a reliability diagram and the Brier score (Figure~\ref{fig:step6_calibration}). Its Brier score is \textbf{0.197}, compared with approximately 0.210 for a constant prediction equal to the TEST prevalence. The reliability curve is close to the diagonal in the lower populated bins but departs from it at higher predicted probabilities, where fewer observations are available. The result indicates a modest reduction in mean squared probabilistic error relative to the constant reference, but does not demonstrate full calibration.
 
 \begin{figure}[ht!]
@@ -414,8 +413,7 @@ The probabilistic predictions of the DEV-fitted XGBoost model are examined using
   \label{fig:step6_calibration}
 \end{figure}
 \newpage
-\subsection{Confusion Matrix}
-
+\noindent\textbf{Confusion matrix.}
 Figure~\ref{fig:step6_cm} presents the confusion matrix at the $F_1$-optimal threshold ($t\!=\!0.21$).
 
 \begin{figure}[H]
@@ -425,8 +423,7 @@ Figure~\ref{fig:step6_cm} presents the confusion matrix at the $F_1$-optimal thr
   \label{fig:step6_cm}
 \end{figure}
 
-\subsection{Post-Evaluation Refit}
-
+\noindent\textbf{Post-evaluation refit.}
 After completion of the held-out evaluation and the TEST-based analyses reported in this chapter, the selected XGBoost pipeline is refitted on all 1,392 six-month participants for use by the prototype reporting workflow. This artefact uses the full-cohort slope cutoff ($-1.248$ points per 30 days) and retains the DEV-derived operating threshold $t=0.21$. A balanced Logistic Regression pipeline is refitted in parallel. No performance estimate is reported from these full-cohort fits, since they include the former TEST participants in training.
 
 % ============================================================
@@ -499,17 +496,12 @@ The case illustrates that the baseline profile can appear insufficiently suggest
 \end{figure}
 
 \clearpage
-% ------------------------------------------------------------
-\subsection{LIME --- Local Explanations}
-\label{subsec:results_lime}
-% ------------------------------------------------------------
-
+\phantomsection\label{subsec:results_lime}
+\noindent\textbf{LIME local explanations.}
 LIME was applied to the same four subjects, using 2{,}000 perturbations per case to fit a sparse local surrogate. The resulting explanations provide a methodologically different view of the same predictions; the four plots are presented in Appendix~\ref{app:local_lime}.
-% ------------------------------------------------------------
-\subsection{SHAP--LIME Concordance}
-\label{subsec:results_concordance}
-% ------------------------------------------------------------
 
+\phantomsection\label{subsec:results_concordance}
+\noindent\textbf{SHAP--LIME concordance.}
 The top-ten SHAP and LIME rankings share five to seven features across the four cases, corresponding to an overlap of 50--70\%. ALSFRS-R appears in every shared set, while age, FVC, respiratory rate, pulse, BMI, and temperature recur in individual cases. The remaining differences reflect what each method measures: TreeSHAP attributes the fitted tree model's output, whereas LIME approximates its decision surface around perturbed observations. The comparison is therefore descriptive agreement, not validation of either explanation. Appendix~\ref{app:local_concordance} reports the shared features for each case.
 
 % ------------------------------------------------------------
@@ -553,11 +545,8 @@ The local cases show why this agreement does not make each prediction reliable. 
 This section presents six supplementary analyses of the DEV-fitted XGBoost model: error profiling, subgroup performance, decision curve analysis, learning curves, bootstrap confidence intervals, and partial dependence plots.
 All analyses use the held-out TEST set ($N\!=\!279$) at the $F_1$-optimal threshold $t\!=\!0.21$.
 
-% ------------------------------------------------------------
-\subsection{Error Profiling}
-\label{subsec:results_error_profile}
-% ------------------------------------------------------------
-
+\phantomsection\label{subsec:results_error_profile}
+\noindent\textbf{Error profiling.}
 At $t=0.21$, the model misses 12 of 84 rapid progressors and produces 133 false positives. Seven false negatives have a baseline \gls{ALSFRS-R} score of at least 40, including five in the mildest group ($>42$), while six occur among participants aged 49 years or younger. False-negative proportions are similar for female and male participants (4.7\% and 4.0\%), and the incomplete \gls{FVC} data do not support a clear respiratory pattern. The concentration of missed cases among participants with relatively preserved baseline function motivates the subgroup analysis that follows. Appendix~\ref{app:error_profiles} contains the four stratified error profiles and their detailed interpretation.
 
 % ------------------------------------------------------------
@@ -569,18 +558,12 @@ Baseline functional status shows the clearest subgroup variation. Recall falls f
 
 PR-AUC varies across the \gls{FVC} strata, but the lower-FVC groups also contain a higher proportion of rapid progressors. The metric differences therefore cannot be separated from subgroup prevalence in this analysis. Appendix~\ref{app:subgroup_performance} reports all strata, including participants with missing age or FVC, together with the complete table and figures.
 
-% ------------------------------------------------------------
-\subsection{Decision Curve Analysis}
-\label{subsec:results_dca}
-% ------------------------------------------------------------
-
+\phantomsection\label{subsec:results_dca}
+\noindent\textbf{Decision curve analysis.}
 The model has higher estimated net benefit than both reference strategies across the main continuous interval $t\in[0.18,\,0.47]$. At the selected operating point ($t=0.21$), net benefit is 0.131, compared with 0.115 for treat all and 0 for treat none. The difference from treat all corresponds to approximately 1.6 additional net true-positive decisions per 100 participants under the threshold-implied weighting of false positives. This is evidence of potential decision value within the evaluated sample, not established clinical utility: no intervention has been specified, the analysis lacks uncertainty intervals, and external validation has not been performed. Appendix~\ref{app:dca} presents the full curve and isolated threshold results.
 
-% ------------------------------------------------------------
-\subsection{Learning Curves}
-\label{subsec:results_learning_curves}
-% ------------------------------------------------------------
-
+\phantomsection\label{subsec:results_learning_curves}
+\noindent\textbf{Learning curves.}
 Mean PR-AUC increases from 0.424 with 20\% of \gls{DEV} ($n=222$) to 0.446 with 90\% ($n=1{,}001$), while the standard deviation across repeated subsets decreases from 0.029 to 0.011. The model fitted once on all 1{,}113 development participants reaches 0.456. Since adjacent error bars generally overlap and the mean curve is not monotonic, the analysis indicates modest gains and greater stability with more training data but does not locate a clear performance plateau. The deterministic full-data point is not directly comparable with the repeated-subset variation, nor can this experiment predict the benefit of a larger independent cohort. Appendix~\ref{app:learning_curve} presents the complete curve.
 
 % ------------------------------------------------------------

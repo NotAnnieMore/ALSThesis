@@ -1,0 +1,113 @@
+% LaTeX adaptation of the official Universidade Politecnica de Santarem
+% MSc dissertation cover. Edit only the field definitions below unless the
+% official model changes.
+
+\begingroup
+\fontencoding{T1}\fontfamily{qhv}\selectfont
+
+% --------------------------------------------------------------------------
+% Editable cover fields
+% --------------------------------------------------------------------------
+\newcommand{\CoverInstitution}{Universidade Politécnica de Santarém}
+\newcommand{\CoverSchool}{Escola Superior de Gestão e Tecnologia}
+\newcommand{\CoverTitleLineOne}{Explainable and Reproducible Machine Learning}
+\newcommand{\CoverTitleLineTwo}{for ALS Prognosis:}
+\newcommand{\CoverTitleLineThree}{Functional Progression Classification and Survival Prediction}
+\newcommand{\CoverWorkType}{Dissertação}
+\newcommand{\CoverProgramme}{Mestrado em Informática Aplicada}
+\newcommand{\CoverAuthor}{Ivo Nunes Camacho}
+\newcommand{\CoverSupervisionLabel}{Orientação:}
+\newcommand{\CoverSupervisorOne}{Prof.ª Maryam Abbasi}
+\newcommand{\CoverSupervisorTwo}{Prof. Pedro Martins}
+\newcommand{\CoverDate}{Julho de 2026}
+
+\tikzset{
+  cover text/.style={
+    anchor=base,
+    align=center,
+    inner sep=0bp,
+    outer sep=0bp,
+    text=black
+  }
+}
+
+\begin{titlepage}
+\thispagestyle{empty}
+\null
+
+\begin{tikzpicture}[remember picture,overlay]
+  \node[
+    cover text,
+    font=\fontsize{12bp}{14bp}\selectfont\bfseries
+  ] at ([yshift=-128bp]current page.north) {\MakeUppercase{\CoverInstitution}};
+
+  \node[
+    cover text,
+    font=\fontsize{12bp}{14bp}\selectfont\bfseries
+  ] at ([yshift=-151bp]current page.north) {\CoverSchool};
+
+  \node[
+    anchor=north,
+    inner sep=0bp,
+    outer sep=0bp
+  ] at ([yshift=-185bp]current page.north) {%
+    \includegraphics[
+      width=2.58in,
+      height=2.87in,
+      keepaspectratio
+    ]{images/logos/upsantarem-cover-symbol.png}%
+  };
+
+  \node[
+    cover text,
+    font=\fontsize{14bp}{17bp}\selectfont\bfseries
+  ] at ([yshift=-418bp]current page.north) {\CoverTitleLineOne};
+
+  \node[
+    cover text,
+    font=\fontsize{14bp}{17bp}\selectfont\bfseries
+  ] at ([yshift=-435bp]current page.north) {\CoverTitleLineTwo};
+
+  \node[
+    cover text,
+    font=\fontsize{14bp}{17bp}\selectfont\bfseries
+  ] at ([yshift=-452bp]current page.north) {\CoverTitleLineThree};
+
+  \node[
+    cover text,
+    font=\fontsize{12bp}{14bp}\selectfont\bfseries
+  ] at ([yshift=-478bp]current page.north) {\CoverWorkType};
+
+  \node[
+    cover text,
+    font=\fontsize{12bp}{14bp}\selectfont\bfseries
+  ] at ([yshift=-514bp]current page.north) {\CoverProgramme};
+
+  \node[
+    cover text,
+    font=\fontsize{14bp}{17bp}\selectfont\bfseries
+  ] at ([yshift=-550bp]current page.north) {\CoverAuthor};
+
+  \node[
+    cover text,
+    font=\fontsize{14bp}{17bp}\selectfont\bfseries
+  ] at ([yshift=-604bp]current page.north) {\CoverSupervisionLabel};
+
+  \node[
+    cover text,
+    font=\fontsize{14bp}{17bp}\selectfont\bfseries
+  ] at ([yshift=-640bp]current page.north) {\CoverSupervisorOne};
+
+  \node[
+    cover text,
+    font=\fontsize{14bp}{17bp}\selectfont\bfseries
+  ] at ([yshift=-676bp]current page.north) {\CoverSupervisorTwo};
+
+  \node[
+    cover text,
+    font=\fontsize{10bp}{12bp}\selectfont
+  ] at ([yshift=-748bp]current page.north) {\CoverDate};
+\end{tikzpicture}
+\end{titlepage}
+
+\endgroup

@@ -1,12 +1,9 @@
 """
 Step 2 — Data Preprocessing & Feature Engineering
 ===================================================
-Extracts features from PRO-ACT tables following Papaiz et al. (2024)
-methodology faithfully. Combines all sources into a patient-level
+Extracts features from PRO-ACT tables following the feature definitions
+reported by Papaiz et al. (2024). Combines all sources into a patient-level
 intermediate dataset with raw (uncategorized) features.
-
-Key changes from paper: None (faithful preprocessing replication).
-Modifications (Optuna, LightGBM) apply only in modeling steps.
 
 Output: patient-level dataset with raw features + survival metadata.
 """
@@ -34,7 +31,8 @@ print("=" * 70)
 # ══════════════════════════════════════════════════════════════════════════
 # HELPER: Select record closest to patient's Diagnosis_Delta
 # ══════════════════════════════════════════════════════════════════════════
-def get_at_diagnosis(temporal_df, delta_col, diag_deltas, id_col='subject_id'):
+def get_closest_to_diagnosis(
+        temporal_df, delta_col, diag_deltas, id_col='subject_id'):
     """For each patient, select the temporal record closest to their
     Diagnosis_Delta. Falls back to delta=0 if Diagnosis_Delta is missing.
     Records with null delta are treated as delta=0 (enrollment baseline)."""
@@ -147,7 +145,7 @@ print(f"  Age_at_Onset available: {df['Age_at_Onset'].notna().sum():,}")
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 4. ALSFRS → slopes, regions, gastrostomy at diagnosis
+# 4. ALSFRS → slopes, regions, gastrostomy closest to diagnosis
 #    Paper: slope = (4 - score) / months_from_onset AT EACH VISIT,
 #    then pick the visit closest to Diagnosis_Delta.
 #    Regions: Bulbar(Q1+Q2+Q3<12), UpperLimb(Q4+Q5<8),
@@ -214,7 +212,7 @@ alsfrs_proc['Qty_Regions_Involved'] = (
     alsfrs_proc['Region_Bulbar'] + alsfrs_proc['Region_Upper_Limb'] +
     alsfrs_proc['Region_Lower_Limb'] + alsfrs_proc['Region_Respiratory'])
 
-# Columns to extract "at diagnosis"
+# Columns retained from the visit closest to diagnosis
 alsfrs_feature_cols = (
     [f'Slope_{n}' for n in q_map.values()] +
     ['Patient_with_Gastrostomy', 'Qty_Regions_Involved',
@@ -225,18 +223,19 @@ alsfrs_to_pick = alsfrs_proc[['subject_id', 'ALSFRS_Delta'] + alsfrs_feature_col
 # Pick values closest to patient's Diagnosis_Delta
 all_diag = hist_raw.dropna(subset=['Diagnosis_Delta'])[['subject_id', 'Diagnosis_Delta']]
 all_diag = all_diag.drop_duplicates('subject_id')
-alsfrs_at_diag = get_at_diagnosis(alsfrs_to_pick, 'ALSFRS_Delta', all_diag)
+alsfrs_at_diag = get_closest_to_diagnosis(
+    alsfrs_to_pick, 'ALSFRS_Delta', all_diag)
 alsfrs_at_diag.drop(columns=['ALSFRS_Delta'], inplace=True)
 
 # Rename with _at_Diagnosis suffix (matching paper column names)
 rename = {c: f'{c}_at_Diagnosis' for c in alsfrs_feature_cols}
 alsfrs_at_diag.rename(columns=rename, inplace=True)
 
-print(f"  ALSFRS at diagnosis: {len(alsfrs_at_diag):,} patients")
+print(f"  ALSFRS closest to diagnosis: {len(alsfrs_at_diag):,} patients")
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 5. FVC → FVC_pct at diagnosis
+# 5. FVC → FVC_pct from the record closest to diagnosis
 #    Paper: max of 3 trial pct columns; fallback: max liters/subject_normal*100
 # ══════════════════════════════════════════════════════════════════════════
 print("\n[5/8] Processing FVC...")
@@ -260,21 +259,22 @@ fvc_raw.loc[can_compute, 'FVC_Pct'] = (
 
 fvc_to_pick = fvc_raw[['subject_id', 'Forced_Vital_Capacity_Delta', 'FVC_Pct']].dropna(
     subset=['FVC_Pct']).copy()
-fvc_at_diag = get_at_diagnosis(fvc_to_pick, 'Forced_Vital_Capacity_Delta', all_diag)
+fvc_at_diag = get_closest_to_diagnosis(
+    fvc_to_pick, 'Forced_Vital_Capacity_Delta', all_diag)
 fvc_at_diag.drop(columns=['Forced_Vital_Capacity_Delta'], inplace=True)
 fvc_at_diag.rename(columns={'FVC_Pct': 'FVC_at_Diagnosis'}, inplace=True)
 
-print(f"  FVC at diagnosis: {len(fvc_at_diag):,} patients")
+print(f"  FVC closest to diagnosis: {len(fvc_at_diag):,} patients")
 print(f"  FVC% stats: mean={fvc_at_diag['FVC_at_Diagnosis'].mean():.1f}, "
       f"median={fvc_at_diag['FVC_at_Diagnosis'].median():.1f}")
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 6. VITAL SIGNS → BMI at diagnosis
+# 6. VITAL SIGNS → BMI using weight closest to diagnosis
 #    Paper: Height inches→cm→m (delete ≤0.80m); Weight pounds→kg (delete <25kg)
 #    Height is static for adults → use ANY available record.
 #    Weight is temporal → pick closest to diagnosis.
-#    BMI = weight (at diagnosis) / height² (any visit)
+#    BMI = weight (closest to diagnosis) / height² (any visit)
 # ══════════════════════════════════════════════════════════════════════════
 print("\n[6/8] Processing VITAL SIGNS (BMI)...")
 vs_raw = pd.read_csv(os.path.join(RAW_DIR, 'PROACT_VITALSIGNS.csv'))
@@ -304,20 +304,21 @@ is_pounds = ((vs_raw['Weight_Units'] == 'Pounds') |
 vs_raw.loc[is_pounds, 'Weight_kg'] = vs_raw.loc[is_pounds, 'Weight'] * 0.453592
 vs_raw.loc[vs_raw['Weight_kg'] < 25, 'Weight_kg'] = np.nan
 
-# Weight at diagnosis: pick closest-to-diagnosis record
+# Weight: pick the closest-to-diagnosis record
 wt_to_pick = (vs_raw[['subject_id', 'Vital_Signs_Delta', 'Weight_kg']]
               .dropna(subset=['Weight_kg']).copy())
-wt_at_diag = get_at_diagnosis(wt_to_pick, 'Vital_Signs_Delta', all_diag)
+wt_at_diag = get_closest_to_diagnosis(
+    wt_to_pick, 'Vital_Signs_Delta', all_diag)
 wt_at_diag.drop(columns=['Vital_Signs_Delta'], inplace=True)
-print(f"  Patients with weight at diagnosis: {len(wt_at_diag):,}")
+print(f"  Patients with weight closest to diagnosis: {len(wt_at_diag):,}")
 
-# Combine height (any visit) + weight (at diagnosis) → BMI
+# Combine height (any visit) + weight (closest to diagnosis) → BMI
 bmi_at_diag = wt_at_diag.merge(patient_height, on='subject_id', how='inner')
 bmi_at_diag['BMI_at_Diagnosis'] = (
     bmi_at_diag['Weight_kg'] / (bmi_at_diag['Height_m'] ** 2))
 bmi_at_diag = bmi_at_diag[['subject_id', 'BMI_at_Diagnosis']].copy()
 
-print(f"  BMI at diagnosis: {len(bmi_at_diag):,} patients")
+print(f"  BMI from closest weight record: {len(bmi_at_diag):,} patients")
 print(f"  BMI stats: mean={bmi_at_diag['BMI_at_Diagnosis'].mean():.1f}, "
       f"median={bmi_at_diag['BMI_at_Diagnosis'].median():.1f}")
 

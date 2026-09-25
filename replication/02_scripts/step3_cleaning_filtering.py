@@ -1,6 +1,6 @@
 """
-Step 3 — Cleaning, Survival Grouping, Codification & Scaling
-=============================================================
+Step 3 — Cleaning, Survival Grouping & Codification
+=====================================================
 Takes the patient-level raw features from Step 2 and prepares the
 final modelling dataset following Papaiz et al. (2024):
 
@@ -9,16 +9,16 @@ final modelling dataset following Papaiz et al. (2024):
   3. Remove Site_of_Onset = Limb_and_Bulbar & Other (paper's binary coding)
   4. Complete case analysis — drop rows with ANY missing feature
   5. Codify features to ordinal integers (Table 1 scheme)
-  6. Scale with MinMaxScaler [0, 1]
 
-Expected result: ~1,967 patients, 23 features, IR ~6.9 (13% Short / 87% Non-Short)
+Scaling is deliberately deferred until after the train/test split in Step 4.
+
+Current extract: 1,502 patients, 23 features, IR 7.6.
 """
 
 import pandas as pd
 import numpy as np
 import os
 import time
-from sklearn.preprocessing import MinMaxScaler
 
 # ── Configuration ──────────────────────────────────────────────────────────
 INTERIM_DIR = os.path.join(os.path.dirname(__file__), '..', '01_data', 'interim')
@@ -30,7 +30,7 @@ os.makedirs(OUT_DIR, exist_ok=True)
 start_time = time.time()
 
 print("=" * 70)
-print("STEP 3 — CLEANING, GROUPING, CODIFICATION & SCALING")
+print("STEP 3 — CLEANING, GROUPING & CODIFICATION")
 print("Following Papaiz et al. (2024) methodology")
 print("=" * 70)
 
@@ -233,20 +233,6 @@ for feat in feature_names:
 
 
 # ══════════════════════════════════════════════════════════════════════════
-# 7. SCALE WITH MinMaxScaler [0, 1]
-# ══════════════════════════════════════════════════════════════════════════
-print("\n" + "─" * 70)
-print("SCALING with MinMaxScaler [0, 1]...")
-
-scaler = MinMaxScaler()
-coded[feature_names] = scaler.fit_transform(coded[feature_names])
-
-print(f"  Scaled {len(feature_names)} features")
-print(f"  Value ranges: min={coded[feature_names].min().min():.3f}, "
-      f"max={coded[feature_names].max().max():.3f}")
-
-
-# ══════════════════════════════════════════════════════════════════════════
 # FINAL STATISTICS
 # ══════════════════════════════════════════════════════════════════════════
 print("\n" + "=" * 70)
@@ -279,15 +265,13 @@ print(f"  └──────────────────────�
 print("\n" + "=" * 70)
 print("SAVING OUTPUTS...")
 
-# Save the complete coded+scaled dataset (for modelling in step 4+)
+# Save the complete coded dataset. Step 4 splits these rows before scaling.
 out_path = os.path.join(PROCESSED_DIR, 'step3_final_dataset.csv')
 coded.to_csv(out_path, index=False)
 print(f"  Final dataset → {out_path}")
 
-# Also save unscaled coded version (for Table 1 / interpretability)
+# Keep the explicitly named copy used for Table 1 and sensitivity analyses.
 coded_unscaled = coded.copy()
-coded_unscaled[feature_names] = scaler.inverse_transform(coded_unscaled[feature_names])
-coded_unscaled[feature_names] = coded_unscaled[feature_names].round().astype(int)
 coded_unscaled.to_csv(
     os.path.join(PROCESSED_DIR, 'step3_coded_unscaled.csv'), index=False)
 print(f"  Coded (unscaled) → {os.path.join(PROCESSED_DIR, 'step3_coded_unscaled.csv')}")

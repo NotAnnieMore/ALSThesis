@@ -20,6 +20,7 @@ import warnings
 
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.metrics import recall_score, balanced_accuracy_score
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
@@ -76,7 +77,7 @@ def run_bonferroni_analysis():
     print("=" * 70)
 
     # Load data
-    data = np.load(os.path.join(PROCESSED_DIR, 'step4_arrays.npz'),
+    data = np.load(os.path.join(PROCESSED_DIR, 'step4_arrays_unscaled.npz'),
                    allow_pickle=True)
     X_train = data['X_train']
     y_train = data['y_train']
@@ -112,6 +113,10 @@ def run_bonferroni_analysis():
         for fold_idx, (train_idx, val_idx) in enumerate(cv.split(X_train, y_train)):
             Xtr, Xval = X_train[train_idx], X_train[val_idx]
             ytr, yval = y_train[train_idx], y_train[val_idx]
+
+            scaler = MinMaxScaler()
+            Xtr = scaler.fit_transform(Xtr)
+            Xval = scaler.transform(Xval)
 
             # Single-Model
             est = make_estimator(clf_name, params)
