@@ -1,10 +1,16 @@
 # PRO-ACT source and patient-level derived data
-01_data/raw/
-01_data/interim/
-01_data/processed/
-replication/01_data/raw/
-replication/01_data/interim/
-replication/01_data/processed/
+01_data/raw/*
+!01_data/raw/.gitkeep
+01_data/interim/*
+!01_data/interim/.gitkeep
+01_data/processed/*
+!01_data/processed/.gitkeep
+replication/01_data/raw/*
+!replication/01_data/raw/.gitkeep
+replication/01_data/interim/*
+!replication/01_data/interim/.gitkeep
+replication/01_data/processed/*
+!replication/01_data/processed/.gitkeep
 
 # Participant-level predictions, reports, and explanation matrices
 04_outputs/reports/
@@ -15,6 +21,11 @@ replication/03_outputs/step7/step7_*_shap_values.csv
 
 # Context files (internal, not versioned)
 contexts/
+
+# Internal thesis review notes
+review_tese
+review_tese_round2
+resumo_resultados_discussao.txt
 
 # Python
 __pycache__/
