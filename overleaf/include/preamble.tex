@@ -66,6 +66,7 @@
 
 \usepackage{parskip}
 \usepackage{fancyhdr}	
+\usepackage{emptypage}
 \usepackage{eso-pic}	
 \usepackage{makeidx}
 \usepackage{pdfpages}
@@ -139,23 +140,38 @@
 % Header and footer settings (Select TWOSIDE or ONESIDE layout below)							
 \pagestyle{fancy}  
 \renewcommand{\chaptermark}[1]{\markboth{\thechapter.\space#1}{}} 
+\newcommand{\ThesisHeaderLogo}{%
+    \includegraphics[width=4.25cm]{images/logos/upsantarem-header-logo.png}%
+}
+% Fit the header within the existing top margin, leaving the text area unchanged.
+\setlength{\headheight}{32pt}
+\setlength{\headsep}{8pt}
+\AtBeginDocument{\setlength{\headwidth}{\textwidth}}
+\fancyhf{}
+\fancyhead[L]{\ThesisHeaderLogo}
+\fancyhead[R]{%
+    \parbox[b]{\dimexpr\headwidth-4.75cm\relax}{%
+        \setstretch{1}\raggedleft\small\nouppercase{\leftmark}%
+    }%
+}
 
 % Select one-sided (1) or two-sided (2) page numbering
 \def\layout{2}	% Choose 1 for one-sided or 2 for two-sided layout
 % Conditional expression based on the layout choice
 \ifnum\layout=2	% Two-sided
-    \fancyhf{}			 						
-	\fancyhead[LE,RO]{\nouppercase{ \leftmark}}
-	\setlength{\headheight}{32pt}
 	\fancyfoot[LE,RO]{\thepage}
 	\fancypagestyle{plain}{			% Redefine the plain page style
 		\fancyhf{}
+		\fancyhead[L]{\ThesisHeaderLogo}
 		\renewcommand{\headrulewidth}{0pt} 		
 		\fancyfoot[LE,RO]{\thepage}}	
 \else			% One-sided  	
-  	\fancyhf{}					
-	\fancyhead[C]{\nouppercase{ \leftmark}}
 	\fancyfoot[C]{\thepage}
+	\fancypagestyle{plain}{
+		\fancyhf{}
+		\fancyhead[L]{\ThesisHeaderLogo}
+		\renewcommand{\headrulewidth}{0pt}
+		\fancyfoot[C]{\thepage}}
 \fi
 
 \newcommand{\backgroundpic}[3]{

@@ -3,8 +3,9 @@
 % ============================================================
 
 \appendix
-\addcontentsline{toc}{chapter}{Appendices}
 \chapter*{Appendices}
+\phantomsection
+\addcontentsline{toc}{chapter}{Appendices}
 \markboth{Appendices}{}
 
 % ============================================================
@@ -119,7 +120,7 @@ Figures~\ref{fig:eda_arm_dist} and~\ref{fig:eda_arm_rapid} show the overlapping 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_arm_slope_dist.png}
-  \caption[ALSFRS-R slope distribution by study arm]{ALSFRS-R slope distribution by study arm: histogram (left) and boxplot (right). The dashed red line marks the 30th-percentile threshold ($P_{30} = -1.25$).}
+  \caption[ALSFRS-R slope distribution by study arm]{ALSFRS-R slope distribution by study arm: histogram (left) and boxplot (right). The dashed line marks the 30th-percentile threshold ($P_{30} = -1.25$ points per 30 days).}
   \label{fig:eda_arm_dist}
 \end{figure}
 
@@ -172,7 +173,7 @@ The 15 most frequently recorded medications are identified from \texttt{PROACT\_
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/eda_treat_top_meds.png}
-  \caption[Top 15 pre-baseline medications by prevalence]{Top 15 pre-baseline medications by cohort prevalence, coloured by whether their rapid-progression rate exceeds the global prevalence (30\%, red dashed line). Green bars fall below the global rate.}
+  \caption[Rapid-progression rates for the top 15 medications]{Rapid-progression rates for the 15 most frequently recorded pre-baseline medications, ordered by rate. Pink bars exceed the global rapid-progression prevalence (30\%); lavender bars fall below it. The dashed line marks this reference rate.}
   \label{fig:eda_top_meds}
 \end{figure}
 
@@ -315,7 +316,7 @@ This section provides the complete three-month tuning results and the additional
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step5v2_3m_prauc_barchart.png}
-  \caption[Cross-validation PR-AUC by model, 3-month]{PR-AUC for the eight Optuna-tuned configurations on the three-month DEV set. Error bars show one standard deviation across the five folds.}
+  \caption[Cross-validation PR-AUC by model, 3-month]{PR-AUC for the eight Optuna-tuned configurations on the three-month DEV set. Colours identify model families; solid bars indicate unbalanced mode and diagonally hatched bars balanced mode. Error bars show one standard deviation across the five folds.}
   \label{fig:prauc_barchart_3m}
 \end{figure}
 

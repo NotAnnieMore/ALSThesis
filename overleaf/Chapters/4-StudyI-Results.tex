@@ -21,7 +21,7 @@ Nevertheless, the 6-month horizon provides greater temporal support for slope es
 
 \begin{table}[ht!]
 \centering
-\caption[Cohort size by prediction horizon]{Cohort size and data partition by prediction horizon.}
+\caption[Cohort size by prediction horizon]{Cohort size and data partition by prediction horizon. Percentages are relative to the 5,436 participants with at least one ALSFRS-R record.}
 \label{tab:eligibility}
 \small
 \begin{tabular}{lcccc}
@@ -64,7 +64,7 @@ Labs are moderately available (creatinine: 64.7\%, ALT: 69.0\%).
 
 \begin{table}[ht]
 \centering
-\caption[Feature coverage, 6-month cohort]{Feature coverage for the 6-month cohort ($N\!=\!1{,}392$). Block-level coverage indicates the fraction of subjects with at least one non-missing feature in the block.}
+\caption[Feature coverage, 6-month cohort]{Feature coverage for the 6-month cohort ($N\!=\!1{,}392$). Block-level coverage indicates the fraction of subjects with at least one non-missing feature in the block; the laboratory range gives coverage of the two variables separately. The final row refers to complete feature vectors after preprocessing.}
 \label{tab:feature_coverage}
 \small
 \begin{tabular}{lcc}
@@ -132,16 +132,16 @@ Table~\ref{tab:step5v2_tuning} and Figure~\ref{fig:prauc_barchart} summarise the
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step5v2_prauc_barchart.png}
-  \caption[Cross-validation PR-AUC by model, 6-month]{PR-AUC comparison of Optuna-tuned models (6-month, DEV). Blue bars: unbalanced mode; orange bars: balanced mode. Error bars show $\pm 1$ standard deviation across 5 folds.}
+  \caption[Cross-validation PR-AUC by model, 6-month]{PR-AUC comparison of Optuna-tuned models (6-month, DEV). Colours identify model families; solid bars indicate unbalanced mode and diagonally hatched bars balanced mode. Error bars show $\pm 1$ standard deviation across 5 folds.}
   \label{fig:prauc_barchart}
 \end{figure}
 
 \clearpage
 \noindent\textbf{Key observations.}
 \begin{enumerate}
-  \item \textbf{Top-ranked model.} XGBoost (unbalanced) achieves the highest PR-AUC ($0.434 \pm 0.049$), closely followed by Random Forest (unbalanced, $0.431 \pm 0.042$) and SVM (balanced, $0.425 \pm 0.049$).
+  \item \textbf{Top-ranked model.} XGBoost (unbalanced) achieves the highest PR-AUC ($0.434 \pm 0.049$), closely followed by Random Forest (unbalanced, $0.431 \pm 0.042$) and SVM (balanced, $0.426 \pm 0.049$).
     The small differences among the leading configurations show that several model families achieve similar internal validation performance; they do not, by themselves, establish a performance ceiling.
-  \item \textbf{Effect of class balancing on PR-AUC.} Weighting produces small changes for Random Forest ($0.431 \to 0.425$), LightGBM ($0.415 \to 0.418$), and XGBoost ($0.434 \to 0.424$). The largest change occurs for SVM, whose PR-AUC increases from $0.389$ to $0.425$. The effect is therefore model-dependent rather than uniformly beneficial or detrimental.
+  \item \textbf{Effect of class balancing on PR-AUC.} Weighting produces small changes for Random Forest ($0.431 \to 0.425$), LightGBM ($0.415 \to 0.418$), and XGBoost ($0.434 \to 0.424$). The largest change occurs for SVM, whose PR-AUC increases from $0.389$ to $0.426$. The effect is therefore model-dependent rather than uniformly beneficial or detrimental.
   \item \textbf{Threshold-dependent metrics.} At the default threshold of 0.5, $F_1$ and $F_2$ are low for most unbalanced models, although Decision Tree is a clear exception. Weighting substantially increases these scores for Decision Tree, Random Forest, Logistic Regression, LightGBM, and XGBoost; for example, Logistic Regression $F_2$ increases from $0.028$ to $0.527$. Balanced SVM remains near zero at this cutoff despite its improved PR-AUC.
   \item \textbf{Interpretable baselines.} Logistic Regression balanced ($\text{PR-AUC} = 0.407$) performs only $0.027$ below XGBoost unbalanced, making it a competitive interpretable alternative.
     Its coefficients can be directly analysed to understand feature directionality.
@@ -207,7 +207,7 @@ Figure~\ref{fig:ablation_v2} compares the PR-AUC profile across feature configur
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.85\linewidth]{images/figures/step5v2_ablation_prauc.png}
-  \caption[Feature block ablation PR-AUC curves]{Feature-block analysis on the six-month DEV set using hyperparameters tuned on the full feature configuration. Points show mean PR-AUC and error bars show the standard deviation across five folds. B and C are alternative extensions of A; D combines both before treatment and laboratory variables are added in E and F.}
+  \caption[Feature block ablation PR-AUC curves]{Feature-block analysis on the six-month DEV set using hyperparameters tuned on the full feature configuration. Points show mean PR-AUC and shaded bands show $\pm 1$ standard deviation across five folds. B and C are alternative extensions of A; D combines both before treatment and laboratory variables are added in E and F.}
   \label{fig:ablation_v2}
 \end{figure}
 
@@ -228,7 +228,7 @@ Figure~\ref{fig:3m_vs_6m_grouped} compares the eight matched model configuration
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{images/figures/step5v2_3m_vs_6m_prauc.png}
-  \caption[PR-AUC comparison: 3-month vs.\ 6-month]{Descriptive PR-AUC comparison between 3-month and 6-month horizons for matched model $\times$ mode configurations tuned independently on their respective DEV sets. Annotations show mean PR-AUC values.}
+  \caption[PR-AUC comparison: 3-month vs.\ 6-month]{Descriptive PR-AUC comparison between 3-month and 6-month horizons for matched model $\times$ mode configurations tuned independently on their respective DEV sets. Solid bars show six-month results and diagonally hatched bars three-month results; annotations show mean PR-AUC values.}
   \label{fig:3m_vs_6m_grouped}
 \end{figure}
 
@@ -290,7 +290,7 @@ Figure~\ref{fig:step6_threshold_sweep} illustrates the multi-metric threshold sw
   \centering
   \includegraphics[width=0.70\linewidth]{images/figures/step6_threshold_sweep.png}
   \caption[Threshold sweep on DEV out-of-fold predictions]{Threshold sweep on DEV out-of-fold predictions for XGBoost (unbalanced, 6\,m).
-  The $F_1$-optimal threshold ($t\!=\!0.21$, blue dotted) and Youden's~$J$ operating point ($t\!=\!0.35$, purple dotted) are annotated.}
+  Vertical dotted lines mark the $F_1$-optimal threshold ($t\!=\!0.21$) and Youden's~$J$ operating point ($t\!=\!0.35$).}
   \label{fig:step6_threshold_sweep}
 \end{figure}
 
@@ -459,7 +459,7 @@ The effects of age, respiratory rate, and the remaining variables are less unifo
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.85\linewidth]{images/figures/shap_beeswarm.pdf}
-  \caption[SHAP beeswarm plot, XGBoost TEST set]{SHAP beeswarm plot for the DEV-fitted XGBoost model on TEST. Each dot represents one subject; colour indicates the observed feature value (red\,=\,high, blue\,=\,low). Positive SHAP values shift the prediction towards the rapid class.}
+  \caption[SHAP beeswarm plot, XGBoost TEST set]{SHAP beeswarm plot for the DEV-fitted XGBoost model on TEST. Each dot represents one subject; colour indicates the feature value (pink\,=\,high, purple\,=\,low). Positive SHAP values shift the prediction towards the rapid class.}
   \label{fig:shap_beeswarm}
 \end{figure}
 
@@ -515,7 +515,7 @@ Numeric features are standardised prior to fitting, whereas one-hot encoded indi
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.85\linewidth]{images/figures/lr_coefficients.pdf}
-  \caption[Logistic regression coefficients]{Coefficients of the balanced Logistic Regression model (top~15 by absolute value). Numeric features are standardised before fitting, while one-hot encoded indicators remain binary. Negative coefficients (blue) reduce the predicted log-odds of rapid progression; positive coefficients (red) increase them.}
+  \caption[Logistic regression coefficients]{Coefficients of the balanced Logistic Regression model (top~15 by absolute value). Numeric features are standardised before fitting, while one-hot encoded indicators remain binary. Negative coefficients (lavender) reduce the predicted log-odds of rapid progression; positive coefficients (pink) increase them.}
   \label{fig:lr_coefs}
 \end{figure}
 \newpage
@@ -640,7 +640,7 @@ Its main findings can be summarised as follows:
     The source of the missingness could not be established from the available data.
 
   \item \textbf{No single classifier was clearly superior.}
-    Among 13 tuned configurations, unbalanced XGBoost ranked first on development \gls{PR-AUC} ($0.434 \pm 0.049$), narrowly ahead of unbalanced Random Forest ($0.431 \pm 0.042$) and balanced \gls{SVM} ($0.425 \pm 0.049$).
+    Among 13 tuned configurations, unbalanced XGBoost ranked first on development \gls{PR-AUC} ($0.434 \pm 0.049$), narrowly ahead of unbalanced Random Forest ($0.431 \pm 0.042$) and balanced \gls{SVM} ($0.426 \pm 0.049$).
     The fold-level distributions overlapped, and the Friedman test did not reject equal model ranks ($p=0.053$).
     XGBoost was therefore selected by the prespecified ranking rule, not because statistical superiority had been demonstrated.
 

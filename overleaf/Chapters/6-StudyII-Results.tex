@@ -150,7 +150,7 @@ The precision--recall curves in Figure~\ref{fig:s2_pr} provide a second threshol
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.97\linewidth]{images/figures/fig_confusion_matrices.png}
-  \caption[Confusion matrices for three highlighted classifiers]{Confusion matrices on the held-out test set for the three classifiers highlighted in the text. LightGBM+ROS and SVM+SMOTEENN correctly identify the majority of Short Survivors (TP), whereas MLP+None effectively classifies all patients as Standard Survival (FN\,$= 34$).}
+  \caption[Confusion matrices for three highlighted classifiers]{Confusion matrices on the held-out test set for the three classifiers highlighted in the text. LightGBM+ROS and SVM+SMOTEENN correctly identify the majority of Short Survivors (TP), whereas MLP+None misses 34 of the 35 Short Survivors.}
   \label{fig:s2_cm}
 \end{figure}
 
@@ -235,7 +235,7 @@ Table~\ref{tab:s2_bonferroni} reports mean balanced accuracy for each classifier
   }
 \end{table}
 
-BalancedBagging increased balanced accuracy for six of the seven classifiers. The largest gain was observed for SVM, from 0.500 to 0.793, followed by KNN and Random Forest. MLP achieved the highest mean balanced accuracy under BalancedBagging (0.832), with LightGBM (0.820) and Random Forest (0.814) close behind.
+BalancedBagging increased mean balanced accuracy for all seven classifiers, with statistically significant differences for six after Bonferroni correction. The largest gain was observed for SVM, from 0.500 to 0.793, followed by KNN and Random Forest. MLP achieved the highest mean balanced accuracy under BalancedBagging (0.832), with LightGBM (0.820) and Random Forest (0.814) close behind.
 
 The effect was not a simultaneous improvement in both classes. Across all seven classifiers, BalancedBagging increased sensitivity and reduced specificity, shifting the predictions towards the minority class. For Naïve Bayes, these changes nearly cancelled each other: sensitivity increased, specificity decreased, and balanced accuracy rose by only 0.012. Its balanced-accuracy difference was therefore not significant after correction.
 
@@ -272,7 +272,7 @@ Table~\ref{tab:s2_comparison} summarises the main methodological differences bet
   }
 \end{table}
 
-The closest comparison concerns the five classifier families evaluated with BalancedBagging in both studies: KNN, Naïve Bayes, Decision Tree, SVM, and MLP. In both analyses, the balanced ensemble improved balanced accuracy for four of these five families, while Naïve Bayes was the exception. This reproduces the qualitative pattern reported by Papaiz et al., although not the exact experimental protocol or performance values.
+The closest comparison concerns the five classifier families evaluated with BalancedBagging in both studies: KNN, Naïve Bayes, Decision Tree, SVM, and MLP. In both analyses, the balanced ensemble significantly improved balanced accuracy for four of these five families; Naïve Bayes did not show a significant gain. This reproduces the qualitative pattern reported by Papaiz et al., although not the exact experimental protocol or performance values.
 
 The reported neural-network balanced accuracy was 0.88 in the reference study, compared with a repeated cross-validation mean of 0.832 for MLP with BalancedBagging in the present analysis. These values come from different evaluation stages and should not be treated as a direct performance comparison. Differences in cohort composition, optimisation objective, hyperparameter search, and ensemble implementation may all contribute, and their individual effects cannot be separated here.
 
@@ -339,7 +339,7 @@ Finally, the statistical comparisons do not constitute independent confirmation.
 \label{sec:s2r_summary}
 % ============================================================
 
-Study~II reproduced the main qualitative BalancedBagging pattern reported by Papaiz et al.~\cite{Papaiz2024}. Balanced accuracy increased for four of the five directly comparable classifier families, with Naïve Bayes again providing the exception. Random Forest and LightGBM extend rather than reproduce the original comparison, and the reported performance values are not directly interchangeable across the two studies.
+Study~II reproduced the main qualitative BalancedBagging pattern reported by Papaiz et al.~\cite{Papaiz2024}. Balanced accuracy increased significantly for four of the five directly comparable classifier families, while the small increase for Naïve Bayes was not significant after correction. Random Forest and LightGBM extend rather than reproduce the original comparison, and the reported performance values are not directly interchangeable across the two studies.
 
 Selection by mean ROC-AUC retained configurations with similar ranking performance but very different behaviour at the default threshold. On the held-out test set, LightGBM+ROS provided the strongest balance at 0.50, with ROC-AUC 0.923, sensitivity 0.857, and specificity 0.831. The MLP reached ROC-AUC 0.918 but identified only one of 35 Short Survivors. Applying the sensitivity-constrained threshold selected from OOF predictions raised its test sensitivity to 0.771 while retaining specificity of 0.883. The discrepancy was therefore largely tied to the operating point rather than to an absence of ranking signal.
 

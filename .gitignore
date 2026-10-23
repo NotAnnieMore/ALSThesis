@@ -45,5 +45,14 @@ Thumbs.db
 apresentação/
 .codex-presentation-*/
 
+# Local Study I journal submission package
+study1-journal-paper/
+
+# Local Study II journal submission package
+study2-journal-paper/
+
+# Local checkouts used to publish the two study repositories
+study-repositories/
+
 # Compiled outputs
 *.joblib

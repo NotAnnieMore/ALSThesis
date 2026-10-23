@@ -231,7 +231,7 @@ The prediction task is anchored at $t_0$. Predictors are constructed from inform
 
   \end{tikzpicture}
   \caption[Feature--target temporal separation diagram]{Temporal separation between feature extraction and target construction.
-  For each subject, features are derived from data available up to and including~$t_0$ (blue zone), while the target slope uses ALSFRS-R measurements from~$t_0$ onwards (orange/teal zone).
+  For each subject, features are derived from data available up to and including~$t_0$ (blue zone), while the target slope uses ALSFRS-R measurements from~$t_0$ onwards (orange zone at six months; teal zone at three months).
   The dashed red line marks the boundary beyond which measurements cannot be used as predictors.
   At least one ALSFRS-R assessment must fall within the $\pm 7$-day endpoint band (red shading).
   Blue and coloured dots represent example clinical measurements for a hypothetical patient.}
@@ -278,7 +278,7 @@ Across the full six-month cohort, the descriptive 30th percentile is $-1.25$ poi
   \centering
   \includegraphics[width=0.85\linewidth]{images/figures/slope_histogram_6m.png}
   \caption[ALSFRS-R slope distribution, 6-month cohort]{Distribution of ALSFRS-R slopes (points/30\,days) for the 6-month cohort ($N\!=\!1{,}392$).
-  The dashed line marks the 30th-percentile cutoff ($-1.25$\,points/month); subjects to the left (red) are labelled \textit{rapid}, those to the right (blue) \textit{slow}.
+  The dashed line marks the 30th-percentile cutoff ($-1.25$ points per 30 days); subjects to the left (pink) are labelled \textit{rapid}, those to the right (lavender) \textit{slow}.
   The cutoff shown is computed on the full cohort for illustration. Training-fold cutoffs are used during cross-validation, and the cutoff used for final evaluation is calculated from the DEV partition only.}
   \label{fig:slope_histogram_6m}
 \end{figure}

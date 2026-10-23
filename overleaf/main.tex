@@ -37,7 +37,7 @@
 
 % TITLE PAGE
 \input{include/cover_ipsantarem_latex.tex}
-\null\newpage
+\thispagestyle{empty}\null\newpage
 % ENTITIES
 %\input{include/emptyPage.tex}
 %\input{include/entities.tex}
@@ -84,14 +84,18 @@
 \listoftables
 \listoffigures
 \glsaddall
+\cleardoublepage
+\begingroup
+\renewcommand*{\leftmark}{Abbreviations}
 \printglossary[title={Abbreviations}]
+\cleardoublepage
+\endgroup
 
 %\end{spacing}
 
 % ABBREVIATIONS
 %\input{include/abbreviation.tex}
 \pagenumbering{arabic}
-\setcounter{page}{0}
 
 \input{Chapters/1-Introduction}
 \input{Chapters/2-State of the Art}
@@ -113,7 +117,7 @@
 
 % INDEX [OPTIONAL]
 % Each time you want to add an entry to index you need to use \index{text}
-\newpage\null\newpage
+\newpage\thispagestyle{empty}\null\newpage
 \printindex
 
 
