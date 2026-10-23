@@ -1,0 +1,394 @@
+{
+  "scope": "Post-hoc checks with fixed cohorts, predictions and thresholds; no primary model refits.",
+  "bootstrap_resamples": 2000,
+  "study1": {
+    "n_test": 279,
+    "average_precision": 0.45646207840694486,
+    "brier": 0.1970623715966077,
+    "null_brier": 0.21042895132385248,
+    "scaled_brier": 0.0635206308027143,
+    "probability_range": [
+      0.12826917,
+      0.5734408
+    ],
+    "calibration": {
+      "intercept": 0.24864691951531365,
+      "slope": 1.1655499859355416
+    },
+    "treatment_tests": {
+      "yates_chi2": 3.621716346993657,
+      "yates_p": 0.057030009161933334,
+      "uncorrected_chi2": 3.8647980967022875,
+      "uncorrected_p": 0.049309126190533376,
+      "fisher_p": 0.05158419749808707
+    },
+    "dca_at_021": {
+      "threshold": 0.21,
+      "net_benefit": 0.1313461276711583,
+      "lower": 0.07403702191370629,
+      "upper": 0.1960505421714078,
+      "difference_vs_all": 0.016060977269633875,
+      "difference_lower": -0.014990245451658238,
+      "difference_upper": 0.043282972641894596
+    }
+  },
+  "study2": {
+    "probability_metrics": [
+      {
+        "classifier": "KNN",
+        "average_precision": 0.5250972677314609,
+        "brier": 0.12698106451849184,
+        "mean_probability": 0.3122559705216456,
+        "prevalence": 0.11627906976744186,
+        "intercept": -1.7193380732139452,
+        "slope": 1.490965217729403
+      },
+      {
+        "classifier": "NaiveBayes",
+        "average_precision": 0.6310591902917249,
+        "brier": 0.14751442787843713,
+        "mean_probability": 0.2261877614584387,
+        "prevalence": 0.11627906976744186,
+        "intercept": -1.770508857556403,
+        "slope": 0.19152405143754675
+      },
+      {
+        "classifier": "DecisionTree",
+        "average_precision": 0.505933568981264,
+        "brier": 0.07368495470545967,
+        "mean_probability": 0.11397819055386957,
+        "prevalence": 0.11627906976744186,
+        "intercept": -0.6955174911938156,
+        "slope": 0.2099745947412967
+      },
+      {
+        "classifier": "RandomForest",
+        "average_precision": 0.6454920203500908,
+        "brier": 0.06546698160698491,
+        "mean_probability": 0.1157283303963179,
+        "prevalence": 0.11627906976744186,
+        "intercept": 0.4045671325534185,
+        "slope": 1.35946486270769
+      },
+      {
+        "classifier": "SVM",
+        "average_precision": 0.59473356547127,
+        "brier": 0.16888665357668856,
+        "mean_probability": 0.30484260563330506,
+        "prevalence": 0.11627906976744186,
+        "intercept": -2.2880762592364747,
+        "slope": 0.25065719454991997
+      },
+      {
+        "classifier": "MLP",
+        "average_precision": 0.6691387561088944,
+        "brier": 0.07865599827849659,
+        "mean_probability": 0.05395913070599702,
+        "prevalence": 0.11627906976744186,
+        "intercept": 2.2328366457525335,
+        "slope": 1.503772055510568
+      },
+      {
+        "classifier": "LightGBM",
+        "average_precision": 0.7035758636484443,
+        "brier": 0.10335798050322904,
+        "mean_probability": 0.26000849539948157,
+        "prevalence": 0.11627906976744186,
+        "intercept": -1.7629352172064647,
+        "slope": 1.0889631937559747
+      }
+    ],
+    "timing": [
+      {
+        "group": "Short Survivor",
+        "n": 174,
+        "q25": 8.6892247043364,
+        "median": 11.185939553219448,
+        "q75": 14.183639947437582,
+        "at_or_after_24": 0,
+        "min": 3.9421813403416555,
+        "max": 23.160315374507228
+      },
+      {
+        "group": "Standard Survival",
+        "n": 1328,
+        "q25": 19.38239159001314,
+        "median": 26.116951379763467,
+        "q75": 35.57818659658344,
+        "at_or_after_24": 756,
+        "min": 8.409986859395532,
+        "max": 287.1550591327201
+      }
+    ],
+    "unknown_outcomes": 1967,
+    "unknown_missing_onset": 1801,
+    "unknown_missing_death_time": 888,
+    "unknown_missing_followup": 1079,
+    "site_fallback_unique_patients": 0,
+    "site_fallback_in_final": 0,
+    "paired_sensitivity": {
+      "lgb_only": 1,
+      "svm_only": 2,
+      "p": 1.0,
+      "difference": -0.02857142857142857,
+      "lower": -0.14285714285714285,
+      "upper": 0.05714285714285714
+    }
+  },
+  "trials": {
+    "study1": [
+      {
+        "search": "DT_balanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 38
+      },
+      {
+        "search": "DT_unbalanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 58
+      },
+      {
+        "search": "KNN_unbalanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 50
+      },
+      {
+        "search": "LGBM_balanced_3m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 56
+      },
+      {
+        "search": "LGBM_balanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 51
+      },
+      {
+        "search": "LGBM_unbalanced_3m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 59
+      },
+      {
+        "search": "LGBM_unbalanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 13
+      },
+      {
+        "search": "LR_balanced_3m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 49
+      },
+      {
+        "search": "LR_balanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 40
+      },
+      {
+        "search": "LR_unbalanced_3m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 53
+      },
+      {
+        "search": "LR_unbalanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 51
+      },
+      {
+        "search": "RF_balanced_3m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 2
+      },
+      {
+        "search": "RF_balanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 51
+      },
+      {
+        "search": "RF_unbalanced_3m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 52
+      },
+      {
+        "search": "RF_unbalanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 14
+      },
+      {
+        "search": "SVM_balanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 32
+      },
+      {
+        "search": "SVM_unbalanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 54
+      },
+      {
+        "search": "XGB_balanced_3m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 54
+      },
+      {
+        "search": "XGB_balanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 48
+      },
+      {
+        "search": "XGB_unbalanced_3m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 36
+      },
+      {
+        "search": "XGB_unbalanced_6m",
+        "n": 60,
+        "zero_scores": 0,
+        "missing_scores": 0,
+        "states": {
+          "COMPLETE": 60
+        },
+        "best_trial_zero_based": 58
+      }
+    ],
+    "study2": "Stored aggregate trial means cannot establish whether an individual fold received the 0.5 failure fallback; no fold-level failure ledger is available in this workspace."
+  },
+  "input_sha256": {
+    "G:\\TESE\\CodigoMain\\01_data\\processed\\features_baseline_v1.csv": "02f1e2b542b7f3bff05bebb931a459c19d05ea2891ceee3448191490798fdbd6",
+    "G:\\TESE\\CodigoMain\\01_data\\processed\\dataset_6m_v2.csv": "544a794318b3407c8d03871c8d7b8d030d7d44f11536ee608e8587f2a122f4b5",
+    "G:\\TESE\\CodigoMain\\01_data\\processed\\dataset_3m_v2.csv": "4397f0d2bb12a64cf5d9c0debc9e6e566c260344ad1e33baf3c02bb242bc8001",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step8_xai\\test_predictions.csv": "3a8871eb72ca59929e6d69beb277278fc63aa14a535d76f8a51a31226374f316",
+    "G:\\TESE\\CodigoMain\\01_data\\processed\\holdout_split_6m.csv": "dbaf53e704819baaa4829f1eb5eb93c7ef6ee61eb14d26bec024eeec6138c062",
+    "G:\\TESE\\V2Codigo\\03_outputs\\step6\\step6_test_probabilities.json": "a20762814c0ac5a0fb625b0288e8f4b56fca9eb91aa586f4bbdbe1eb4552e78f",
+    "G:\\TESE\\CodigoMain\\replication\\01_data\\processed\\step4_arrays_unscaled.npz": "5e567a3cf61458e18e60ca1de0ee09bf078e4f0833c6169ee53d3649832177b5",
+    "G:\\TESE\\CodigoMain\\replication\\03_outputs\\step6\\step6_test_results.csv": "4d91ebc14a9e22b7766533457049626202d806cbfba1929b0b19dfbf18ce7ef7",
+    "G:\\TESE\\CodigoMain\\replication\\01_data\\interim\\step2_patient_features.csv": "c56fe69a3a320c9336202c579b201bd8f4bdb309928067feb6375ccb709ad4a8",
+    "G:\\TESE\\CodigoMain\\replication\\01_data\\processed\\step3_coded_unscaled.csv": "2d5057830ebc5209189a0c846a28f523cbb9706a840721efdd7eb981ca5a6909",
+    "G:\\TESE\\CodigoMain\\01_data\\raw\\PROACT_ALSHISTORY.csv": "735dce5fe67ade7d8e6180fec570ca8bb3d12e2502c024b78c156396d694959f",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\DT_balanced_6m_trials.csv": "fc33d2e24ba46e1f8388537bc560cc5d3638271a46f488f84dbe57578e82a066",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\DT_unbalanced_6m_trials.csv": "a5ee5134b3e26ca363064726acf2696831f5a7d70711964ebba08f3246225fb8",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\KNN_unbalanced_6m_trials.csv": "49a8928fe98b093b99a38e320450169191c6f21e8e6e939c9d0bb114f03d9a88",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\LGBM_balanced_3m_trials.csv": "2182735aaa3737b0845ed598b255310f60c880c27788663573860e21b308b2e2",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\LGBM_balanced_6m_trials.csv": "c14fcdb47c359402fd671a2f38d15e71b55fe3e878607d09d2ff9399fd76a5ad",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\LGBM_unbalanced_3m_trials.csv": "50988401e161546ef6e84c62c580ac3091904ec8be4978c18c3b095122a9f72c",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\LGBM_unbalanced_6m_trials.csv": "ca46ee63128de238bd2710a6af0de9d94b5e2cd29d5b0c34ef8b47fb45fd40a7",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\LR_balanced_3m_trials.csv": "f99294e392e64e038cee4a7d38bbafaf1685bc82178f54a6c47d6788947fd4c4",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\LR_balanced_6m_trials.csv": "75d6698df125f73007fdc94d23e44b61d6e62e997f17fbd73dbf23dac5aeb9a0",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\LR_unbalanced_3m_trials.csv": "9dcf17aab7c5b3af47ada4d83ab0653d6f87dee5ccbf92af9710f5b3b082e9ac",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\LR_unbalanced_6m_trials.csv": "0d210209b1fff6737e3aee2d7e32496327b286868f4ae48cae5cbf0e255f9e8b",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\RF_balanced_3m_trials.csv": "5762dfce6d7544c69ba140a0f6ecb535ae5ceda2ca4822a669942eae3c9730ef",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\RF_balanced_6m_trials.csv": "a153474414ba7a372ef3b30ff5afa2f3850efa4f84e9514604dfd632aa85624d",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\RF_unbalanced_3m_trials.csv": "7f3796396474ce22d74ac37b2ce47079f2074ad558c630b0ddc548d8267f9d86",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\RF_unbalanced_6m_trials.csv": "d5d84e81fa7ffe676d721bdabfeb78609583159bc3df615522c6be8d2a052e7a",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\SVM_balanced_6m_trials.csv": "e9f58aa47bc911c501e6dada5ca091b92fb3af879c8271d530962ed34476827c",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\SVM_unbalanced_6m_trials.csv": "87f547ae10044fcdcfca28b4fe07a5496828bf29c1ce5c87898bad7abfd58a47",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\XGB_balanced_3m_trials.csv": "4796568499ad6a0b0ef4d07e7479c149d861efb8b23c4695e5747449071c18d1",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\XGB_balanced_6m_trials.csv": "ba1135539b94f7960ae0609639f5bfbb8d7ca772a1f7ca90002694c4e0b3ac6b",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\XGB_unbalanced_3m_trials.csv": "a4b45bc5cdb2850e9dbe6999bf008420667c2aa021141d2711dbaddb10501f8a",
+    "G:\\TESE\\CodigoMain\\04_outputs\\tables\\step5_tuning\\XGB_unbalanced_6m_trials.csv": "09786dfb0da026e715fbd501311abcb6fc798abe2c165dc6edf0011ad609ef4a"
+  },
+  "packages": {
+    "numpy": "2.4.2",
+    "pandas": "3.0.1",
+    "scipy": "1.17.1",
+    "scikit-learn": "1.8.0",
+    "matplotlib": "3.10.8"
+  }
+}

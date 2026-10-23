@@ -62,9 +62,13 @@ Following the feature engineering protocol of Papaiz et al.~\cite{Papaiz2024}, r
 
 The target was defined as a fixed-horizon binary outcome. Patients who died within 24 months of symptom onset were assigned to the \textbf{Short Survivor} class. The \textbf{Standard Survival} class comprised patients who died after 24 months and those who were alive with at least 24 months of documented follow-up. Short Survivor is treated as the positive class throughout this study.
 
+This onset-based definition is conditional on surviving to trial entry. A participant entering after 20 months has only four months left in which to meet the Short Survivor definition; one entering beyond 24 months has already passed the outcome boundary. This delayed entry, or left truncation, is not corrected by a random train/test split. Appendix~\ref{app:review_s2_entry} audits the symptom-onset offset by outcome, using PRO-ACT's source-trial day zero as an entry-time proxy~\cite{PROACTtiming}, not as a verified individual enrolment date. The primary cohort was retained; no entry-restricted or delayed-entry survival model was fitted.
+
 The outcome could be assigned to 6,120 patients: 656 Short Survivors and 5,464 Standard Survival patients. A further 1,396 patients were alive at their last recorded visit but had less than 24 months of follow-up. These records were excluded because their class could not be established at the selected horizon. Another 1,967 patients lacked sufficient information to determine either time to death or follow-up duration.
+Recalculation from the intermediate records confirmed the latter count independently of the reference study's identically sized cohort. Of these 1,967 records, 1,801 lacked the symptom-onset offset needed to express survival time from onset. There were 888 recorded deaths without a computable onset-to-death interval and 1,079 patients without a computable onset-to-last-visit interval and no recorded death; the missing-onset count overlaps these two categories.
 
 Site of onset was represented as a binary variable distinguishing bulbar from limb/spinal onset. The 298 records classified as \textit{Other} and the 20 records containing both limb and bulbar onset were therefore excluded. Forty-two patients with missing site-of-onset information were subsequently removed during complete-case filtering.
+The extraction code also defaults unrecognised non-missing onset text to limb/spinal. An audit found no source records taking this fallback in the available extract. The potentially unsafe default therefore did not change the current cohort, but should be replaced by an explicit unrecognised category before applying the code to a new extract.
 
 This target differs from the short-term functional progression outcome used in Study~I. Rather than classifying patients from their ALSFRS-R rate of decline, Study~II predicts survival within a fixed 24-month window and presents a more severe class imbalance.
 
@@ -104,9 +108,9 @@ The final cohort is 23.6\% smaller than the 1,967-patient cohort reported in the
 \subsection{Preprocessing}
 \label{subsec:s2_preprocessing}
 
-Feature construction followed the definitions reported by Papaiz et al.~\cite{Papaiz2024}. Diagnostic delay was calculated as the interval between symptom onset and diagnosis and grouped as short ($\leq 8$ months), average (9--18 months), or long ($\geq 19$ months). Age at onset was estimated from the demographic age and the recorded symptom-onset offset, then divided into five groups: $\leq 39$, 40--49, 50--59, 60--69, and $\geq 70$ years. Sex, site of onset, riluzole use, and gastrostomy were represented as binary variables. A patient was considered to use riluzole if any corresponding record indicated its use.
+Feature construction followed the representation reported by Papaiz et al.~\cite{Papaiz2024}, with the following implemented boundaries. Diagnostic delay was the interval between symptom onset and diagnosis in days divided by 30.44, grouped as $\leq8$, $>8$ to $\leq18$, or $>18$ months. Age at onset was estimated from demographic age and the symptom-onset offset and grouped as $\leq39$, $(39,49]$, $(49,59]$, $(59,69]$, or $>69$ years. These right-closed intervals apply to continuous values, rather than completed integer months or years. Sex, site of onset, riluzole use, and gastrostomy were binary. Any record indicating riluzole use counted as exposure, without restricting its date to diagnosis or enrolment. Unlike the pre-baseline indicator in Study~I, this variable does not establish treatment status at a fixed prediction time.
 
-For longitudinal clinical variables, the available measurement closest to the diagnosis date was selected by absolute time difference. This rule allows the selected record to fall either before or after diagnosis. FVC was expressed as percentage predicted, using the largest of the available trial measurements or, when percentage values were absent, the ratio between measured and expected volume. Values below 80\% were coded as abnormal. BMI was calculated from the weight measurement closest to diagnosis and the median valid height recorded for that patient. It was grouped as underweight ($<18.5$), normal (18.5--24.9), overweight (25.0--29.9), or obesity ($\geq 30$).
+For longitudinal clinical variables, the available measurement closest to the diagnosis date was selected by absolute time difference. This rule allows the selected record to fall either before or after diagnosis. FVC was expressed as percentage predicted, using the largest of the available trial measurements or, when percentage values were absent, the ratio between measured and expected volume. Values below 80\% were coded as abnormal. BMI used the weight measurement closest to diagnosis and the patient's median valid recorded height. Its implemented categories were $\leq18.5$, $(18.5,25]$, $(25,30]$, and $>30$. These right-closed bins differ at the boundaries from conventional underweight, normal-weight, overweight, and obesity categories. They are reported as fitted rather than retrospectively changing the encoding and the resulting models.
 
 The temporal audit showed that the selected records were usually obtained well after diagnosis. In the final cohort, 1,496 of 1,502 ALSFRS assessments (99.6\%), 1,492 FVC assessments (99.3\%), and 1,494 weight measurements (99.5\%) occurred after the diagnosis date. Their median offsets were 314, 310.5, and 311 days, respectively. Only five patients had selected records at or before diagnosis for all three sources. These variables therefore represent trial measurements selected relative to diagnosis, rather than a strict diagnosis-time baseline.
 
@@ -114,7 +118,7 @@ Functional decline was represented separately for the ten ALSFRS items Q1--Q10. 
 \[
   \frac{4 - \text{item score}}{\text{months from symptom onset}}.
 \]
-Slopes were classified as slow ($<0.05$), average ($0.05$--$0.13$), or rapid ($\geq 0.14$ points per month).
+Slopes were classified as slow ($<0.05$), average ($0.05\leq\text{slope}<0.14$), or rapid ($\geq0.14$ points per month), using right-open intervals.
 
 Four indicators described regional involvement at the same assessment. Bulbar involvement was present when the sum of Q1--Q3 was below 12, upper-limb involvement when Q4 and Q5 summed to less than 8, lower-limb involvement when Q8 and Q9 summed to less than 8, and respiratory involvement when Q10 was below 4. Their sum gave the number of involved regions, from zero to four. Gastrostomy was identified from the presence of the gastrostomy-specific Q5 response.
 
@@ -123,7 +127,7 @@ After complete-case filtering, categorical and ordinal values were converted to 
 \subsection{Feature Set}
 \label{subsec:s2_featureset}
 
-The final representation uses the same 23 feature definitions as the reference study:
+The final representation uses the same 23 predictor concepts as the reference study, subject to the timing and category-boundary differences described above:
 
 \begin{itemize}
   \item \textbf{Patient characteristics, treatment, and timing (5):} sex, site of onset, age at onset, riluzole use, and diagnostic delay;
@@ -156,7 +160,7 @@ Figure~\ref{fig:s2_workflow} provides an overview of the complete experimental p
 
 Seven classifiers were evaluated: K-Nearest Neighbours (\gls{KNN}), Gaussian Naïve Bayes, Decision Tree, Random Forest, Support Vector Machine (\gls{SVM}), Multi-Layer Perceptron (\gls{MLP}), and LightGBM~\cite{ke2017lightgbm}. The first six match the algorithm families considered by Papaiz et al.~\cite{Papaiz2024}; LightGBM was added as a gradient-boosted tree model.
 
-Each classifier was paired with ten imbalance-handling conditions. These comprised an unmodified baseline; four over-sampling methods, Random Oversampling (\gls{ROS}), \gls{SMOTE}~\cite{chawla2002smote}, Borderline-SMOTE, and \gls{ADASYN}; three under-sampling or cleaning methods, Random Undersampling (\gls{RUS}), NearMiss, and TomekLinks; and two hybrid methods, \gls{SMOTETomek} and \gls{SMOTEENN}. This produced 70 classifier--strategy combinations.
+Each classifier was paired with ten imbalance-handling conditions. These comprised an unmodified baseline; four over-sampling methods, Random Oversampling (\gls{ROS}), \gls{SMOTE}~\cite{chawla2002smote}, Borderline-SMOTE~\cite{han2005borderline}, and \gls{ADASYN}~\cite{he2008adasyn}; three under-sampling or cleaning methods, Random Undersampling (\gls{RUS}), NearMiss~\cite{zhang2003nearmiss}, and TomekLinks~\cite{tomek1976cnn}; and two hybrids, \gls{SMOTETomek} and \gls{SMOTEENN}, the latter combining SMOTE with edited nearest neighbours~\cite{wilson1972edited}. This produced 70 combinations, implemented with imbalanced-learn~\cite{lemaitre2017}.
 
 Resampling was performed separately within each cross-validation iteration. The sampler was fitted only to the training fold, and the resulting data were then used to fit the classifier. Neither the validation fold nor the held-out test partition was resampled. Their class distributions therefore remained representative of the final cohort.
 
@@ -165,6 +169,8 @@ Resampling was performed separately within each cross-validation iteration. The 
 
 Hyperparameter optimisation used the Optuna framework introduced in Study~I (Section~\ref{sec:methods_optuna}) with a seeded Tree-structured Parzen Estimator sampler. Fifty trials were run for each of the 70 classifier--strategy combinations, giving 3,500 optimisation trials. Each trial was evaluated by repeated cross-validation, and its objective value was the mean \gls{ROC-AUC}.
 
+The implementation substitutes ROC-AUC 0.5 if resampling or fitting fails within a fold. The saved aggregate results do not contain a fold-level failure ledger, so they cannot establish that this fallback was never used. A configured median pruner was also inactive because the objective did not report intermediate scores. These are limitations of the search audit trail; no failure-free claim is inferred from completed trial counts.
+
 The combination with the highest mean cross-validation ROC-AUC was retained for each classifier and later refitted on the full training partition. This differs from the reference study, which used grid search and selected models by balanced accuracy. ROC-AUC was chosen here to assess probability ranking independently of a fixed decision threshold; sensitivity and specificity were examined separately during evaluation.
 
 \subsection{Cross-Validation Strategy}
@@ -172,7 +178,7 @@ The combination with the highest mean cross-validation ROC-AUC was retained for 
 
 Model selection used repeated stratified five-fold cross-validation with three repeats, producing 15 validation scores for each Optuna trial. Stratification maintained the Short Survivor proportion in each fold. The same folds were generated from the training partition with random seed 42. Within each iteration, MinMax parameters were fitted on the fold's training observations before resampling and model fitting, then applied unchanged to the validation observations.
 
-Study~I required grouped folds because several records could belong to the same patient. Here, each row represents one patient, so repeated stratified cross-validation was sufficient to prevent patient overlap while retaining the validation structure of the reference study.
+Both studies have one row per participant. Study~I used the participant identifier in GroupKFold to enforce separation explicitly, not because its modelling matrix contained repeated patient records. Study~II used repeated stratified cross-validation to preserve class proportions and the reference study's validation structure. Neither procedure separates source trials.
 
 % ============================================================
 \section{BalancedBagging Comparison Protocol}
@@ -181,9 +187,11 @@ Study~I required grouped folds because several records could belong to the same 
 
 An additional analysis examined the central ensemble-imbalance claim of the reference study. For each of the seven classifiers, the best hyperparameters found for the unmodified baseline were used in two conditions: the classifier alone and the same classifier wrapped in a BalancedBagging ensemble~\cite{lemaitre2017}. BalancedBagging used ten estimators and random under-sampling within each bootstrap sample. Keeping the base hyperparameters fixed isolated the effect of adding the ensemble wrapper.
 
-This is not an exact reconstruction of every ensemble in the reference study. Papaiz et al. used BalancedBagging for five classifier families and Balanced Random Forest for Random Forest, and did not include LightGBM. The present comparison instead applies a common BalancedBagging mechanism to all seven classifiers; results for the original five families provide the closest methodological comparison, while Random Forest and LightGBM should be read as extensions.
+This is not an exact reconstruction of every ensemble in the reference study. Papaiz et al. used the ten best single-model configurations per algorithm as base classifiers, whereas the present implementation makes ten bags of one selected configuration. They used BalancedBagging for five families and Balanced Random Forest for Random Forest, and did not include LightGBM. Here, a common BalancedBagging mechanism is applied to all seven classifiers; the original five families provide the closest comparison, while Random Forest and LightGBM are extensions.
 
 Balanced accuracy, sensitivity, and specificity were recorded for the single and ensemble conditions in each of the 15 paired cross-validation folds. Differences were tested with two-sided Wilcoxon signed-rank tests~\cite{wilcoxon1945}. Bonferroni-adjusted $p$-values controlled the seven comparisons made for each metric, equivalent to an unadjusted significance threshold of $0.05/7 \approx 0.007$.
+
+A supplementary audit refitted the same baseline configurations and ten-estimator ensembles on the original 15 development folds and recorded ROC-AUC as well. It repeated neither Optuna optimisation nor held-out evaluation. Comparing these ranking scores with default-operating-point balanced accuracy distinguishes changes in discrimination from changes in classification behaviour (Appendix~\ref{app:review_s2_bagging}).
 
 % ============================================================
 \section{Explainability Protocol}
@@ -207,7 +215,9 @@ ROC-AUC was the optimisation and ranking metric during model selection. Held-out
 \]
 Sensitivity denotes recall for the Short Survivor class. Average precision, precision, minority-class $F_1$, and overall accuracy were calculated as secondary descriptors. Because failing to identify a Short Survivor is the more consequential error in the intended setting, sensitivity received particular attention when interpreting models with similar ranking performance.
 
-The default operating point was a probability threshold of 0.50. Three alternatives were derived from the repeated cross-validation predictions generated on the training partition: (i) the threshold maximising Youden's $J$~\cite{youden1950}; (ii) the highest threshold with sensitivity of at least 0.90; and (iii) the threshold maximising minority-class $F_1$. The validation predictions from all 15 folds were pooled, so each training patient contributed one out-of-fold prediction in each of the three repeats. No held-out test prediction was used to choose a threshold. The selected values were subsequently applied unchanged to the test probabilities.
+The saved held-out probabilities were also assessed using average precision, the Brier score, and reliability diagrams with five quantile bins. The bootstrap prediction files were checked against the current test labels, seven confusion matrices, and ROC-AUC values before reuse. No recalibration or new threshold selection was performed. A paired sensitivity comparison of LightGBM+ROS and SVM+SMOTEENN used an exact McNemar test restricted to the 35 Short Survivors and 2,000 paired resamples of those patients.
+
+The default operating point was a probability threshold of 0.50, except that SVM labels came from \texttt{predict()}, which uses the decision-function sign rather than a threshold on its Platt-scaled probabilities. Three alternatives were derived from repeated cross-validation predictions on the training partition: (i) the threshold maximising Youden's $J$~\cite{youden1950}; (ii) the highest threshold with sensitivity of at least 0.90; and (iii) the threshold maximising minority-class $F_1$. Validation predictions from all 15 folds were pooled, so each training patient contributed one out-of-fold prediction per repeat. No held-out test prediction was used to choose a threshold. Selected values were applied unchanged to the test probabilities.
 
 The test set contains 35 Short Survivors, so one correctly classified patient changes sensitivity by 2.86 percentage points. Sampling uncertainty was described using 95\% percentile bootstrap intervals. For each fitted classifier, 2,000 samples of 301 patient-level outcome--prediction pairs were drawn with replacement using random seed 42, and the five principal metrics were recalculated. A bootstrap sample containing only one outcome class would be omitted for any metric that could not be computed; none of the 2,000 samples was degenerate in this analysis. These intervals quantify variation within the held-out sample while treating the fitted model and selected threshold as fixed.
 

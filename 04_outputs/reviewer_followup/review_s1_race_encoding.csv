@@ -1,0 +1,8 @@
+feature,missing_dev,median_dev,recorded_dev
+Race_Caucasian,113,1.0,1000
+Race_Black_African_American,1016,0.0,97
+Race_Asian,1018,0.0,95
+Race_Americ_Indian_Alaska_Native,1029,0.0,84
+Race_Hawaiian_Pacific_Islander,1031,0.0,82
+Race_Other,1091,1.0,22
+Race_Unknown,1029,0.0,84

@@ -199,6 +199,29 @@ python replication/02_scripts/step11_missing_data_sensitivity.py
 
 Model search is computationally expensive: Study II evaluates 70 classifier-strategy combinations with 50 Optuna trials and repeated five-fold cross-validation.
 
+## Reviewer Follow-Up Checks
+
+Verified, pinned runtime snapshots and their limitations are documented in
+[`environments/`](environments/). The revision adds aggregate checks without
+changing the primary cohorts, selected configurations, or thresholds:
+
+```bash
+python 03_src/analysis/reviewer_followup.py --study2-probabilities /local/path/step6_test_probabilities.json
+python replication/02_scripts/step13_bagging_discrimination.py
+```
+
+The first command requires the locally retained Study II test-probability export.
+It validates labels, confusion matrices and rounded AUCs before reuse. Patient-level
+probabilities and PRO-ACT records must not be uploaded. Only aggregate summaries are
+written to `04_outputs/reviewer_followup/`. The second command repeats the original
+15 development folds with fixed baseline parameters to assess ROC-AUC under the
+single/ten-bag comparison; it does not repeat Optuna or use the test set.
+
+The saved Study I split manifests are required for exact partition reproduction.
+Input row order and two near-tied three-month slopes can change a newly generated
+seeded split. Verify regenerated partitions against the manifests rather than
+assuming that the random seed alone identifies the original experiment.
+
 ## Dissertation
 
 The complete LaTeX project is in [`overleaf/`](overleaf/). Its main chapters are:

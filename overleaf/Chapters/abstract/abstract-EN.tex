@@ -5,9 +5,9 @@
 \section*{Abstract}
 \label{sec:abstract}
 
-Amyotrophic lateral sclerosis follows a variable course, making functional decline and survival difficult to predict. This dissertation uses the PRO-ACT database in two studies of class imbalance, validation, and threshold selection. Study~I predicted rapid functional progression at three- and six-month horizons from baseline clinical features. In the six-month test set, XGBoost achieved a PR-AUC of 0.456 and detected 72 of 84 rapid progressors, with 85.7\% recall and 35.1\% precision. SHAP highlighted baseline ALSFRS-R and forced vital capacity. Study~II examined death within 24 months of symptom onset. LightGBM with random oversampling achieved a test ROC-AUC of 0.923 and detected 30 of 35 Short Survivors. Across both studies, ranking performance did not determine behaviour at the selected threshold. Outcome definition, imbalance handling, data separation, and threshold choice all affected interpretation. External, prospective validation is required before clinical use.
+Two PRO-ACT studies examined machine learning for amyotrophic lateral sclerosis prognosis. Study~I classified rapid functional progression at three and six months. At six months, XGBoost achieved test PR-AUC 0.456, detecting 72 of 84 rapid progressors with 85.7\% recall and 35.1\% precision. SHAP highlighted baseline ALSFRS-R and forced vital capacity. Study~II classified death within 24 months of symptom onset. LightGBM with random oversampling achieved test ROC-AUC 0.923 and detected 30 of 35 Short Survivors. BalancedBagging significantly improved balanced accuracy in four of five directly comparable reference-study families. Ranking performance did not determine threshold behaviour. Patient separation, outcome construction, imbalance handling, and threshold selection affected interpretation. Study~II's delayed entry and post-diagnosis predictors restrict its prognostic interpretation. External, prospective validation remains necessary.
 
 \section*{Keywords}
 \label{sec:keywords}
 
-Amyotrophic lateral sclerosis, functional progression, survival prognosis, class imbalance, threshold selection.
+Amyotrophic lateral sclerosis, explainable machine learning, functional progression, survival prognosis, class imbalance, PRO-ACT.

@@ -26,8 +26,13 @@ contexts/
 review_tese
 review_tese_round2
 resumo_resultados_discussao.txt
+Thesis_Ivo_review_annotated.pdf
+Thesis_Ivo_review_annotated_source.zip
+Thesis_Ivo_review_annotated_source/
+replication/03_outputs/step6/step6_test_probabilities.json
 
 # Python
+.venv*/
 __pycache__/
 *.pyc
 *.pyo

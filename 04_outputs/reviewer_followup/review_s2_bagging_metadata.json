@@ -1,0 +1,16 @@
+{
+  "input_sha256": {
+    "G:\\TESE\\CodigoMain\\replication\\01_data\\processed\\step4_arrays_unscaled.npz": "5e567a3cf61458e18e60ca1de0ee09bf078e4f0833c6169ee53d3649832177b5",
+    "G:\\TESE\\CodigoMain\\replication\\03_outputs\\step5\\step5_cv_results.csv": "14a889baef1bfb5c6d9d1bca64cd8ab8b20ab92be689050205c132630ba439ce"
+  },
+  "packages": {
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "scikit-learn": "1.8.0",
+    "imbalanced-learn": "0.14.1",
+    "lightgbm": "4.6.0"
+  },
+  "n_fits_single": 105,
+  "n_fits_bags": 1050,
+  "convergence_warnings": 1
+}

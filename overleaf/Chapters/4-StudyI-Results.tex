@@ -13,10 +13,7 @@ Starting from $N\!=\!5{,}436$ subjects with at least one ALSFRS-R record in the 
 For the \textbf{6-month horizon} ($H\!=\!180 \pm 7$\,d), the final dataset contains $N\!=\!1{,}392$ subjects (25.6\% of the initial pool), partitioned into DEV ($n\!=\!1{,}113$, 80\%) and TEST ($n\!=\!279$, 20\%).
 For the \textbf{3-month horizon} ($H\!=\!90 \pm 7$\,d), $N\!=\!2{,}407$ subjects (44.3\%) are eligible, split into DEV ($n\!=\!1{,}925$) and TEST ($n\!=\!482$).
 A total of 720 subjects are eligible at both horizons.
-The substantial attrition from 5{,}436 to 1{,}392 at 6 months reflects two structural properties of the PRO-ACT database:
-(i)~many clinical trials had follow-up periods shorter than 180~days, so subjects were never assessed near the 6-month mark;
-and (ii)~ALS patients who deteriorated rapidly may have dropped out, been transferred to palliative care, or died before the 180-day window, creating informative censoring that disproportionately removes fast progressors.
-Consequently, the 6-month cohort is likely enriched for slower-progressing subjects relative to the full PRO-ACT population, a caveat that should be borne in mind when interpreting the results.
+The reduction from 5{,}436 to 1{,}392 at six months may reflect differences in trial schedules, incomplete endpoint assessments, and withdrawal or death before the required visit. The eligibility records do not distinguish these causes, so enrichment for slower progressors cannot be established from attrition alone. The baseline comparison in Table~\ref{tab:review_s1_baseline} shows slightly higher median ALSFRS-R (39 versus 38) and FVC in litres (3.5 versus 3.3) among eligible participants, with similar median age. These differences describe selection on observed characteristics, not the unobserved future slopes of excluded participants.
 Nevertheless, the 6-month horizon provides greater temporal support for slope estimation (99.8\% based on $\geq 3$ data points, median 7) than the 3-month horizon.
 
 \begin{table}[ht!]
@@ -48,15 +45,15 @@ The 3-month slopes exhibit higher variance ($\sigma = 1.16$ vs $0.89$), consiste
 Despite this, 90.5\% of 3-month slopes are based on $\geq 3$ ALSFRS-R measurements (median $n_{\text{points}} = 4$), and 99.8\% of 6-month slopes use $\geq 3$ points (median $n_{\text{points}} = 7$), confirming adequate estimation quality for both horizons.
 
 The binary target (\textit{rapid} vs \textit{slow}) is derived \textbf{fold-wise} during cross-validation by labelling the worst 30\% slopes in the \emph{training} fold as \textit{rapid}.
-For the 6-month horizon, the global 30th percentile corresponds to a slope of $-1.25$\,pts/30d; in practice, the fold-wise cutoffs range from $-1.27$ to $-1.19$ (mean $-1.24$), identifying subjects who are declining by more than approximately one ALSFRS-R point per month.
+For the 6-month horizon, the global 30th percentile corresponds to a slope of $-1.25$\,pts/30d; in practice, the fold-wise cutoffs range from $-1.27$ to $-1.19$ (mean $-1.24$), identifying subjects declining by at least about 1.2 ALSFRS-R points per 30 days.
 
 \subsection{Feature Coverage}
 \label{subsec:results_coverage}
 Feature availability varies substantially across blocks (Table~\ref{tab:feature_coverage}).
 The baseline block has effectively complete coverage: ALSFRS-R total and sex are available for 100\% of subjects, while age is present for 87.1\% ($n\!=\!1{,}212$).
 The 180 subjects without recorded age are concentrated in clinical trials in which age was not collected or was anonymised. This pattern suggests an administrative source of missingness, but it does not rule out differences between the affected trials and the remainder of the cohort. Age is therefore retained through fold-fitted median imputation rather than complete-case exclusion.
-Vital signs are available for 80.6\% of subjects at a block level ($n\!=\!1{,}122$), with individual features ranging from 44.9\% (height) to 79.2\% (weight).
-FVC data are available for 56.3\% (litres) to 54.5\% (percent of normal), motivating the missingness analysis in Section~\ref{sec:results_fvc_missingness}.
+Vital signs are available for 80.6\% of subjects at a block level ($n\!=\!1{,}122$), with individual features ranging from 5.5\% (standing and supine blood pressure) to 79.2\% (weight).
+FVC coverage is 56.3\% for litres, 54.5\% for percentage of normal, and 33.3\% for the subject-normal value, motivating the missingness analysis in Section~\ref{sec:results_fvc_missingness}.
 At block level, 60.7\% of subjects ($n\!=\!845$) have at least one non-missing FVC feature.
 Study arm is recorded for 91.1\% of subjects. The derived riluzole indicator and concomitant-medication count contain no missing values because subjects without a qualifying pre-baseline record are coded as zero.
 Labs are moderately available (creatinine: 64.7\%, ALT: 69.0\%).
@@ -84,7 +81,7 @@ All features & 35 & 100\textsuperscript{$\dagger$} \\
 \end{table}
 \break
 The heterogeneous coverage across blocks underscores the importance of an imputation strategy that does not introduce outcome-dependent bias, and supports the use of ablation to quantify whether blocks with lower coverage (e.g.\ FVC, Labs) contribute sufficient predictive signal to justify their inclusion.
-Note that the dataset contains 39 columns in total, but 4 columns are excluded before modelling: three temporal offsets (\texttt{t0\_delta\_days}, \texttt{vitals\_delta\_days}, \texttt{fvc\_delta\_days}) that encode measurement timing rather than clinical status, and \texttt{ALSFRS\_Responded\_By} which is near-constant ($>$93\% missing).
+The dataset contains 42 columns: the subject identifier, two outcome slopes, and 39 other fields. Removing the identifier, both slopes, three temporal offsets, and the response-source field leaves 35 predictors. The offsets describe measurement timing, not clinical status; the response-source field is more than 93\% missing, rather than near-constant.
 The remaining 35 features constitute the model input after imputation.
 
 
@@ -110,7 +107,7 @@ The plausibility filter described in Section~\ref{sec:methods_bmi_correction} se
 \label{sec:results_eda_treatment}
 % ============================================================
 
-Three treatment-related features are available: clinical trial arm, documented pre-baseline riluzole use, and the number of concomitant medications. Active and Placebo participants have rapid-progression rates of 26.5\% and 31.6\%, respectively, but neither the binary comparison ($\chi^2=3.62$, $p=0.057$) nor the continuous slope comparison ($U=200{,}472$, $p=0.229$) provides evidence of a difference at $\alpha=0.05$. The corresponding rates for participants with and without documented riluzole use are 30.8\% and 28.6\%; again, the binary ($p=0.416$) and continuous ($p=0.534$) comparisons are not statistically significant.
+Three treatment-related features are available: clinical trial arm, documented pre-baseline riluzole use, and the number of concomitant medications. Active and Placebo participants have rapid-progression rates of 26.5\% and 31.6\%. The Yates-corrected binary comparison gives $\chi^2=3.62$, $p=0.057$, while the uncorrected test gives $p=0.049$ and Fisher's exact test $p=0.052$. This is weak, method-sensitive evidence rather than a clear arm difference; the continuous slope comparison gives $U=200{,}472$, $p=0.229$. For participants with and without documented riluzole use, rates are 30.8\% and 28.6\%, with binary $p=0.416$ and continuous $p=0.534$. Appendix~\ref{app:treatment_eda} reports the full comparisons.
 
 Medication burden and individual drug rates vary across the descriptive groups, but these unadjusted comparisons cannot distinguish pharmacological effects from differences in comorbidity, symptom management, trial procedures, or recording density. The three variables are therefore retained as candidate predictors of patient and trial heterogeneity, with their incremental contribution assessed through feature ablation. Appendix~\ref{app:treatment_eda} reports the complete distributions, subgroup rates, and medication summaries.
 
@@ -221,7 +218,7 @@ Vital signs, treatment variables, and laboratory measurements produce smaller an
 \label{sec:results_3m}
 % ============================================================
 
-The four highest-ranked six-month model families were tuned independently on the three-month DEV set ($n\!=\!1{,}925$), in balanced and unbalanced modes. Balanced XGBoost achieved the highest three-month PR-AUC ($0.426 \pm 0.036$), followed by unbalanced XGBoost and unbalanced LightGBM (both 0.423). The leading four configurations differed by less than 0.004, well within their fold-to-fold variation. Complete three-month results are reported in Appendix~\ref{app:three_month}.
+Four six-month model families (XGBoost, Random Forest, LightGBM, and Logistic Regression) were tuned independently on the three-month DEV set ($n\!=\!1{,}925$), in balanced and unbalanced modes. Balanced SVM, ranked third at six months, was not included. Balanced XGBoost achieved the highest three-month PR-AUC ($0.426 \pm 0.036$), followed by unbalanced XGBoost and unbalanced LightGBM (both 0.423). The leading four configurations differed by at most 0.004, well within their fold-to-fold variation. Complete three-month results are reported in Appendix~\ref{app:three_month}.
 
 Figure~\ref{fig:3m_vs_6m_grouped} compares the eight matched model configurations across horizons.
 
@@ -335,7 +332,7 @@ Model & Mode & PR-AUC & ROC-AUC & $F_1$ & $F_2$ & Brier \\
   \item \textbf{SVM has the highest ROC-AUC point estimate} ($0.675$), followed closely by Logistic Regression ($0.671$), Random Forest ($0.664$), and XGBoost ($0.660$).
     Its PR-AUC is lower than that of Random Forest and XGBoost, and it produces no positive predictions at $t\!=\!0.50$. The latter reflects an unsuitable default operating threshold rather than an absence of ranking ability.
   \item \textbf{Default threshold is unsuitable for unbalanced models.}
-    XGBoost, RF, and KNN (all trained without class weighting) produce near-zero $F_1$ and $F_2$ at $t\!=\!0.50$, because their predicted probabilities concentrate below $0.50$ for the minority class.
+    XGBoost, RF, and KNN (all trained without class weighting) produce near-zero $F_1$ and $F_2$ at $t\!=\!0.50$, because their predicted probabilities concentrate below $0.50$ for the minority class. Balanced SVM also makes no positive predictions at this probability threshold, so the problem is not confined to unweighted models.
     This reinforces the need for threshold optimisation (Section~\ref{sec:results_threshold_xgb}).
   \item \textbf{Class weighting changes default-threshold behaviour.}
     Balanced Logistic Regression achieves the highest $F_1$ ($0.484$) and $F_2$ ($0.520$) at $t\!=\!0.50$. These values describe performance at a common cutoff and do not replace the threshold-free criteria used for model selection.
@@ -405,6 +402,8 @@ $t$ & Precision & Recall & $F_1$ & $F_2$ & TP & FP & FN & TN \\
 
 \noindent\textbf{Calibration.}
 The probabilistic predictions of the DEV-fitted XGBoost model are examined using a reliability diagram and the Brier score (Figure~\ref{fig:step6_calibration}). Its Brier score is \textbf{0.197}, compared with approximately 0.210 for a constant prediction equal to the TEST prevalence. The reliability curve is close to the diagonal in the lower populated bins but departs from it at higher predicted probabilities, where fewer observations are available. The result indicates a modest reduction in mean squared probabilistic error relative to the constant reference, but does not demonstrate full calibration.
+
+Using unrounded scores, the scaled Brier score is 0.064, a 6.4\% reduction from that descriptive constant-prevalence reference. TEST probabilities range from 0.128 to 0.573. A post-hoc logistic calibration diagnostic gives intercept 0.249 and slope 1.166; these estimates were not used to transform predictions and have no separate validation sample. Appendix~\ref{app:review_s1_uncertainty} reports the additional uncertainty checks.
 
 \begin{figure}[ht!]
   \centering
@@ -527,7 +526,9 @@ Numeric features are standardised prior to fitting, whereas one-hot encoded indi
 \end{enumerate}
 
 \noindent Functional status and respiratory measurements therefore recur in both the linear and non-linear models, although their exact ranking differs.
-Age ($\beta = +0.076$), study-arm assignment ($\beta = -0.062$), FVC percentage of normal ($\beta = -0.052$), temperature ($\beta = -0.050$), and pulse ($\beta = +0.045$) also appear among the larger Logistic Regression coefficients.
+Age ($\beta = +0.076$), the Black/African-American race indicator ($\beta = -0.064$), study-arm assignment ($\beta = -0.062$), FVC percentage of normal ($\beta = -0.052$), temperature ($\beta = -0.050$), and pulse ($\beta = +0.045$) also appear among the larger Logistic Regression coefficients.
+The race coefficient must be read alongside the sparse, median-imputed indicator coding described in Section~\ref{sec:methods_preprocessing}; it is not a biological interpretation of race.
+Of the 42 transformed coefficients, 25 are exactly zero under the selected $\ell_1$ penalty. A zero coefficient does not establish that a variable is uninformative when predictors are correlated or sparsely recorded.
 
 \subsection{Summary of Explainability Findings}
 \label{subsec:results_xai_summary}
@@ -554,13 +555,13 @@ At $t=0.21$, the model misses 12 of 84 rapid progressors and produces 133 false 
 \label{subsec:results_subgroup}
 % ------------------------------------------------------------
 
-Baseline functional status shows the clearest subgroup variation. Recall falls from 97.2\% among participants with \gls{ALSFRS-R} $\leq35$ to 54.5\% in the $>42$ group; these estimates are based on 36 and 11 rapid progressors, respectively. The youngest age group also has lower recall than the overall \gls{TEST} value (72.7\% versus 85.7\%). Female and male participants have similar point estimates for PR-AUC (0.450 and 0.473) and recall (84.4\% and 86.5\%), although no formal equivalence or fairness test was performed.
+Baseline functional status shows the clearest subgroup variation. Recall falls from 97.2\% among participants with \gls{ALSFRS-R} $\leq35$ to 54.5\% in the $>42$ group; these estimates are based on 36 and 11 rapid progressors, respectively. The supplementary pointwise bootstrap intervals are $[0.909,\,1.000]$ and $[0.231,\,0.857]$, so their precision differs substantially. The youngest age group also has lower recall than the overall TEST value (72.7\% versus 85.7\%). Female and male participants have similar point estimates for PR-AUC (0.450 and 0.473) and recall (84.4\% and 86.5\%), although no formal equivalence or fairness test was performed.
 
 PR-AUC varies across the \gls{FVC} strata, but the lower-FVC groups also contain a higher proportion of rapid progressors. The metric differences therefore cannot be separated from subgroup prevalence in this analysis. Appendix~\ref{app:subgroup_performance} reports all strata, including participants with missing age or FVC, together with the complete table and figures.
 
 \phantomsection\label{subsec:results_dca}
 \noindent\textbf{Decision curve analysis.}
-The model has higher estimated net benefit than both reference strategies across the main continuous interval $t\in[0.18,\,0.47]$. At the selected operating point ($t=0.21$), net benefit is 0.131, compared with 0.115 for treat all and 0 for treat none. The difference from treat all corresponds to approximately 1.6 additional net true-positive decisions per 100 participants under the threshold-implied weighting of false positives. This is evidence of potential decision value within the evaluated sample, not established clinical utility: no intervention has been specified, the analysis lacks uncertainty intervals, and external validation has not been performed. Appendix~\ref{app:dca} presents the full curve and isolated threshold results.
+The model has higher estimated net benefit than both reference strategies across the main continuous interval $t\in[0.18,\,0.47]$. At $t=0.21$, net benefit is 0.131, compared with 0.115 for treat all and 0 for treat none. The supplementary 95\% bootstrap interval for model net benefit is $[0.074,\,0.196]$. The difference from treat all is 0.016, or approximately 1.6 net true-positive decisions per 100 participants, with paired interval $[-0.015,\,0.043]$. The point estimate is therefore favourable but does not establish a gain over treat all at this threshold. No intervention was specified. Appendices~\ref{app:dca} and~\ref{app:review_s1_uncertainty} provide the curves and uncertainty analysis.
 
 \phantomsection\label{subsec:results_learning_curves}
 \noindent\textbf{Learning curves.}
@@ -614,7 +615,7 @@ Brier     & 0.197 & [0.174,~0.221] & 0.047 \\
 \label{subsec:results_pdp}
 % ------------------------------------------------------------
 
-The marginal prediction decreases across the observed baseline \gls{ALSFRS-R} range of 29--46, with step changes characteristic of a tree ensemble. For \gls{FVC}, the curve is relatively flat below approximately 3.7 litres, falls around 3.8--4.0 litres, and then stabilises. The age curve rises around the low 40s before remaining broadly stable across most higher values. These patterns complement the global \gls{SHAP} ranking by describing the model's average response shape.
+The marginal prediction decreases across the plotted baseline \gls{ALSFRS-R} range of 29--46, which spans the 5th--95th percentiles of TEST values rather than their full observed range. Step changes are characteristic of a tree ensemble. For \gls{FVC}, the curve is relatively flat below approximately 3.7 litres, falls around 3.8--4.0 litres, and then stabilises. The age curve rises around the low 40s before remaining broadly stable across most higher values. These patterns complement the global \gls{SHAP} ranking by describing the model's average response shape.
 
 The curves remain descriptive. FVC in litres is observed for only 162 of 279 \gls{TEST} participants, and age for 246; correlations between baseline function, respiratory measurements, age, and other covariates also mean that some combinations evaluated by the PDP may be uncommon in the cohort. Appendix~\ref{app:pdp} presents the full figure, observed-value density, and PDP ranges.
 
@@ -636,7 +637,7 @@ Its main findings can be summarised as follows:
 \begin{enumerate}
   \item \textbf{The cohort supported the intended analysis, but data quality required active review.}
     The six-month cohort included 1,392 participants, and 99.8\% of the slopes were estimated from at least three \gls{ALSFRS-R} measurements.
-    The preprocessing audit identified a systematic height-unit error affecting 147 raw records, 132 of which reached the selected feature set, and showed that \gls{FVC} availability varied across trials.
+    The preprocessing audit identified 147 implausible raw height records, compatible with an unconfirmed decimal-placement error, 132 of which reached the selected feature set. It also showed that \gls{FVC} availability varied with trial-related attributes.
     The source of the missingness could not be established from the available data.
 
   \item \textbf{No single classifier was clearly superior.}

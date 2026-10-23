@@ -1,0 +1,22 @@
+search,n,zero_scores,missing_scores,states,best_trial_zero_based
+DT_balanced_6m,60,0,0,{'COMPLETE': 60},38
+DT_unbalanced_6m,60,0,0,{'COMPLETE': 60},58
+KNN_unbalanced_6m,60,0,0,{'COMPLETE': 60},50
+LGBM_balanced_3m,60,0,0,{'COMPLETE': 60},56
+LGBM_balanced_6m,60,0,0,{'COMPLETE': 60},51
+LGBM_unbalanced_3m,60,0,0,{'COMPLETE': 60},59
+LGBM_unbalanced_6m,60,0,0,{'COMPLETE': 60},13
+LR_balanced_3m,60,0,0,{'COMPLETE': 60},49
+LR_balanced_6m,60,0,0,{'COMPLETE': 60},40
+LR_unbalanced_3m,60,0,0,{'COMPLETE': 60},53
+LR_unbalanced_6m,60,0,0,{'COMPLETE': 60},51
+RF_balanced_3m,60,0,0,{'COMPLETE': 60},2
+RF_balanced_6m,60,0,0,{'COMPLETE': 60},51
+RF_unbalanced_3m,60,0,0,{'COMPLETE': 60},52
+RF_unbalanced_6m,60,0,0,{'COMPLETE': 60},14
+SVM_balanced_6m,60,0,0,{'COMPLETE': 60},32
+SVM_unbalanced_6m,60,0,0,{'COMPLETE': 60},54
+XGB_balanced_3m,60,0,0,{'COMPLETE': 60},54
+XGB_balanced_6m,60,0,0,{'COMPLETE': 60},48
+XGB_unbalanced_3m,60,0,0,{'COMPLETE': 60},36
+XGB_unbalanced_6m,60,0,0,{'COMPLETE': 60},58

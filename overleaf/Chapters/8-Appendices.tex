@@ -15,12 +15,21 @@
 
 This appendix brings together the supplementary data-quality checks and exploratory analyses conducted before model development in Study~I.
 
+\section{Baseline Characteristics and Eligibility}
+\label{app:review_s1_baseline}
+
+Table~\ref{tab:review_s1_baseline} compares the two eligible cohorts and the 4,044 participants excluded from the six-month analysis. All groups come from the 5,436 participants with a valid ALSFRS-R total. Comparisons use observed values, not imputed measurements, and the observation count is reported for each continuous variable.
+
+\input{images/tables/review_s1_baseline.tex}
+
+Median age is nearly unchanged between six-month eligible and excluded participants. Eligible participants have slightly higher baseline functional and respiratory measurements: the rank-biserial effects are 0.105 for ALSFRS-R, 0.074 for FVC in litres, and 0.083 for FVC percentage. The corresponding unadjusted Mann--Whitney $p$-values are $<0.001$, 0.003, and 0.002. These small descriptive effects do not establish the progression rate of excluded participants, whose endpoint data do not satisfy the target definition. Onset site is not included in the Study~I feature table and was not reconstructed for this comparison.
+
 \section{FVC Missingness Analysis}
 \label{app:fvc_missingness}
 
 This section reports the complete analysis of baseline \gls{FVC} availability summarised in Section~\ref{sec:results_fvc_missingness}. FVC in litres is missing for 43.7\% of the six-month cohort. Participants with and without an observed value are compared to determine whether availability is visibly associated with patient characteristics, trial attributes, or the target slope.
 
-Eight continuous variables are examined: baseline \gls{ALSFRS-R} total, age, six-month slope, creatinine, \gls{ALT}, \gls{BMI}, weight, and concomitant-medication count. Sex, study arm, and documented riluzole use are treated as categorical variables. Continuous distributions are compared using two-sided Mann--Whitney~$U$ tests and absolute Cohen's~$d$ values based on the pooled standard deviation. Categorical associations use Pearson's $\chi^2$ test and Cram\'er's~$V$:
+Eight continuous variables are examined: baseline \gls{ALSFRS-R} total, age, six-month slope, creatinine, \gls{ALT}, \gls{BMI}, weight, and concomitant-medication count. Sex, study arm, and documented riluzole use are treated as categorical variables. Continuous distributions are compared using two-sided Mann--Whitney~$U$ tests and absolute Cohen's~$d$ values based on the pooled standard deviation~\cite{cohen1988statistical}. Categorical associations use Pearson's $\chi^2$ test, with Yates' correction for $2\times2$ tables. The original Cram\'er's~$V$ values use that same test statistic:
 \[
   V=\sqrt{\frac{\chi^2}{n\min(r-1,c-1)}}.
 \]
@@ -37,6 +46,11 @@ The largest categorical association is study arm ($V=0.357$, $p<0.001$), while c
 Weight ($d=0.146$, $p=0.003$) and BMI ($d=0.468$, $p<0.001$) also differ between availability groups. Their collection may be related to FVC measurement, although this was not tested directly. Under the Bonferroni threshold, study arm, BMI, weight, and concomitant-medication count remain the clearest observed differences.
 
 The pattern is compatible with missingness related partly to trial-level collection practices, but observed-data comparisons cannot identify the missing-data mechanism. They do not prove that FVC is \gls{MAR}, and an \gls{MNAR} component cannot be excluded. Median imputation is therefore a pragmatic preprocessing decision rather than a consequence of a confirmed missingness assumption.
+
+The supplementary rank-biserial effects in Table~\ref{tab:review_s1_rank_effects} match the rank-based test rather than relying only on the original mean-based Cohen's $d$. The sign compares observed-FVC with missing-FVC participants. Table~\ref{tab:review_s1_cramers_v} also gives the conventional Cram\'er's $V$ calculated from the uncorrected Pearson statistic. The original test statistics and effect sizes above are retained, with their continuity correction now explicit.
+
+\input{images/tables/review_s1_rank_effects.tex}
+\input{images/tables/review_s1_cramers_v.tex}
 
 
 \section{Missing-Data Sensitivity Analysis}
@@ -76,7 +90,7 @@ The feature-extraction function \texttt{to\_cm} passed values carrying the ``Cen
 
 After the measurement closest to $t_0$ was selected for each participant, 132 of the 147 anomalous height records remained in \texttt{features\_vitals\_t0.csv} ($N=4{,}438$). Heights outside $[120,220]$\,cm and weights outside $[30,200]$\,kg were set to \texttt{NaN} rather than rescaled. This affected 132 selected heights and 31 weights. BMI was then recalculated only for records with a valid height and weight, while missing values were left for median imputation within each model's preprocessing pipeline.
 
-Following this correction, BMI ranges from 15.5 to 46.9 in the six-month cohort ($N=1{,}392$), which is compatible with reported distributions in \gls{ALS} clinical-trial populations~\cite{Anani2023}. All horizon-specific datasets used for tuning, ablation, and subsequent analyses were regenerated from the cleaned vital-sign features.
+Following this correction, observed BMI ranges from 15.5 to 46.9 in the six-month cohort ($N=1{,}392$). This is a description of the corrected data, not external validation of the assumed source error. All horizon-specific datasets used for tuning, ablation, and subsequent analyses were regenerated from the cleaned vital-sign features.
 
 
 % ============================================================
@@ -88,7 +102,7 @@ This section provides the complete exploratory analysis of the three treatment-r
 \subsection{Analysis Design}
 \label{app:treatment_design}
 
-Active and Placebo participants are compared using a $\chi^2$ test for the binary progression label and a two-sided Mann--Whitney~$U$ test for the continuous slope. Participants without study-arm information remain in the descriptive summary but are excluded from these tests. The same comparisons are performed for participants with and without documented pre-baseline riluzole use. Study arm and riluzole are also cross-tabulated, although no formal interaction test is conducted.
+Active and Placebo participants are compared using a Yates-corrected $\chi^2$ test for the binary progression label and a two-sided Mann--Whitney~$U$ test for the continuous slope. Participants without study-arm information remain in the descriptive summary but are excluded from these tests. The same comparisons are performed for participants with and without documented pre-baseline riluzole use. Study arm and riluzole are also cross-tabulated, although no formal interaction test is conducted.
 
 Concomitant-medication counts are grouped as 0, 1--2, 3--5, 6--9, and $\geq10$. The 15 most frequently recorded medications are identified from records beginning no later than each participant's $t_0$. Their progression rates are descriptive: no drug-level hypothesis tests or multiple-comparison claims are made.
 
@@ -132,7 +146,7 @@ Figures~\ref{fig:eda_arm_dist} and~\ref{fig:eda_arm_rapid} show the overlapping 
 \end{figure}
 
 \clearpage
-The test of the binary label, restricted to the 1{,}268 participants with known arm information, gives $\chi^2=3.62$ and $p=0.057$. The continuous slope comparison gives $U=200{,}472$ and $p=0.229$. Neither test provides evidence of a difference at the predefined $\alpha=0.05$ level, and the pooled arm labels do not permit treatment-specific interpretation.
+Among the 1{,}268 participants with known arm information, the Yates-corrected test gives $\chi^2=3.62$ and $p=0.057$. The uncorrected Pearson test gives $\chi^2=3.86$, $p=0.049$, and Fisher's exact test gives $p=0.052$. The nominal decision at 0.05 therefore depends on the test, not a substantive change in the data. The continuous slope comparison gives $U=200{,}472$, $p=0.229$. The observed arm difference is weak and method-sensitive; pooled arm labels cannot support treatment-specific conclusions.
 
 \subsection{Riluzole}
 \label{subsec:results_eda_riluzole}
@@ -197,7 +211,7 @@ This section complements the optimisation protocol in Section~\ref{sec:methods_o
 
 \input{images/tables/optuna_search_spaces.tex}
 
-The 13 model--mode searches comprised 780 Optuna trials and 3,900 cross-validation fits. All trials completed successfully. The common budget of 60 trials was a computational choice rather than a convergence criterion: nine searches, including both XGBoost modes, found their final best value between trials 41 and 60. The histories therefore give no empirical basis for reducing the budget to 40 trials.
+The 13 model--mode searches comprised 780 Optuna trials and 3,900 cross-validation fits. The stored histories record every trial as complete and contain no missing or zero objective values. Since the objective returns zero after an exception, this check found no recorded exception fallback; completion status alone would not have established that. The eight three-month histories likewise contain 480 completed trials without zero or missing values. The common budget of 60 trials was a computational choice rather than a convergence criterion: nine six-month searches, including both XGBoost modes, found their final best value between trials 41 and 60. The histories therefore give no empirical basis for reducing the budget to 40 trials.
 
 The recorded optimisation time was approximately 34 minutes on one machine. Individual searches ranged from 8 seconds for the Decision Tree to 768 seconds for the unbalanced SVM. Trial histories were stored as \gls{CSV} files, while selected parameters and summary metrics were saved as \gls{JSON} files for the subsequent analyses.
 
@@ -219,6 +233,7 @@ Figure~\ref{fig:metric_heatmap} places the four recorded metrics side by side fo
 Tables~\ref{tab:best_simple}--\ref{tab:best_boosting} report the best configuration found for each model on the 6-month DEV set.
 For models evaluated in both balanced and unbalanced modes, the configuration with the higher PR-AUC is indicated in bold.
 The LightGBM \texttt{subsample} values are retained to reproduce the stored trial records, but were inactive because \texttt{subsample\_freq=0}.
+Its selected depth limits of two and three allow at most four and eight leaves, so \texttt{num\_leaves}=127 and 117 are also non-binding. Other selected values reach the search boundary, including unbalanced XGBoost's \texttt{max\_depth}=8 and KNN's 51 neighbours. The low LightGBM learning rate (0.0101 in balanced mode) is close to its lower bound. The searches establish the best configurations found within the specified ranges and budget, not convergence to an unrestricted optimum; no ranges were widened after the primary evaluation.
 
 \clearpage
 \begin{table}[ht!]
@@ -518,7 +533,7 @@ This section expands the error analysis summarised in Section~\ref{subsec:result
   \item \textbf{\gls{ALSFRS-R} severity:} $\leq35$, 36--39, 40--42, and $>42$;
   \item \textbf{\gls{FVC} percentage of normal:} $\leq77\%$, 78--87\%, 88--98\%, and $>98\%$.
 \end{itemize}
-The age and \gls{FVC} boundaries are based on quartiles among participants with observed values. Missing age or FVC is shown as a separate group, avoiding the exclusion of participants whose measurements are unavailable.
+The age and \gls{FVC} boundaries are fixed cut-points chosen to approximate quartile groups among observed values. They are hard-coded in the supplementary script, not recomputed for each analysis, and ties make group sizes unequal. Missing age or FVC is shown as a separate group.
 
 \begin{figure}[ht!]
   \centering
@@ -550,7 +565,7 @@ The age and \gls{FVC} boundaries are based on quartiles among participants with 
 
 Seven of the 12 false negatives have baseline \gls{ALSFRS-R} scores of at least 40, and five score above 42. Most missed rapid progressors therefore have relatively preserved baseline function, although errors also occur in the lower score groups. Six false negatives occur in the youngest age group ($\leq49$ years); the other six are distributed across the three older groups, and none occurs among the 33 participants with missing age.
 
-Only 156 participants have an observed \gls{FVC} percentage. Of the seven false negatives with an observed value, five have FVC above 77\%; the other five false negatives have missing FVC. These counts are too small and incomplete to support a firm conclusion about respiratory function. The false-negative proportions for female and male participants are also close (4.7\% and 4.0\%), but this descriptive comparison does not establish equivalent performance between sexes.
+Only 156 participants have an observed \gls{FVC} percentage. Of the seven false negatives with an observed value, six have FVC above 77\% (three at 78--87\%, one at 88--98\%, and two above 98\%); the other five false negatives have missing FVC. These counts are too small and incomplete to support a firm conclusion about respiratory function. The false-negative proportions for female and male participants are also close (4.7\% and 4.0\%), but this descriptive comparison does not establish equivalent performance between sexes.
 
 False positives are frequent in every stratification. This is consistent with the selected operating point: the model detects 72 of 84 rapid progressors but classifies another 133 participants as rapid. The profiles therefore describe where the resulting errors occur rather than identifying independent causes of misclassification.
 
@@ -614,7 +629,7 @@ Recall decreases from 97.2\% in the \gls{ALSFRS-R} $\leq35$ group to 54.5\% in t
 
 Female and male participants have similar point estimates: PR-AUC is 0.450 and 0.473, while recall is 84.4\% and 86.5\%. These values are descriptive and do not establish fairness or equivalent performance. For \gls{FVC}, PR-AUC is higher in the two lower-value groups (0.590--0.678), where rapid-progressor prevalence is also higher (40.0--44.1\%) than in the higher-FVC groups (18.9--20.0\%). PR-AUC cannot therefore be interpreted independently of prevalence.
 
-The 123 participants without an observed FVC percentage have PR-AUC 0.420 and recall 86.5\%. Retaining this group avoids reporting subgroup performance only for the 156 participants with an available measurement. Given the small outcome counts in several strata and the absence of confidence intervals, the analysis identifies patterns for further investigation rather than stable differences between patient groups.
+The 123 participants without an observed FVC percentage have PR-AUC 0.420 and recall 86.5\%. Retaining this group avoids reporting subgroup performance only for the 156 participants with an available measurement. Given the small outcome counts, these point estimates identify patterns for investigation rather than stable differences. The supplementary recall intervals in Appendix~\ref{app:review_s1_uncertainty} describe their sampling uncertainty without changing the strata.
 
 
 % ============================================================
@@ -641,7 +656,7 @@ The main continuous interval in which the model exceeds both references is $t\in
 
 At the selected threshold of 0.21, the model's net benefit is 0.131, compared with 0.115 for treat all and 0 for treat none. The difference of 0.016 from treat all corresponds to approximately 1.6 additional net true-positive decisions per 100 participants under the weighting implied by this threshold.
 
-These estimates come from the same finite TEST set used for model evaluation and are reported without confidence intervals. Moreover, the reference terminology does not correspond to a specified clinical intervention in this study. The curve can therefore identify thresholds with favourable estimated net benefit in this sample, but it cannot establish clinical utility or transportability to another cohort.
+These point estimates come from the same finite TEST set used for model evaluation. Appendix~\ref{app:review_s1_uncertainty} adds pointwise bootstrap intervals, including the paired comparison against treat all. The reference terminology does not correspond to a specified clinical intervention. Neither the curve nor its uncertainty intervals establish clinical utility or transportability to another cohort.
 
 
 % ============================================================
@@ -687,7 +702,7 @@ PDPs are computed for the three features with the highest global \gls{SHAP} impo
 \end{figure}
 \newpage
 
-For baseline \gls{ALSFRS-R}, the average predicted probability generally decreases across the observed range of 29--46, with several step changes characteristic of a tree ensemble. The total PDP range is 0.201. This direction is consistent with the global SHAP analysis, where higher baseline functional scores generally shift predictions towards the slow-progression class.
+For baseline \gls{ALSFRS-R}, the average predicted probability generally decreases across the plotted 5th--95th percentile range of 29--46, with several step changes characteristic of a tree ensemble. The total PDP range is 0.201. This direction is consistent with the global SHAP analysis, where higher baseline functional scores generally shift predictions towards the slow-progression class.
 
 The \gls{FVC} curve is relatively flat below approximately 3.7 litres, falls around 3.8--4.0 litres, and then stabilises, producing a total PDP range of 0.080. Only 162 of 279 TEST participants have an observed FVC value in litres, so the rug plot is important when judging which regions have direct data support. For age, the average prediction rises around the low 40s and remains broadly stable across much of the higher range. Its total PDP range is 0.104, with age observed for 246 participants.
 
@@ -718,7 +733,7 @@ The percentile flags are distributional context rather than clinical reference r
 \section{Fictitious Profile Generator}
 \label{subsec:methods_random_patient}
 
-A companion script generates fictitious profiles containing all 35 baseline features, allowing the interface to be tested without selecting a named cohort record. Continuous variables are sampled from bounded distributions calibrated to approximate summaries from the full \gls{PRO-ACT} cohort ($N=1{,}392$), while categorical variables follow approximate observed frequencies. Two dependencies are imposed explicitly: \gls{BMI} is calculated from sampled weight and height, and \gls{FVC} in litres is conditioned on sex.
+A companion script generates fictitious profiles containing all 35 baseline features, allowing the interface to be tested without selecting a named cohort record. Continuous variables are sampled from bounded distributions calibrated to approximate summaries from the six-month Study~I cohort ($N=1{,}392$), while categorical variables follow approximate observed frequencies. Two dependencies are imposed explicitly: \gls{BMI} is calculated from sampled weight and height, and \gls{FVC} in litres is conditioned on sex.
 
 The remaining variables are sampled separately, so the profiles do not reproduce the clinical data's joint distribution. Their purpose is limited to testing data ingestion, prediction, and report formatting; they are unsuitable for clinical simulation, privacy assessment, or model validation.
 
@@ -787,6 +802,26 @@ Random 010 & 33.4\% & Rapid & Respiratory rate (14) \\
 
 All ten profiles passed through preprocessing and prediction and produced a complete report. Their probabilities range from 18\% to 54\%, with nine above the selected threshold. That proportion cannot be compared with cohort prevalence or model sensitivity because the generator does not preserve dependencies between most variables. The leading contributor is \gls{ALSFRS-R} in three reports, respiratory rate in three, \gls{FVC} in two, and pulse and age in one each. These counts describe the generated examples rather than the behaviour expected in a clinical population.
 
+\section{Additional Uncertainty Checks}
+\label{app:review_s1_uncertainty}
+
+The saved predictions from the DEV-fitted XGBoost model were checked against the 279 TEST identifiers, DEV-derived target labels, and original confusion matrix before reuse. No model was fitted and no threshold was selected in these checks. A fixed random generator (seed 42) produced 2,000 patient resamples for each analysis.
+
+Table~\ref{tab:review_s1_subgroup_ci} gives percentile intervals for recall within the original strata. Each resample draws the stratum's original number of participants with replacement; samples with no rapid progressors are omitted. The intervals are pointwise, not simultaneous or multiplicity-adjusted. Where all observed rapid progressors were detected, as in the missing-age stratum, the ordinary bootstrap interval collapses to 1.000. This reflects the observed sample and does not rule out misses among future patients.
+
+\input{images/tables/review_s1_subgroup_ci.tex}
+
+Figure~\ref{fig:review_s1_dca_ci} adds pointwise net-benefit intervals over the original threshold grid. At $t=0.21$, model net benefit is 0.131, with 95\% interval $[0.074,\,0.196]$. Resampling the model and treat-all decisions together gives a difference of 0.016 with interval $[-0.015,\,0.043]$. The apparent advantage over treat all at the selected threshold is therefore uncertain. The bands condition on the fixed fit and do not account for development sampling or the search across thresholds.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.94\linewidth]{images/figures/review_s1_dca_ci.pdf}
+  \caption[Study I net benefit with pointwise intervals]{Study I decision curve with pointwise 95\% percentile bootstrap intervals from 2,000 TEST-patient resamples. The vertical line marks the unchanged threshold 0.21. The band is not a simultaneous confidence band across thresholds.}
+  \label{fig:review_s1_dca_ci}
+\end{figure}
+
+The scaled Brier score, $1-\mathrm{BS}/\{\hat{\pi}(1-\hat{\pi})\}$, is 0.064 using unrounded TEST scores, where $\hat{\pi}=84/279$. The reference uses the observed TEST prevalence descriptively, not a deployable risk estimate chosen during development. A post-hoc logistic diagnostic fitted the observed outcomes to an intercept plus the logit of the saved probabilities, giving intercept 0.249 and slope 1.166 (ideal values zero and one). Probabilities were clipped to $[10^{-8},1-10^{-8}]$ only for that calculation. These are descriptive assessment coefficients, without uncertainty intervals; no recalibrated predictions were used in any reported metric.
+
 
 % ============================================================
 \chapter{Supplementary Analyses for Study II}
@@ -838,3 +873,105 @@ Figure~\ref{fig:s2_featbars} shows the outcome-stratified distributions of diagn
   \caption[Feature distributions by survival group]{Diagnostic-delay and Q8 walking-slope categories by survival group across the full Study II cohort.}
   \label{fig:s2_featbars}
 \end{figure}
+
+\section{Cohort Selection and Delayed Entry}
+\label{app:review_s2_entry}
+
+Table~\ref{tab:review_s2_selection} compares complete cases with the 4,300 incomplete records among the 5,802 outcome-eligible participants. Missing predictors are not filled for this descriptive comparison. Available-case summaries can themselves be selected, particularly for FVC, which is observed for only 683 excluded participants. They therefore describe measurable differences without recovering the missing distribution.
+
+\input{images/tables/review_s2_selection.tex}
+
+PRO-ACT expresses assessment deltas in days from the official beginning of each source trial~\cite{PROACTtiming}. The interval $-\texttt{Onset\_Delta}/30.44$ therefore measures months from symptom onset to that reference day. It is an entry-time proxy; exact individual enrolment dates were not reconstructed. Table~\ref{tab:review_s2_delayed_entry} summarises the interval within the final 1,502-patient cohort.
+
+\input{images/tables/review_s2_delayed_entry.tex}
+
+None of the 174 Short Survivors has an interval of 24 months or more, compared with 756 of the 1,328 Standard Survival patients. For those entering late, survival past the outcome boundary is partly established before the trial observation. This is the left-truncation problem, distinct from the post-diagnosis timing of predictors and exclusion of patients with unresolved follow-up. The audit identifies the mechanism but neither estimates its contribution to ROC-AUC nor removes it. The original cohort, fitted configurations, and target are unchanged.
+
+\section{Calibration and Average Precision}
+\label{app:review_s2_probability}
+
+The locally saved test-probability export was checked against the current outcome array, all seven confusion matrices, selected resampling strategies, and ROC-AUC values to the precision stored in the original results table. These checks passed for all 301 patients in each configuration. The following assessments reuse those probabilities, without fitting new models or selecting thresholds.
+
+\input{images/tables/review_s2_probability_metrics.tex}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=\linewidth]{images/figures/review_s2_calibration.pdf}
+  \caption[Study II reliability diagrams]{Reliability diagrams for the seven selected Study II configurations on the unchanged test set ($N=301$). Each panel uses five quantile bins, with fewer distinct bins possible when probabilities are tied. Points compare mean predicted probability with observed Short Survivor frequency; the dashed diagonal represents agreement. No recalibration was performed.}
+  \label{fig:review_s2_calibration}
+\end{figure}
+
+LightGBM+ROS has average precision 0.704 but mean probability 0.260 against prevalence 0.116. Its Brier score, 0.1034, is slightly worse than the constant-prevalence reference of 0.1028. That reference uses test prevalence descriptively and was not selected as a development model. Random Forest has the lowest Brier score, 0.065, while the MLP underestimates average event frequency. Brier score measures overall probability error, not calibration alone; the small number of events also limits the reliability diagrams. The probabilities should not be presented as validated individual clinical risks.
+
+\section{Ranking Under BalancedBagging}
+\label{app:review_s2_bagging}
+
+The original 15 development folds were rerun using the saved baseline hyperparameters and the same ten-estimator BalancedBagging design. Each fold fitted MinMax scaling on its training observations only. No Optuna study or held-out assessment was repeated. The new balanced-accuracy means reproduce the stored single and ensemble means to numerical precision, allowing the supplementary ROC-AUC scores to be compared with the original operating-point results.
+
+\input{images/tables/review_s2_bagging_auc.tex}
+
+The ranking gains are much smaller and less consistent than the default-operating-point gains. Decision Tree improves ROC-AUC by 0.026 and KNN by 0.011, while Naive Bayes changes by less than 0.001. The other four families lose ROC-AUC, including SVM ($-0.030$) despite its balanced-accuracy gain of 0.293. This comparison does not isolate undersampling from bagging, but it rules out interpreting every balanced-accuracy increase as an increase in discrimination. One MLP fit emitted a convergence warning under the retained iteration limit; the supplementary run recorded rather than suppressed it, and no parameters were changed in response.
+
+% ============================================================
+\chapter{Reporting and Reproducibility Checks}
+\label{app:reporting_checks}
+% ============================================================
+
+\section{Retrospective TRIPOD+AI Reporting Checklist}
+\label{app:tripod_checklist}
+
+\gls{TRIPOD-AI}~\cite{collins2024tripodai} was used retrospectively to check the reporting of the completed studies. It did not guide their original design and is not a certificate of methodological validity or low risk of bias. Table~\ref{tab:tripod_checklist} maps its main items to the dissertation and makes incomplete coverage explicit. Topic labels are condensed; the cited guideline provides the full items and subitems.
+
+No dedicated funding was received for this dissertation, and the author declares no conflicts of interest. The work was planned as a master's dissertation but was not publicly preregistered; no separate publicly registered analysis protocol was used. No patients or members of the public were directly involved in its design or analysis. These statements concern the present secondary analyses, not the funding, registration, or consent procedures of the contributing PRO-ACT trials.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}p{0.07\linewidth}p{0.20\linewidth}p{0.65\linewidth}@{}}
+\caption[Retrospective TRIPOD+AI reporting checklist]{Retrospective reporting map for the 27 main TRIPOD+AI items. Locations indicate coverage, not full compliance with every subitem.}\label{tab:tripod_checklist}\\
+\toprule
+Item & Topic & Location and coverage \\
+\midrule
+\endfirsthead
+\toprule
+Item & Topic & Location and coverage \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+1 & Title & The title identifies ALS prognosis, functional classification, and survival prediction. \\
+2 & Abstract & English and Portuguese summaries report both tasks and principal test results; the 150-word limit prevents a full structured abstract. \\
+3 & Rationale & Sections~\ref{subsec:context} and~\ref{subsec:motivation}; Chapter~\ref{sec:stateoftheart}. Intended research use and clinical restrictions are discussed in Chapter~\ref{ch:conclusion}. \\
+4 & Objectives & Section~\ref{subsec:objectives} distinguishes original development from partial replication. \\
+5 & Data sources & Sections~\ref{sec:methods_proact_sources} and~\ref{subsec:s2_proact}. Source-trial recruitment dates and centres were not reconstructed. \\
+6 & Participants & Cohort eligibility and treatment variables are described in Chapters~\ref{ch:study1_methods} and~\ref{ch:study2_methods}; Tables~\ref{tab:review_s1_baseline} and~\ref{tab:review_s2_selection} describe selection. \\
+7 & Data preparation & Sections~\ref{sec:methods_preprocessing} and~\ref{subsec:s2_preprocessing}; Appendix~\ref{app:bmi_correction}. Quality checks were not validated separately across demographic groups. \\
+8 & Outcomes & Chapters~\ref{ch:study1_methods} and~\ref{ch:study2_methods} define the slope and survival targets. Source-assessor blinding and qualifications were not established. \\
+9 & Predictors & Feature definitions and timing are given in both methods chapters. Sparse race coding, untimed riluzole use, and post-diagnosis records are disclosed. \\
+10 & Sample size & Available data and eligibility determined cohort sizes; no prospective sample-size calculation was performed. TEST contains 84 and 35 positive outcomes. \\
+11 & Missing data & Section~\ref{sec:methods_preprocessing}, Appendix~\ref{app:fvc_missingness}, and Appendices~\ref{app:study1_missing_sensitivity} and~\ref{app:study2_missing_sensitivity}. \\
+12 & Analysis & Chapters~\ref{ch:study1_methods} and~\ref{ch:study2_methods} describe splits, transformations, tuning, validation, metrics, and prediction generation. Trial-level heterogeneity was not modelled; no probability recalibration was applied. \\
+13 & Imbalance & Section~\ref{sec:methods_imbalance} and Section~\ref{subsec:s2_classifiers}. Calibration consequences are assessed in Section~\ref{sec:s2r_calibration}. \\
+14 & Fairness & Study~I subgroup estimates and recall intervals are descriptive, not a formal fairness evaluation. Study~II has no dedicated fairness audit. \\
+15 & Outputs & Both studies report probabilities and classes. Thresholds were derived from development predictions; no clinical cost function was specified. \\
+16 & Development/evaluation & Both holdouts are internal patient splits from the same extract, not different clinical settings or external cohorts. \\
+17 & Ethics & Section~\ref{subsec:availability_ethics} describes secondary use, de-identification, source-trial consent, and why no additional approval was sought. \\
+18 & Open science & Repository links and access restrictions: Section~\ref{subsec:availability_ethics}. Funding, conflicts, planning, and absence of preregistration: this appendix. Runtime verification: Section~\ref{app:runtime_verification}. No patient-level data are redistributed. \\
+19 & Public involvement & No direct patient or public involvement in the present analyses; source trials remain separate. \\
+20 & Participant results & Cohort flows, class counts, feature coverage, and the additional baseline and selection tables. Dates, assessor characteristics, and trial-level summaries remain incomplete. \\
+21 & Analysis counts & Both methods chapters give training/test sizes and search budgets. Post-hoc expanded-cohort results identify their different split. \\
+22 & Model specification & Reproduction code, selected parameters, and preprocessing are documented. The Study~I full-cohort reporting artefact is distinct from the DEV-fitted model used for evaluation. \\
+23 & Performance & Chapters~\ref{ch:study1_results} and~\ref{ch:study2_results}; supplementary calibration, subgroup-recall, and net-benefit checks. Not every metric has an interval; trial-level performance is unassessed. \\
+24 & Updating & No test-informed model or threshold replacement was made. Study~I's post-evaluation full-cohort refit is not an independent performance assessment. \\
+25 & Interpretation & Both results chapters and Chapter~\ref{ch:conclusion} distinguish discrimination, threshold behaviour, and replication scope. \\
+26 & Limitations & Missingness, trial clustering, small event counts, entry timing, and predictor availability are discussed explicitly. \\
+27 & Use and next steps & Research-only reporting prototype; no clinical deployment. Chapter~\ref{ch:conclusion} sets out external evaluation, prospective assessment, input-data checks, and the need for user testing. \\
+\end{longtable}
+\endgroup
+
+\section{Runtime and Release Verification}
+\label{app:runtime_verification}
+
+The two local Python~3.12.10 environments were inspected on 23 October 2026. Exact installed-package inventories are recorded in \path{environments/study1-verified.txt} and \path{environments/study2-verified.txt}, with machine-readable companions. These are current verification snapshots, not historical locks captured at the start of every experiment. The Study~I versions agree with those reported in Section~\ref{sec:methods_environment}. The supplementary Study~II bagging run used scikit-learn~1.8.0, imbalanced-learn~0.14.1, LightGBM~4.6.0, pandas~3.0.2, and NumPy~2.4.4.
+
+Version pins alone do not reconstruct an analysis. Study~I also requires the original input row order and agreement with the saved split manifests, especially near the three-month percentile boundary. The supplementary scripts record input-file hashes, package versions, and aggregate results; patient-level predictions and source data remain outside the public release. The Study~I trial histories contain no recorded zero-score exception fallback. In Study~II, the original aggregate records cannot exclude failures scored as 0.5 within individual folds; a fold-level failure ledger was not available. The supplementary bagging audit stops on errors and records convergence warnings rather than assigning fallback scores.

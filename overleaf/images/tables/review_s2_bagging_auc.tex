@@ -1,0 +1,23 @@
+\begin{table}[ht!]
+\centering\small
+\caption[BalancedBagging and ranking discrimination]{Supplementary comparison of ROC-AUC and default-operating-point balanced accuracy on the original Study II development folds.}
+\label{tab:review_s2_bagging_auc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{ROC-AUC} & \multicolumn{2}{c}{Balanced accuracy} \\
+Classifier & Single & Bagging & Single & Bagging \\
+\midrule
+KNN & $0.877\pm0.040$ & $0.888\pm0.038$ & $0.566\pm0.032$ & $0.788\pm0.045$ \\
+NaiveBayes & $0.891\pm0.034$ & $0.891\pm0.030$ & $0.797\pm0.046$ & $0.809\pm0.034$ \\
+DecisionTree & $0.858\pm0.029$ & $0.884\pm0.029$ & $0.653\pm0.071$ & $0.777\pm0.040$ \\
+RandomForest & $0.906\pm0.030$ & $0.904\pm0.029$ & $0.629\pm0.029$ & $0.814\pm0.046$ \\
+SVM & $0.910\pm0.034$ & $0.880\pm0.033$ & $0.500\pm0.000$ & $0.793\pm0.042$ \\
+MLP & $0.915\pm0.029$ & $0.908\pm0.034$ & $0.698\pm0.034$ & $0.832\pm0.040$ \\
+LightGBM & $0.912\pm0.028$ & $0.904\pm0.032$ & $0.692\pm0.046$ & $0.820\pm0.043$ \\
+\bottomrule\end{tabular}
+\par\smallskip
+\begin{minipage}{0.98\linewidth}\footnotesize
+Means $\pm$ population standard deviations across the original 15 folds. Parameters, folds and ten-estimator bagging design are unchanged; no hyperparameter search was repeated. Fold training sets overlap, so these are descriptive paired summaries, not independent replications.
+\end{minipage}
+\end{table}

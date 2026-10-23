@@ -1,0 +1,18 @@
+{
+  "active_tex_files": 34,
+  "labels": 271,
+  "citations": 47,
+  "glossary_uses": 47,
+  "abstract_words": {
+    "EN": {
+      "body": 122,
+      "with_title": 136
+    },
+    "PT": {
+      "body": 127,
+      "with_title": 145
+    }
+  },
+  "bagging_original_balanced_accuracy_reproduced": true,
+  "note": "Static source checks, not a LaTeX compilation or pagination check."
+}

@@ -1,0 +1,6 @@
+# Build the glossary on a clean latexmk/Overleaf build.
+add_cus_dep('glo', 'gls', 0, 'build_glossaries');
+add_cus_dep('acn', 'acr', 0, 'build_glossaries');
+sub build_glossaries {
+    return system('makeglossaries', $_[0]);
+}

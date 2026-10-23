@@ -17,7 +17,7 @@ Figure~\ref{fig:pipeline_overview} shows the nine stages of the analysis, from c
   \caption[Study I end-to-end pipeline overview]{Pipeline for Study~I.
   Stages~1--4 construct the horizon-specific datasets and development/test partitions.
   Stages~5--6 use only the development set for cross-validation, hyperparameter optimisation, and model selection.
-  Stage~7 evaluates the selected model on the reserved test set, stage~8 examines its predictions using global and local explanation methods, and stage~9 produces a prototype patient-level report.}
+  The cross-horizon step is descriptive, not independent validation. Stage~7 evaluates the selected model on the reserved test set. Stage~8 combines SHAP, LIME, and Logistic Regression coefficients; stage~9 produces a research report with descriptive review flags, not clinical monitoring recommendations.}
   \label{fig:pipeline_overview}
 \end{figure}
 
@@ -58,13 +58,15 @@ Figure~\ref{fig:consort_flowchart} summarises the cohort derivation.
 \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{images/figures/study1_cohort_derivation.png}
   \caption[Cohort derivation by prediction horizon]{Derivation of the Study~I cohorts from the 5,436 participants with at least one valid ALSFRS-R assessment.
   Eligibility is evaluated separately at three and six months according to the availability of repeated assessments and an endpoint measurement within the corresponding $\pm7$-day band.
-  Each horizon-specific cohort is subsequently divided into development (DEV, 80\%) and test (TEST, 20\%) partitions.}
+  This excludes 3,029 and 4,044 participants, respectively. The 720 eligible at both horizons indicate cohort overlap, not an additional filtering step. Each cohort is subsequently divided into development (DEV, 80\%) and test (TEST, 20\%) partitions.}
   \label{fig:consort_flowchart}
 \end{figure}
 \clearpage
 \subsection{Held-Out Data Partitioning}
 \label{sec:methods_holdout}
 Before model development, each horizon-specific cohort is divided into development (\gls{DEV}, 80\%) and test (\gls{TEST}, 20\%) partitions with a fixed random seed. Stratification uses a provisional rapid/slow label obtained from the 30th percentile of the complete horizon-specific slope distribution. This provisional label is used only to preserve the approximate class proportion in the split. It is not used for training or final evaluation: after partitioning, the operative slope threshold is recomputed from \gls{DEV} data and then applied unchanged to \gls{TEST}.
+
+The stored split manifests are part of the reproducible analysis, not interchangeable with a newly seeded split. The split also depends on input row order. Regenerating the three-month slopes can change the order of two near-tied values at the percentile boundary and hence the provisional stratification label. Reproduction should therefore retain the original row order and verify the generated partitions against the stored manifests.
 
 The six-month partition contains 1,113 development and 279 test participants; the three-month partition contains 1,925 and 482, respectively. Cross-validation, preprocessing, hyperparameter optimisation, ablation, threshold selection, and model selection use the \gls{DEV} partition only. The \gls{TEST} partition is accessed after these choices have been fixed to estimate final performance (Section~\ref{sec:results_test_eval}).
 
@@ -76,6 +78,7 @@ The prediction task is anchored at $t_0$. Predictors are constructed from inform
 \clearpage
 \begin{figure}[ht!]
   \centering
+  \resizebox{\linewidth}{!}{%
   \begin{tikzpicture}[
     >=Stealth,
     tlabel/.style={font=\scriptsize, text=black!70},
@@ -229,7 +232,8 @@ The prediction task is anchored at $t_0$. Predictors are constructed from inform
     \tikz{\draw[red!70!black, line width=1pt, densely dashed] (0,0) -- (0.5,0);}\ Leakage barrier
   };
 
-  \end{tikzpicture}
+  \end{tikzpicture}%
+  }
   \caption[Feature--target temporal separation diagram]{Temporal separation between feature extraction and target construction.
   For each subject, features are derived from data available up to and including~$t_0$ (blue zone), while the target slope uses ALSFRS-R measurements from~$t_0$ onwards (orange zone at six months; teal zone at three months).
   The dashed red line marks the boundary beyond which measurements cannot be used as predictors.
@@ -253,7 +257,7 @@ The six-month horizon is treated as the primary analysis because its slopes are 
 
 \subsection{Slope Estimation}
 \label{sec:methods_slope}
-Functional progression is represented by the change in total \gls{ALSFRS-R} score over time, a common functional outcome in \gls{ALS} prognostic research~\cite{Pancotti2022, Anani2023}. For subject $i$, ordinary least squares regression is fitted separately at each eligible horizon:
+Functional progression is represented by the change in total \gls{ALSFRS-R} score over time, a common functional outcome in \gls{ALS} prognostic research~\cite{Pancotti2022, Anani2024}. For subject $i$, ordinary least squares regression is fitted separately at each eligible horizon:
 \[
   \mathrm{ALSFRS\mbox{-}R}_{ij}
   = \beta_{0i} + \beta_{1i}(t_{ij}-t_{0i}) + \varepsilon_{ij},
@@ -313,7 +317,7 @@ FVC in litres is available for 56.3\% of subjects, percentage of normal for 54.5
 
 \subsection{FVC Missingness Analysis}
 \label{subsec:methods_fvc_missingness}
-Because FVC in litres is absent for 43.7\% of the six-month cohort, participants with and without a valid baseline value are compared across 11 observed variables. Continuous distributions use two-sided Mann--Whitney~$U$ tests with absolute Cohen's~$d$ effect sizes; categorical variables use Pearson's $\chi^2$ test with Cram\'er's~$V$. Raw $p$-values are interpreted against a Bonferroni threshold of $0.05/11=0.0045$. These comparisons can identify observed differences but cannot establish that the data are \gls{MAR} or exclude an \gls{MNAR} component. Appendix~\ref{app:fvc_missingness} provides the variables, complete results, and effect-size definition.
+Because FVC in litres is absent for 43.7\% of the six-month cohort, participants with and without a valid baseline value are compared across 11 observed variables. Continuous distributions use two-sided Mann--Whitney~$U$ tests with absolute Cohen's~$d$ effect sizes; categorical variables use Pearson's $\chi^2$ test with Yates' continuity correction for $2\times2$ tables and Cram\'er's~$V$. Raw $p$-values are interpreted against a Bonferroni threshold of $0.05/11=0.0045$. These comparisons can identify observed differences but cannot establish that the data are \gls{MAR} or exclude an \gls{MNAR} component. Appendix~\ref{app:fvc_missingness} provides the variables, complete results, and supplementary rank-based effect sizes.
 
 \subsection{Data Quality: BMI Correction}
 \label{sec:methods_bmi_correction}
@@ -321,7 +325,7 @@ During baseline feature construction, height values outside $[120,220]$\,cm and 
 
 \subsection{Exploratory Review of Treatment Variables}
 \label{sec:methods_eda_treatment}
-The treatment block is examined descriptively before modelling using the complete six-month cohort and a rapid-progression label based on the global 30th-percentile slope cutoff. Active and Placebo arms, as well as participants with and without documented pre-baseline riluzole use, are compared using a $\chi^2$ test for the binary label and a two-sided Mann--Whitney~$U$ test for the continuous slope. Medication burden and the most frequently recorded pre-baseline drugs are summarised without drug-level hypothesis testing. This exploratory label is not used during model development, where cutoffs remain derived from the training data.
+The treatment block is examined descriptively before modelling using the complete six-month cohort and a rapid-progression label based on the global 30th-percentile slope cutoff. Active and Placebo arms, as well as participants with and without documented pre-baseline riluzole use, are compared using a Yates-corrected $\chi^2$ test for the binary label and a two-sided Mann--Whitney~$U$ test for the continuous slope. Medication burden and the most frequently recorded pre-baseline drugs are summarised without drug-level hypothesis testing. This exploratory label is not used during model development, where cutoffs remain derived from the training data.
 
 These variables cannot support treatment-effect claims in the pooled \gls{PRO-ACT} data. ``Active'' combines different experimental interventions, riluzole exposure is observational, and medication count may reflect comorbidity, symptom management, trial procedures, or recording intensity. The complete protocol and descriptive outputs are provided in Appendix~\ref{app:treatment_eda}; the findings retained in the main analysis are reported in Section~\ref{sec:results_eda_treatment}.
 
@@ -336,10 +340,11 @@ Seven supervised learning algorithms were selected to compare model families wit
   \item \textbf{Random Forest (\gls{RF}):} a bagging ensemble used to assess whether averaging multiple trees improves on a single decision tree.
   \item \textbf{Support Vector Machine (\gls{SVM}):} a maximum-margin classifier for which both linear and \gls{RBF} kernels were considered during optimisation.
   \item \textbf{Logistic Regression (\gls{LR}):} a linear probabilistic model retained as an interpretable baseline and for subsequent coefficient analysis.
-  \item \textbf{LightGBM (\gls{LGBM}):} a histogram-based gradient-boosting implementation designed for tabular data.
-  \item \textbf{XGBoost (\gls{XGB}):} a regularised gradient-boosting implementation that also supports the planned \gls{SHAP} analysis.
+  \item \textbf{LightGBM (\gls{LGBM}):} a histogram-based gradient-boosting implementation designed for tabular data~\cite{ke2017lightgbm}.
+  \item \textbf{XGBoost (\gls{XGB}):} a regularised gradient-boosting implementation that also supports the planned \gls{SHAP} analysis~\cite{chen2016xgboost}.
 \end{itemize}
 Together, these algorithms cover local, linear, kernel-based, bagging, and boosting approaches. Neural-network architectures were not included because the analysis focused on established methods for moderate-sized tabular clinical data and required a tractable comparison across model families. This choice defines the scope of the comparison rather than implying that neural networks cannot be applied to this dataset.
+SVM probabilities use \texttt{SVC(probability=True)}, whose internal cross-validation fits a Platt probability mapping. Its probability scale need not reproduce the class boundary of the underlying decision function; a ranking score and a useful probability threshold are separate questions.
 Following hyperparameter optimisation (Section~\ref{sec:methods_optuna}), the final model is selected using cross-validated \gls{PR-AUC}. Its predictions are examined using \gls{SHAP} (Section~\ref{sec:methods_xai_plan}), while Logistic Regression provides a complementary coefficient-based analysis.
 
 \subsection{Preprocessing Pipeline}
@@ -351,9 +356,11 @@ The 35 predictors comprise 31 numeric and four categorical variables: sex, ethni
 \end{itemize}
 Median imputation provides a simple and reproducible treatment of the uneven feature coverage without estimating additional multivariable imputation models from this moderate-sized cohort. It does not resolve possible informative missingness, particularly for FVC, and this limitation is considered alongside the missingness analysis in Section~\ref{sec:results_fvc_missingness}. Both numeric and categorical imputers are fitted within each training fold rather than on the complete dataset.
 
+The seven race indicators belong to the numeric branch and are therefore median-imputed, not treated as one categorical variable. Missing entries cannot consistently be read as either an absent category or an unrecorded value across the pooled trials. In the full DEV partition, the medians are one for Caucasian and Other and zero for the remaining indicators; the Other indicator has only 22 recorded DEV values. This encoding may propagate trial-specific recording patterns and complicates interpretation of the race coefficients. It was retained to preserve the evaluated models, not endorsed as a preferred representation.
+
 A post-hoc sensitivity analysis retained the selected unbalanced XGBoost hyperparameters and compared three numeric-data strategies: the primary median imputation, median imputation with missingness indicators, and five stochastic iterative imputations. For the third strategy, a separate model was fitted to each imputed training set and the five validation or test probabilities were averaged. Numeric imputers were fitted within each cross-validation training fold and on \gls{DEV} before application to \gls{TEST}; categorical processing remained unchanged. This analysis tests whether the main ranking estimates depend on one simple imputation rule. It does not identify the missing-data mechanism or make an \gls{MNAR} process ignorable~\cite{white2011mice,sterne2009multiple}.
 The categorical variables contain between two and four observed levels. One-hot encoding is therefore practical and avoids imposing an ordinal relationship between categories. Decision Tree, Random Forest, LightGBM, and XGBoost use the same imputation and encoding steps but do not use numeric standardisation.
-The preprocessing transformer and classifier are combined in a \texttt{scikit-learn} \texttt{Pipeline}. Within each cross-validation fold, this pipeline is fitted only on the training partition and then applied to the held-out fold. Imputation values, scaling parameters, and encoded categories are therefore estimated without access to the validation data.
+The preprocessing transformer and classifier are combined in a \texttt{scikit-learn} \texttt{Pipeline}~\cite{pedregosa2011scikit}. Within each cross-validation fold, this pipeline is fitted only on the training partition and then applied to the held-out fold. Imputation values, scaling parameters, and encoded categories are therefore estimated without access to the validation data.
 
 \subsection{Software and Computational Environment}
 \label{sec:methods_environment}
@@ -382,7 +389,7 @@ Performance is assessed using complementary threshold-free, threshold-dependent,
 
 \gls{PR-AUC} is implemented using \texttt{average\_precision\_score}. Average precision forms a stepwise summary of the precision--recall curve and gives greater weight to improvements in recall achieved at high precision. Its no-skill reference depends on the proportion of rapid progressors, which is approximately 0.30 in this study. \gls{ROC-AUC} measures the probability that a randomly selected rapid progressor receives a higher score than a randomly selected slow progressor and is less directly affected by class prevalence.
 
-Precision, recall, $F_1$, and $F_2$ require a decision threshold. $F_1$ weights precision and recall equally, whereas $F_2$ gives recall greater weight. The Brier score measures the mean squared error of the predicted probabilities. It reflects overall probabilistic accuracy and is influenced by both calibration and discrimination; it is therefore interpreted together with the reliability diagram rather than as a standalone proof of calibration.
+Precision, recall, $F_1$, and $F_2$ require a decision threshold. $F_1$ weights precision and recall equally, whereas $F_2$ gives recall greater weight. The Brier score~\cite{brier1950verification} measures the mean squared error of the predicted probabilities. It reflects overall probabilistic accuracy and is influenced by both calibration and discrimination; it is therefore interpreted together with the reliability diagram rather than as a standalone proof of calibration.
 \clearpage
 \begin{table}[ht!]
 \centering
@@ -390,6 +397,7 @@ Precision, recall, $F_1$, and $F_2$ require a decision threshold. $F_1$ weights 
 \label{tab:metrics}
 \small
 \renewcommand{\arraystretch}{1.8}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{l l l}
 \toprule
 Metric & Definition & Role \\
@@ -403,6 +411,7 @@ Average precision (PR-AUC) & $\displaystyle\sum_{n}(R_n - R_{n-1})P_n$ & Primary
 Brier score & $\dfrac{1}{N}\displaystyle\sum_{i=1}^{N}(p_i-y_i)^2$ & Probabilistic accuracy; lower is better \\
 \bottomrule
 \end{tabular}
+}
 \renewcommand{\arraystretch}{1.0}
 \end{table}
 
@@ -414,15 +423,19 @@ Hyperparameter tuning, ablation, and model comparison are performed only in the 
 
 The same five folds are reused for all model configurations so that differences can be compared on matched validation subsets. This is particularly relevant for average precision, whose reference level depends on positive-class prevalence. \texttt{GroupKFold} balances fold size but does not stratify the target. Within each split, the rapid-progression cutoff is calculated as the 30th percentile of the training slopes. This produces approximately 30\% rapid labels in the training portion, after which the same cutoff is applied to the validation slopes. The rapid-progression proportion in a validation fold is therefore allowed to differ from 30\%.
 
+With one row per participant, grouping adds no protection against repeated observations beyond keeping each row in one fold. The limitation is the use of only five unstratified validation subsets: their prevalence can vary, and the standard deviation can be large relative to the difference between leading models. Repeated stratified validation would assess sensitivity to partition choice, but was not performed here. Neither this design nor the patient-level holdout separates source trials. Sparse measurement fields, assessment mode, and study arm may encode recording protocols shared by training and test participants, so performance does not estimate transport to an unseen trial.
+
 All preprocessing steps, class weights, and model parameters that depend on the data are fitted using the training portion of the fold. The validation portion is used only to calculate the fold score. Five folds were chosen to retain most of the development data for fitting while keeping the 60-trial searches computationally manageable.
 
-Cross-validation performance is reported as the arithmetic mean and standard deviation of the five fold scores. The standard deviation describes variation across these folds and is not a confidence interval. Since the same cross-validation results guide hyperparameter selection, they represent internal development performance rather than an independent estimate of generalisation. Final performance is assessed separately on the reserved \gls{TEST} partition, which is not used for tuning, model selection, or threshold selection.
+Cross-validation performance is reported as the arithmetic mean and population standard deviation of the five fold scores (\texttt{numpy.std}, \texttt{ddof=0}). The standard deviation describes variation across these folds and is not a confidence interval. Since the same cross-validation results guide hyperparameter selection, they represent internal development performance rather than an independent estimate of generalisation. Final performance is assessed separately on the reserved \gls{TEST} partition, which is not used for tuning, model selection, or threshold selection.
 
 \section{Decision Threshold Selection}
 \label{sec:methods_threshold}
 During model comparison, $F_1$ and $F_2$ are calculated at the common threshold of 0.5 but are not used for optimisation or model selection. After XGBoost is selected, the global rapid-progression cutoff is fixed at the 30th percentile of the full \gls{DEV} slope distribution. Five-fold \texttt{GroupKFold} is then used to generate one out-of-fold probability for each development participant with the tuned unbalanced configuration. These predictions are used only for threshold selection; the model is not refitted or selected using the \gls{TEST} partition.
 
 Candidate thresholds from 0.05 to 0.95, in increments of 0.01, are compared using precision, recall, $F_1$, $F_2$, and Youden's $J$. The threshold that maximises $F_1$ is $0.21$ and is retained as the primary operating point for the prototype report. The $F_2$ optimum and Youden threshold are also reported to show how the preferred cutoff changes with the criterion. No clinical utility function or externally specified cost ratio was available; consequently, $t=0.21$ should be interpreted as a data-derived development choice rather than a clinically validated threshold. It is applied unchanged to the held-out \gls{TEST} predictions.
+
+The $F_2$ optimum occurs at the lower grid boundary, $t=0.05$, where every DEV participant is classified as rapid. It is an all-positive reference, not evidence of a useful screening rule. No threshold was substituted after inspecting TEST.
 
 \section{Ablation Study}
 \label{sec:methods_ablation}
@@ -439,6 +452,8 @@ The core block contains demographics, race indicators, baseline \gls{ALSFRS-R} t
 
 The analysis includes the best class-weight mode within four selected model families: unbalanced XGBoost, unbalanced Random Forest, balanced LightGBM, and balanced Logistic Regression. For each model, the hyperparameters previously optimised with the full feature set are kept fixed across all six configurations. Each configuration uses the same five \texttt{GroupKFold} splits, fold-specific target definition, and preprocessing procedure as the main model comparison.
 
+As in the cross-horizon analysis, balanced SVM was not included despite ranking third in the main comparison. The ablation therefore describes these four families rather than all leading configurations.
+
 Keeping the hyperparameters fixed makes the feature configurations more directly comparable within a model and avoids a separate optimisation search for every subset. However, the parameters were selected using configuration F and may not be optimal for the smaller feature sets. The analysis is therefore treated as an exploratory sensitivity analysis of feature availability, rather than a formal attribution of independent or causal importance to each block.
 
 \section{Hyperparameter Optimisation (Optuna)}
@@ -451,7 +466,7 @@ The search dimensions are adapted to each model family and therefore differ in n
 
 \section{Cross-Horizon Comparison}
 \label{sec:methods_cross_horizon}
-The three-month analysis is used to examine whether the main modelling results are sensitive to the prediction horizon. Rather than repeating the complete seven-family comparison, we retain the four highest-ranked families from the six-month analysis: XGBoost, Random Forest, LightGBM, and Logistic Regression. Each is evaluated in balanced and unbalanced mode, giving eight configurations.
+The three-month analysis is used to examine whether the main modelling results are sensitive to the prediction horizon. Rather than repeating the complete seven-family comparison, we retain four families from the six-month analysis: XGBoost, Random Forest, LightGBM, and Logistic Regression. This is a selected subset, not the four highest-ranked families: balanced SVM ranked third at six months (PR-AUC 0.426) but was not included. Each retained family is evaluated in balanced and unbalanced mode, giving eight configurations.
 
 These configurations are tuned independently on the three-month DEV set using the same 60-trial budget, \gls{PR-AUC} objective, five-fold GroupKFold procedure, fold-wise target definition, and preprocessing strategy used at six months. All 480 trials completed successfully, and the resulting hyperparameters are specific to the three-month data.
 
@@ -485,7 +500,7 @@ Fold-level distributions are shown in the main results, while the exploratory pa
 \label{sec:methods_test_evaluation}
 After hyperparameter tuning and model selection are complete, the best configuration from each model family is fitted once on the full six-month \gls{DEV} partition. The rapid-progression label is defined using the 30th percentile of the DEV slopes ($-1.243$ points per 30 days), and all preprocessing parameters are estimated from DEV data only. The fitted pipelines are then applied without modification to the reserved \gls{TEST} partition.
 
-The seven configurations are compared using \gls{PR-AUC}, \gls{ROC-AUC}, and the Brier score. $F_1$ and $F_2$ at the default threshold of 0.5 are also reported to describe the unadjusted operating behaviour of each model, but are not used to revise the model selection. For the selected unbalanced XGBoost configuration, the DEV-derived threshold $t=0.21$ is applied unchanged to TEST and compared with $t=0.30$, the DEV-derived Youden threshold $t=0.35$, and the default threshold $t=0.50$. Calibration is examined using a reliability diagram with ten equal-width probability bins.
+The seven configurations are compared using \gls{PR-AUC}, \gls{ROC-AUC}, and the Brier score. $F_1$ and $F_2$ at the default threshold of 0.5 are also reported to describe the unadjusted operating behaviour of each model, but are not used to revise the model selection. For the selected unbalanced XGBoost configuration, the DEV-derived threshold $t=0.21$ is applied unchanged to TEST and compared with $t=0.30$ (a reference near the rapid-progression prevalence, not an optimised threshold), the DEV-derived Youden threshold $t=0.35$, and the default threshold $t=0.50$. Calibration is examined using a reliability diagram with ten equal-width probability bins.
 
 The TEST partition is used to estimate performance after development choices have been fixed. It is not used to retune hyperparameters, choose a different model, or modify the operating threshold. As this is a single internal holdout from the same pooled database, it provides an internal generalisation estimate rather than external validation.
 
@@ -529,7 +544,7 @@ For each of the same four case-study subjects, \gls{LIME} generates 2{,}000 pert
 The resulting feature weights indicate which variables drive the local decision boundary.
 
 Because the XGBoost pipeline includes imputation and one-hot encoding, \gls{LIME} is applied to the \textit{preprocessed} (fully numeric) feature matrix rather than the raw data, wrapping only the final classifier as a black-box predictor.
-This avoids type-conversion errors and ensures that the perturbation distribution matches the feature space seen by the model.
+This avoids type-conversion errors, but does not ensure clinically plausible perturbations. The original explainer did not declare binary or one-hot columns as categorical, so its continuous perturbations can produce non-binary values or invalid category combinations. The reported LIME plots and concordance are retained as exploratory outputs; categorical-aware perturbation would be required before interpreting them as a validated explanation procedure.
 
 \phantomsection\label{subsec:methods_concordance}
 \noindent\textbf{SHAP--LIME concordance.}
@@ -550,15 +565,15 @@ Comparing the \gls{LR} coefficient ranking with \gls{SHAP} importance serves as 
 All \gls{TEST}-set participants are assigned to a confusion-matrix quadrant (\gls{TP}, \gls{FP}, \gls{FN}, or \gls{TN}) at the selected threshold and stratified by age, sex, baseline \gls{ALSFRS-R} severity, and \gls{FVC} percentage of normal. Absolute counts and within-group proportions are reported, with particular attention to false negatives because missed rapid progressors are the main concern at a screening-oriented operating point. Missing age and \gls{FVC} values are retained as separate groups. Appendix~\ref{app:error_profiles} gives the stratum definitions and complete profiles; the main findings are summarised in Section~\ref{subsec:results_error_profile}.
 
 \noindent\textbf{Subgroup performance analysis.}
-\gls{PR-AUC}, recall, precision, and $F_1$ are computed separately for the age, sex, baseline \gls{ALSFRS-R}, and \gls{FVC} strata used in the error profiles. Groups with fewer than ten participants or three rapid progressors are excluded, while missing age and FVC remain separate strata when these criteria are met. Since no multiplicity-adjusted tests or subgroup-specific confidence intervals are calculated, the comparisons are exploratory and do not establish fairness or equivalent performance. Appendix~\ref{app:subgroup_performance} documents the complete results and the variation in outcome prevalence between groups.
+\gls{PR-AUC}, recall, precision, and $F_1$ are computed separately for the age, sex, baseline \gls{ALSFRS-R}, and \gls{FVC} strata used in the error profiles. Groups with fewer than ten participants or three rapid progressors are excluded, while missing age and FVC remain separate strata when these criteria are met. A supplementary audit adds 2,000 within-stratum patient bootstrap resamples for recall, keeping the original cut-points and threshold fixed. The resulting pointwise intervals are not adjusted for multiple comparisons and do not establish fairness or equivalence. Appendix~\ref{app:subgroup_performance} gives the original results; Appendix~\ref{app:review_s1_uncertainty} gives the intervals.
 
 \noindent\textbf{Decision curve analysis.}
-Decision Curve Analysis (\gls{DCA})~\cite{vickers2006dca} estimates net benefit across threshold probabilities from 0.01 to 0.60 and compares the model with \textit{treat-all} and \textit{treat-none} reference strategies. The analysis uses the same finite \gls{TEST} set as the performance evaluation and does not include confidence intervals, so interpretation focuses on continuous threshold intervals rather than isolated points. Appendix~\ref{app:dca} provides the net-benefit definition, complete curve, and threshold-level results.
+Decision Curve Analysis (\gls{DCA})~\cite{vickers2006dca} estimates net benefit across threshold probabilities from 0.01 to 0.60 against \textit{treat-all} and \textit{treat-none} strategies. A supplementary audit resamples the same TEST participants 2,000 times, calculating pointwise percentile intervals for model net benefit and the paired difference from treat all. These intervals condition on the fitted model; they are not simultaneous confidence bands over thresholds. Appendix~\ref{app:dca} gives the original curve and definition, and Appendix~\ref{app:review_s1_uncertainty} adds uncertainty estimates.
 
 \noindent\textbf{Calibration analysis.}
 A well-calibrated model produces predicted probabilities that match observed event frequencies: among patients assigned $P(\text{rapid}) \approx 0.30$, roughly 30\% should indeed experience rapid progression.
 To assess calibration visually, we construct a \textit{reliability diagram} by binning the \gls{TEST}-set predicted probabilities into ten equal-width bins (0.0--0.1, 0.1--0.2, \ldots, 0.9--1.0) and plotting the mean predicted probability in each bin against the observed proportion of rapid progressors.
-A perfectly calibrated model lies on the diagonal; systematic deviations above or below indicate under-confidence or over-confidence, respectively.
+A perfectly calibrated model lies on the diagonal. Points above it indicate underestimated observed risk in that bin; points below it indicate overestimation.
 Calibration is additionally summarised numerically by the Brier score (Table~\ref{tab:metrics}).
 
 \noindent\textbf{Learning curves.}
