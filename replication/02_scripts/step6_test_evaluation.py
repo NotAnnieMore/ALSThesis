@@ -147,6 +147,7 @@ if __name__ == '__main__':
     # ── Evaluate each classifier ───────────────────────────────────────
     results = []
     conf_matrices = {}
+    test_probabilities = {}
     roc_data = {}   # {clf_name: (fpr, tpr, auc)}
 
     for clf_name in CLASSIFIERS_ORDER:
@@ -196,6 +197,11 @@ if __name__ == '__main__':
         conf_matrices[clf_name] = {'TP': int(tp), 'FP': int(fp),
                                    'FN': int(fn), 'TN': int(tn)}
 
+        test_probabilities[clf_name] = {
+            'y_true': y_test.tolist(), 'y_proba': y_prob.tolist(),
+            'y_pred': y_pred.tolist(), 'imbalance_technique': imb_name,
+        }
+
         # ROC curve data
         fpr, tpr, _ = roc_curve(y_test, y_prob)
         roc_data[clf_name] = (fpr, tpr, auc)
@@ -233,6 +239,9 @@ if __name__ == '__main__':
 
     with open(os.path.join(OUT_DIR, 'step6_confusion_matrices.json'), 'w') as f:
         json.dump(conf_matrices, f, indent=2)
+
+    with open(os.path.join(OUT_DIR, 'step6_test_probabilities.json'), 'w') as f:
+        json.dump(test_probabilities, f, indent=2)
 
     # ══════════════════════════════════════════════════════════════════════
     # FIGURE 1 — ROC CURVES (ALL CLASSIFIERS)

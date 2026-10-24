@@ -1,0 +1,58 @@
+{
+  "input_sha256": {
+    "03_outputs\\step5\\step5_best_configs.json": "dfc70634b49bc12420251a7b4327f8d29e09f4d03b5f7f6d2d7e2dca181de4bd",
+    "01_data\\processed\\step3_coded_unscaled.csv": "2d5057830ebc5209189a0c846a28f523cbb9706a840721efdd7eb981ca5a6909",
+    "01_data\\processed\\step4_train_unscaled.csv": "632c3d104ab51f1cb497d5d70c3a62b54f8a1ce87ae1cdeada5bff33da724046",
+    "01_data\\processed\\step4_test_unscaled.csv": "095b45f004b8c85406d5ff41d9c98e4b7c7ea3e0fd8d60614ae12e9e0e6e111b"
+  },
+  "n_completed_fits": 432,
+  "bootstrap_resamples": 2000,
+  "cohort_details": {
+    "bmi_boundary_check": {
+      "changed_bmi_codes": 2,
+      "same_patients_and_partitions": true
+    },
+    "entry_18m": {
+      "entry_proxy_max_month": 18,
+      "predictors_restricted_in_time": false,
+      "interpretation": "Entry-only sensitivity; retrospective features retained."
+    },
+    "landmark_18m": {
+      "eligible_alive_and_observed": 344,
+      "complete_timed_cases": 161,
+      "dropped_for_missing_or_invalid_predictors": 183,
+      "no_known_riluzole_record": 174,
+      "prediction_month": 18,
+      "last_outcome_month": 24,
+      "predictor_dates_bounded": true,
+      "riluzole_definition": "Any recorded Yes at/before landmark; absence of a known record coded as no recorded use."
+    },
+    "entry_12m": {
+      "entry_proxy_max_month": 12,
+      "predictors_restricted_in_time": false,
+      "interpretation": "Entry-only sensitivity; retrospective features retained."
+    },
+    "landmark_12m": {
+      "eligible_alive_and_observed": 106,
+      "complete_timed_cases": 41,
+      "dropped_for_missing_or_invalid_predictors": 65,
+      "no_known_riluzole_record": 56,
+      "prediction_month": 12,
+      "last_outcome_month": 24,
+      "predictor_dates_bounded": true,
+      "riluzole_definition": "Any recorded Yes at/before landmark; absence of a known record coded as no recorded use."
+    }
+  },
+  "original_results_replaced": false,
+  "new_optuna_search": false,
+  "entry_timestamp": "Minus Onset_Delta / 30.44, a source-trial-reference proxy.",
+  "threshold_source": "Concatenated predictions from 15 development folds, no TEST optimisation.",
+  "warning_count": 130,
+  "limitations": [
+    "Patient-level split, not trial-level validation.",
+    "Fixed parameters selected in the original development population.",
+    "Landmarks predict conditional survival to month 24, not prognosis at diagnosis.",
+    "Complete-case and trial recruitment selection remain.",
+    "No known dated riluzole record is coded as no recorded use."
+  ]
+}

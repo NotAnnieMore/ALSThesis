@@ -44,6 +44,8 @@ def collect(path, seen=None):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--package-update", type=Path)
+    parser.add_argument("--page-control-baseline", type=Path,
+                        help="Pre-edit ZIP snapshot containing overleaf/Chapters/*.tex")
     args = parser.parse_args()
     files = collect(TEX / "main.tex")
     texts = {p:active_text(p) for p in files}
@@ -82,19 +84,28 @@ def main():
         body = t.split(r"\label{",1)[1].split("}",1)[1].split(r"\section*{",1)[0]
         abstracts[lang] = dict(body=words(body),with_title=words(title+" "+body))
         assert abstracts[lang]["with_title"]<=150
-    # Preserve manually inserted page/float controls in the original chapters.
+    # Compare with the author's current layout, not an older Git revision.
+    page_controls = {}
     for path in (TEX / "Chapters").glob("[1-8]-*.tex"):
         relative = path.relative_to(ROOT).as_posix()
-        old = subprocess.check_output(["git","-c",f"safe.directory={ROOT.as_posix()}","show",f"HEAD:{relative}"],cwd=ROOT).decode("utf-8")
         current = path.read_text(encoding="utf-8")
+        old = None
+        if args.page_control_baseline:
+            with zipfile.ZipFile(args.page_control_baseline) as baseline:
+                old = baseline.read(relative).decode("utf-8-sig")
+        page_controls[relative] = {}
         for control in [r"\clearpage",r"\cleardoublepage",r"\newpage",r"\break"]:
-            assert old.count(control)==current.count(control), f"Page control changed: {path} {control}"
+            page_controls[relative][control] = current.count(control)
+            if old is not None:
+                assert old.count(control)==current.count(control), f"Page control changed: {path} {control}"
     old_bagging = pd.read_csv(ROOT / "replication/03_outputs/step7/step7c_bonferroni_results.csv").set_index("classifier")
     new_bagging = pd.read_csv(ROOT / "04_outputs/reviewer_followup/review_s2_bagging_summary.csv").set_index("classifier")
     assert np.allclose(old_bagging.bal_acc_single_mean,new_bagging.single_balanced_accuracy,rtol=0,atol=1e-12)
     assert np.allclose(old_bagging.bal_acc_ens_mean,new_bagging.bagging_balanced_accuracy,rtol=0,atol=1e-12)
     result = dict(active_tex_files=len(files),labels=len(labels),citations=len(citations),
                   glossary_uses=len(uses),abstract_words=abstracts,
+                  page_controls=page_controls,
+                  page_controls_checked_against_snapshot=bool(args.page_control_baseline),
                   bagging_original_balanced_accuracy_reproduced=True,
                   note="Static source checks, not a LaTeX compilation or pagination check.")
     (ROOT / "04_outputs/reviewer_followup/review_validation.json").write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")

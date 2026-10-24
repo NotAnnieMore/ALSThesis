@@ -1,0 +1,22 @@
+\begin{table}[ht!]
+\centering\small
+\caption[Study I race-encoding sensitivity]{Study I race-encoding sensitivity}
+\label{tab:review_s1_race_sensitivity}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Configuration & Race coding & PR-AUC & $\Delta$ AP & ROC-AUC & Brier \\
+\midrule
+XGB (unbal.) & Numeric median & $0.414\pm0.033$ & $+0.0000$ & 0.612 & 0.2040 \\
+XGB (unbal.) & Recorded states & $0.416\pm0.033$ & $+0.0014$ & 0.610 & 0.2042 \\
+XGB (unbal.) & Race omitted & $0.417\pm0.032$ & $+0.0026$ & 0.613 & 0.2037 \\
+LR (bal.) & Numeric median & $0.397\pm0.044$ & $+0.0000$ & 0.605 & 0.2445 \\
+LR (bal.) & Recorded states & $0.397\pm0.044$ & $+0.0003$ & 0.605 & 0.2443 \\
+LR (bal.) & Race omitted & $0.397\pm0.044$ & $+0.0003$ & 0.605 & 0.2443 \\
+\bottomrule\end{tabular}}
+\par\smallskip
+\begin{minipage}{0.98\linewidth}\footnotesize
+Six-month DEV only ($n=1{,}113$), with fixed parameters and identical stratified five-fold splits repeated three times. PR-AUC is mean $\pm$ population fold SD; the other scores are fold means. $\Delta$ AP is the mean paired change from the numeric-median reference. Recorded states distinguish explicit zero, explicit one and no recorded value for each indicator; all other preprocessing is unchanged. No new Optuna search, TEST evaluation, threshold selection or significance test was performed.
+\end{minipage}
+\end{table}

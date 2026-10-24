@@ -1,0 +1,20 @@
+\begin{table}[ht!]
+\centering\small
+\caption[Local fidelity of categorical-aware LIME]{Local fidelity of categorical-aware LIME}
+\label{tab:review_s1_lime_fidelity}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Case & Weighted $R^2$ & Model probability & LIME probability & Absolute error \\
+\midrule
+TP & 0.326 & 0.334 & 0.329 & 0.005 \\
+FP & 0.198 & 0.284 & 0.362 & 0.078 \\
+FN & 0.226 & 0.169 & 0.247 & 0.077 \\
+TN & 0.456 & 0.177 & 0.150 & 0.028 \\
+\bottomrule\end{tabular}}
+\par\smallskip
+\begin{minipage}{0.98\linewidth}\footnotesize
+Probabilities refer to the rapid-progression class at the original case-study input. Weighted $R^2$ describes the surrogate's fit to sampled neighbours, not predictive accuracy. Valid categorical sampling does not guarantee clinically plausible joint combinations.
+\end{minipage}
+\end{table}

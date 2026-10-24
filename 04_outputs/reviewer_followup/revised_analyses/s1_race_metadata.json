@@ -1,0 +1,38 @@
+{
+  "horizon": "6m",
+  "n_development": 1113,
+  "n_splits": 5,
+  "n_repeats": 3,
+  "seed": 42,
+  "n_fits": 90,
+  "configurations": [
+    [
+      "XGB",
+      "unbalanced"
+    ],
+    [
+      "LR",
+      "balanced"
+    ]
+  ],
+  "strategies": [
+    "primary_median",
+    "explicit_recording",
+    "race_omitted"
+  ],
+  "input_sha256": {
+    "01_data\\processed\\dataset_6m_v2.csv": "544a794318b3407c8d03871c8d7b8d030d7d44f11536ee608e8587f2a122f4b5",
+    "01_data\\processed\\holdout_split_6m.csv": "dbaf53e704819baaa4829f1eb5eb93c7ef6ee61eb14d26bec024eeec6138c062",
+    "01_data\\raw\\PROACT_DEMOGRAPHICS.csv": "1061717c9166ffe2bea21ba8bfc992e8b980855f63dbabe59de2cfbc63f8b139",
+    "04_outputs\\tables\\step8_xai\\test_predictions.csv": "3a8871eb72ca59929e6d69beb277278fc63aa14a535d76f8a51a31226374f316",
+    "04_outputs\\tables\\step8_xai\\lr_coefficients.csv": "88be218bbf7ce531c5024f16e389ddec6ca7927794570c44e80b42b9fce390c2",
+    "04_outputs\\tables\\step5_tuning\\XGB_unbalanced_6m_best.json": "457f5e9db847be454454f2e72874223398fcbd5ba22bdc6d7f57380d5f52c5ec",
+    "04_outputs\\tables\\step5_tuning\\LR_balanced_6m_best.json": "0ec4e584fb3fe2089af1f61fae783e4a9e82a23cfd46fce6434f3ce75ea1fa6f"
+  },
+  "original_repeated_scores_reproduced": true,
+  "protected_inputs_unchanged": true,
+  "test_evaluated": false,
+  "hyperparameters_retuned": false,
+  "primary_results_replaced": false,
+  "interpretation": "Post-hoc fixed-parameter sensitivity on overlapping development folds; no new selection or significance tests."
+}

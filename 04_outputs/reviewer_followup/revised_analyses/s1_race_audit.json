@@ -1,0 +1,52 @@
+{
+  "n_development": 1113,
+  "raw_fields_match": true,
+  "all_seven_unrecorded": 59,
+  "no_affirmative_indicator": 59,
+  "multiple_affirmative_indicators": 0,
+  "explicit_unknown_indicator": 3,
+  "fields": {
+    "Race_Caucasian": {
+      "recorded_zero": 2,
+      "recorded_one": 998,
+      "unrecorded": 113,
+      "primary_dev_median": 1.0
+    },
+    "Race_Black_African_American": {
+      "recorded_zero": 82,
+      "recorded_one": 15,
+      "unrecorded": 1016,
+      "primary_dev_median": 0.0
+    },
+    "Race_Asian": {
+      "recorded_zero": 81,
+      "recorded_one": 14,
+      "unrecorded": 1018,
+      "primary_dev_median": 0.0
+    },
+    "Race_Americ_Indian_Alaska_Native": {
+      "recorded_zero": 82,
+      "recorded_one": 2,
+      "unrecorded": 1029,
+      "primary_dev_median": 0.0
+    },
+    "Race_Hawaiian_Pacific_Islander": {
+      "recorded_zero": 82,
+      "recorded_one": 0,
+      "unrecorded": 1031,
+      "primary_dev_median": 0.0
+    },
+    "Race_Other": {
+      "recorded_zero": 0,
+      "recorded_one": 22,
+      "unrecorded": 1091,
+      "primary_dev_median": 1.0
+    },
+    "Race_Unknown": {
+      "recorded_zero": 81,
+      "recorded_one": 3,
+      "unrecorded": 1029,
+      "primary_dev_median": 0.0
+    }
+  }
+}

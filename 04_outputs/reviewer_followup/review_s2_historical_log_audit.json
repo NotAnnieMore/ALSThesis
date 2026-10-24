@@ -1,0 +1,107 @@
+{
+  "checked_on": "2026-10-24",
+  "scope": "Historical Study II log search only; no model fits or searches executed.",
+  "aggregate_checks": [
+    {
+      "path": "G:\\TESE\\CodigoMain\\replication\\03_outputs\\step5\\step5_cv_results.csv",
+      "sha256": "14a889baef1bfb5c6d9d1bca64cd8ab8b20ab92be689050205c132630ba439ce",
+      "rows": 70,
+      "unique_classifier_strategy_pairs": 70,
+      "n_trials_counts": {
+        "50": 70
+      },
+      "whole_configuration_failure_rows": 0,
+      "mean_auc_at_0_or_half": 0,
+      "fold_score_columns": []
+    },
+    {
+      "path": "G:\\TESE\\V2Codigo\\03_outputs\\step5\\step5_cv_results.csv",
+      "sha256": "14a889baef1bfb5c6d9d1bca64cd8ab8b20ab92be689050205c132630ba439ce",
+      "rows": 70,
+      "unique_classifier_strategy_pairs": 70,
+      "n_trials_counts": {
+        "50": 70
+      },
+      "whole_configuration_failure_rows": 0,
+      "mean_auc_at_0_or_half": 0,
+      "fold_score_columns": []
+    }
+  ],
+  "archives": [
+    {
+      "path": "G:\\TESE\\CodigoMain (2).zip",
+      "entry_count": 65,
+      "study2_log_search_artifacts": []
+    },
+    {
+      "path": "G:\\TESE\\CodigoMain (3).zip",
+      "entry_count": 88,
+      "study2_log_search_artifacts": []
+    },
+    {
+      "path": "G:\\TESE\\CodigoMain (4).zip",
+      "entry_count": 17228,
+      "study2_log_search_artifacts": [
+        "CodigoMain/replication/03_outputs/step5/step5_best_configs.json",
+        "CodigoMain/replication/03_outputs/step5/step5_best_per_classifier.csv",
+        "CodigoMain/replication/03_outputs/step5/step5_cv_results.csv"
+      ],
+      "aggregate_summary_rows": 70,
+      "aggregate_summary_sha256": "14a889baef1bfb5c6d9d1bca64cd8ab8b20ab92be689050205c132630ba439ce"
+    },
+    {
+      "path": "G:\\TESE\\CodigoMain.zip",
+      "entry_count": 42,
+      "study2_log_search_artifacts": []
+    },
+    {
+      "path": "G:\\TESE\\CodigoMainV2.zip",
+      "entry_count": 58,
+      "study2_log_search_artifacts": []
+    },
+    {
+      "path": "G:\\TESE\\CodigoMain\\replication\\overleaf.zip",
+      "entry_count": 12,
+      "study2_log_search_artifacts": []
+    },
+    {
+      "path": "G:\\TESE\\CodigoMain\\replication\\2026_Conference_EPIA_IVO.zip",
+      "entry_count": 24,
+      "study2_log_search_artifacts": []
+    }
+  ],
+  "rar": {
+    "path": "G:\\TESE\\CodigoMain.rar",
+    "list_exit_code": 0,
+    "entry_count": 551,
+    "study2_candidates": []
+  },
+  "search_scope": {
+    "root": "G:/TESE",
+    "filename_search": "Log, stdout/stderr, JSONL, database/journal and training/Optuna/Step 5 text-file names, including hidden and Git-ignored files.",
+    "content_search": "Training banners, Optuna trial/fold failure markers, tracebacks and persistent-storage identifiers in text, JSON and notebook files.",
+    "excluded_content": "Git internals, virtual environments, package caches, node_modules and original/patient-level data directories; no patient data were read for this audit.",
+    "matching_loose_files": [
+      {
+        "path": "CodigoMain/04_outputs/tables/step5_tuning/step5_tuning_log_6m.txt",
+        "classification": "Study I, not a Study II fold ledger"
+      },
+      {
+        "path": "CodigoMain/04_outputs/tables/step5_tuning/step5_tuning_log_3m.txt",
+        "classification": "Study I, not a Study II fold ledger"
+      },
+      {
+        "path": "CodigoGithub/05_Train_Validate_Models/training_validation_data/the training and validation data will be created here.txt",
+        "classification": "Reference-project placeholder, not a training log"
+      }
+    ],
+    "notebook_content_matches": "Only Study I training notebooks and unrelated data-preparation/reference notebooks matched the training/error content search.",
+    "study2_content_match": "replication/references/summary_for_advisor.txt is a prose summary, not an execution log."
+  },
+  "conclusion": {
+    "historical_fold_failure_ledger_found": false,
+    "whole_configuration_failure_marker_found_in_saved_summary": false,
+    "absence_of_fold_failures_established": false,
+    "interpretation": "The saved summaries show 70 unique configurations, each reporting 50 trials, and no whole-configuration failure row. Neither these summaries nor their identical backup copy establish whether a historical fold silently received AUC 0.5. No new model fits, Optuna searches or score substitutions were performed."
+  }
+}

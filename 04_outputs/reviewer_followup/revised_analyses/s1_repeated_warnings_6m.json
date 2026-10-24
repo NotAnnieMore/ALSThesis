@@ -1,0 +1,821 @@
+[
+  {
+    "horizon": "6m",
+    "model": "KNN",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Could not find the number of physical cores for the following reason:\n[WinError 2] O sistema n\u00e3o conseguiu localizar o ficheiro especificado\nReturning the number of logical cores instead. You can silence this warning by setting LOKY_MAX_CPU_COUNT to the number of cores you want to use."
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LGBM",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 0,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 1,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "balanced",
+    "repeat": 2,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 0,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 1,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "horizon": "6m",
+    "model": "LR",
+    "mode": "unbalanced",
+    "repeat": 2,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  }
+]

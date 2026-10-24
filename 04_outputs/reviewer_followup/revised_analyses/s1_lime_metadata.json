@@ -1,0 +1,29 @@
+{
+  "seed": 42,
+  "neighbours_per_case": 2000,
+  "n_original_variables": 35,
+  "n_transformed_columns": 42,
+  "categorical_variables": [
+    "Race_Caucasian",
+    "Race_Black_African_American",
+    "Race_Asian",
+    "Race_Americ_Indian_Alaska_Native",
+    "Race_Hawaiian_Pacific_Islander",
+    "Race_Other",
+    "Race_Unknown",
+    "R_1_Dyspnea",
+    "R_2_Orthopnea",
+    "R_3_Respiratory_Insufficiency",
+    "riluzole_pre_t0",
+    "Sex",
+    "Ethnicity",
+    "Mode_of_Administration",
+    "study_arm"
+  ],
+  "exact_encode_decode": true,
+  "original_test_predictions_reproduced": true,
+  "test_average_precision": 0.45646207840694486,
+  "concordance_unit": "Original variables; one-hot SHAP contributions summed before absolute ranking.",
+  "source_prediction_sha256": "3a8871eb72ca59929e6d69beb277278fc63aa14a535d76f8a51a31226374f316",
+  "limitation": "Valid categorical groups do not ensure all perturbed clinical combinations are plausible."
+}

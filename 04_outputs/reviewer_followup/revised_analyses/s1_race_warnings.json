@@ -1,0 +1,812 @@
+[
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 0,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 1,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "primary_median",
+    "repeat": 2,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 0,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 1,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "explicit_recording",
+    "repeat": 2,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 0,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 1,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 0,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 0,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 1,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 1,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 2,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 2,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 3,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 3,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 4,
+    "category": "FutureWarning",
+    "message": "'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratio' or 'C' instead. Use l1_ratio=0 instead of penalty='l2', l1_ratio=1 instead of penalty='l1', and C=np.inf instead of penalty=None."
+  },
+  {
+    "model": "LR",
+    "mode": "balanced",
+    "strategy": "race_omitted",
+    "repeat": 2,
+    "fold": 4,
+    "category": "UserWarning",
+    "message": "Inconsistent values: penalty=l1 with l1_ratio=0.0. penalty is deprecated. Please use l1_ratio only."
+  }
+]

@@ -1,0 +1,23 @@
+\begin{table}[ht!]
+\centering\small
+\caption[Study II time-bounded 18-month landmark]{Study II time-bounded 18-month landmark}
+\label{tab:review_s2_landmark18}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Classifier & ROC-AUC [95\% CI] & AP & \shortstack{Native\\sens./spec.} & \shortstack{OOF-constrained\\sens./spec.} \\
+\midrule
+KNN & 0.793 [0.486, 1.000] & 0.615 & 0.800/0.679 & 0.800/0.464 \\
+NaiveBayes & 0.807 [0.500, 1.000] & 0.670 & 0.600/0.821 & 0.800/0.357 \\
+DecisionTree & 0.739 [0.474, 0.948] & 0.324 & 0.400/0.929 & 1.000/0.286 \\
+RandomForest & 0.800 [0.508, 0.989] & 0.475 & 0.000/1.000 & 1.000/0.321 \\
+SVM & 0.793 [0.537, 1.000] & 0.583 & 0.800/0.536 & 1.000/0.286 \\
+MLP & 0.764 [0.600, 0.910] & 0.294 & 0.400/0.786 & 1.000/0.107 \\
+LightGBM & 0.693 [0.507, 0.863] & 0.244 & 0.600/0.679 & 1.000/0.321 \\
+\bottomrule\end{tabular}}
+\par\smallskip
+\begin{minipage}{0.98\linewidth}\footnotesize
+TEST contains 33 participants and five deaths between months 18 and 24; AP reference prevalence is 0.152. The alternative threshold is the highest score attaining sensitivity at least 0.90 in pooled repeated-CV development predictions. This target is not guaranteed on TEST. Complete-case selection, five test events and fixed transferred hyperparameters limit interpretation; these are not diagnosis-time predictions.
+\end{minipage}
+\end{table}

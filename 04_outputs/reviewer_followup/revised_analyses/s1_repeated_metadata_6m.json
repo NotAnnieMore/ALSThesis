@@ -1,0 +1,27 @@
+{
+  "input_sha256": {
+    "01_data\\processed\\dataset_6m_v2.csv": "544a794318b3407c8d03871c8d7b8d030d7d44f11536ee608e8587f2a122f4b5",
+    "01_data\\processed\\holdout_split_6m.csv": "dbaf53e704819baaa4829f1eb5eb93c7ef6ee61eb14d26bec024eeec6138c062",
+    "04_outputs\\tables\\step5_tuning\\DT_balanced_6m_best.json": "43782af8bf53262d50c60a4feafe2f512fde13b8d2e66d7f9c0764dd6033aed4",
+    "04_outputs\\tables\\step5_tuning\\DT_unbalanced_6m_best.json": "1f873343ce784597559da691c7942acb7d6487fdbee4009efc64652c0ead37ea",
+    "04_outputs\\tables\\step5_tuning\\KNN_unbalanced_6m_best.json": "017286acddb49c128aaf1aacc6e84ec59043f1a1109c85020365bb921af4587d",
+    "04_outputs\\tables\\step5_tuning\\LGBM_balanced_6m_best.json": "4c922dd2b436fdd592fe7ef67fafa992a2bd0fdb97ce7456114000d55f569dcc",
+    "04_outputs\\tables\\step5_tuning\\LGBM_unbalanced_6m_best.json": "1f75128444b26b5300aba93dc2c2f242200120b7e5aaa02584dea3dbe20d03a7",
+    "04_outputs\\tables\\step5_tuning\\LR_balanced_6m_best.json": "0ec4e584fb3fe2089af1f61fae783e4a9e82a23cfd46fce6434f3ce75ea1fa6f",
+    "04_outputs\\tables\\step5_tuning\\LR_unbalanced_6m_best.json": "6a4d88da36edb1988112c2804914454193324b7134c723a91ec221163ec86315",
+    "04_outputs\\tables\\step5_tuning\\RF_balanced_6m_best.json": "89b4e3010a9975cd699d15b7ddffd64391118f30aa1c7e5b9e17c59791a2f7e1",
+    "04_outputs\\tables\\step5_tuning\\RF_unbalanced_6m_best.json": "7af11458116dcec5efb0dcb6dd786398f56b752441f94f7501ddab19382ab030",
+    "04_outputs\\tables\\step5_tuning\\SVM_balanced_6m_best.json": "e7d79f7fb40d8b8e3d836ba4da16f301e7c7e1a56208005e08c0140228f026a6",
+    "04_outputs\\tables\\step5_tuning\\SVM_unbalanced_6m_best.json": "2d37971171c3d1876411c4bb5ad71a068d894f469b6e1fc006783b18f45b7c80",
+    "04_outputs\\tables\\step5_tuning\\XGB_balanced_6m_best.json": "b4e1f30d0720b02c21db42a491af4c11e14d1e206911e20276a2c95b60b94d74",
+    "04_outputs\\tables\\step5_tuning\\XGB_unbalanced_6m_best.json": "457f5e9db847be454454f2e72874223398fcbd5ba22bdc6d7f57380d5f52c5ec"
+  },
+  "n_fits": 195,
+  "n_repeats": 3,
+  "n_splits": 5,
+  "seed": 42,
+  "jobs": 2,
+  "interpretation": "Fixed selected configurations; supplementary partition stability, not nested validation.",
+  "test_accessed": false,
+  "hyperparameters_retuned": false
+}

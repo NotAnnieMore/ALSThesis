@@ -222,6 +222,55 @@ Input row order and two near-tied three-month slopes can change a newly generate
 seeded split. Verify regenerated partitions against the manifests rather than
 assuming that the random seed alone identifies the original experiment.
 
+### Fixed-Parameter Methodological Follow-Up
+
+The original held-out results remain the replication/development reference. The
+additional analyses are defined in
+[`ANALYSIS_PLAN_20261024.md`](04_outputs/reviewer_followup/ANALYSIS_PLAN_20261024.md):
+
+```bash
+python 03_src/analysis/repeated_stratified_validation.py
+python 03_src/analysis/review_lime_categorical.py
+python 03_src/analysis/race_encoding_sensitivity.py
+python replication/02_scripts/reviewer_temporal_evaluation.py
+python 03_src/analysis/build_reviewer_revision_assets.py --study2-probabilities /local/path/step6_test_probabilities.json --publish
+```
+
+Use the existing Study I runtime for the first three commands and the Study II
+runtime for the latter two. No new Optuna search is performed. The analyses add
+315 fixed-parameter Study I CV fits, categorical-aware LIME for the same four
+cases, and Study II entry restrictions/conditional landmark tasks. They write to
+`04_outputs/reviewer_followup/revised_analyses/`; patient-level predictions, fold
+assignments and case weights remain in ignored `01_data/interim/` directories.
+The final command publishes only completed tables and figures to thesis paths.
+It overwrites generated tables, so preserve any manual layout edits first. To
+publish only the new race table without touching other tables or figures, use
+`python 03_src/analysis/build_reviewer_revision_assets.py --race-only --publish`.
+
+The race sensitivity adds 90 DEV-only fits for fixed XGBoost and LR configurations,
+comparing the primary numeric-median coding with explicit recorded states and race
+omission. Mean AP changes by less than 0.003; no TEST evaluation, new selection,
+primary pipeline replacement or LIME regeneration is performed. The result does
+not establish fairness or endorse the original missing-value interpretation.
+
+Repeated Study I CV changes the leading configuration to balanced Random Forest,
+without changing the original XGBoost test result. Study II LightGBM+ROS ROC-AUC
+falls from the retrospective reference 0.923 to 0.828 under the 18-month entry
+restriction. The dated 18-month landmark gives 0.693 but has only five test
+events. These populations/tasks differ; the changes are not a causal estimate of
+left-truncation bias. The 12-month landmark is infeasible for the planned five-fold
+comparison, and KNN+RUS cannot retain k=31 in one smaller entry-restricted fold.
+Both limits are reported, not replaced with invented scores.
+
+The revised Study II search code now exports trial/fold records and stops on
+failure. This improves future runs but does not recover missing historical logs.
+The reference cohort's original age/delay/primary BMI representation is retained;
+corrected BMI boundaries are evaluated separately and used in landmark analyses.
+
+Focused synthetic/regression checks can be run with
+`python 03_src/analysis/test_reviewer_revisions.py`. No clean-environment
+reproduction or new clinical validation is claimed.
+
 ## Dissertation
 
 The complete LaTeX project is in [`overleaf/`](overleaf/). Its main chapters are:
@@ -243,6 +292,16 @@ The two analyses are also represented by dedicated Applied Intelligence Hub repo
 
 - [Study I: Explainable ALS Progression](https://github.com/Applied-Intelligence-Hub/explainable-als-progression)
 - [Study II: ALS Survival and Imbalance Learning](https://github.com/Applied-Intelligence-Hub/als-survival-imbalance-ml)
+
+The 24 October 2026 supplementary release is published as Study I commit
+[`d66974f`](https://github.com/Applied-Intelligence-Hub/explainable-als-progression/commit/d66974f49eb8cee87710924b28ccc8232f771abb)
+and Study II commit
+[`d89bc29`](https://github.com/Applied-Intelligence-Hub/als-survival-imbalance-ml/commit/d89bc2998b017f8ee97c9739a2a3025c807c3ec6).
+These include fixed-parameter analyses, synthetic regression tests, selected
+hyperparameters and aggregate summaries, not PRO-ACT records, split membership,
+individual prediction arrays or fitted models. The standalone scripts retain
+the original results as reference; no independent clean-environment reproduction
+is claimed. See the [release checks](04_outputs/reviewer_followup/REPOSITORY_SYNC_20261024.md).
 
 ## Clinical-use notice
 

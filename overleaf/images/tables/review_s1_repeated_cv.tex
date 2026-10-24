@@ -1,0 +1,39 @@
+\begin{table}[ht!]
+\centering\small
+\caption[Study I fixed-parameter repeated validation]{Study I fixed-parameter repeated validation}
+\label{tab:review_s1_repeated_cv}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Configuration & Original AP & Repeated AP & Repeat-mean range \\
+\midrule
+\multicolumn{4}{l}{\textbf{Six months}} \\
+RF (bal.) & 0.425 & $0.422\pm0.034$ & 0.420--0.423 \\
+RF (unbal.) & 0.431 & $0.415\pm0.039$ & 0.404--0.428 \\
+XGB (unbal.) & 0.434 & $0.414\pm0.033$ & 0.410--0.423 \\
+SVM (bal.) & 0.426 & $0.413\pm0.032$ & 0.405--0.421 \\
+XGB (bal.) & 0.424 & $0.411\pm0.027$ & 0.404--0.421 \\
+LGBM (unbal.) & 0.415 & $0.411\pm0.035$ & 0.408--0.414 \\
+LGBM (bal.) & 0.418 & $0.407\pm0.029$ & 0.400--0.413 \\
+LR (bal.) & 0.407 & $0.397\pm0.044$ & 0.388--0.404 \\
+LR (unbal.) & 0.400 & $0.391\pm0.044$ & 0.381--0.402 \\
+DT (bal.) & 0.404 & $0.368\pm0.030$ & 0.349--0.380 \\
+KNN (unbal.) & 0.387 & $0.365\pm0.046$ & 0.357--0.381 \\
+SVM (unbal.) & 0.389 & $0.363\pm0.032$ & 0.352--0.369 \\
+DT (unbal.) & 0.388 & $0.361\pm0.040$ & 0.331--0.389 \\
+\multicolumn{4}{l}{\textbf{Three months}} \\
+XGB (unbal.) & 0.423 & $0.416\pm0.034$ & 0.413--0.418 \\
+RF (bal.) & 0.414 & $0.411\pm0.033$ & 0.408--0.415 \\
+XGB (bal.) & 0.426 & $0.410\pm0.026$ & 0.404--0.418 \\
+LGBM (unbal.) & 0.423 & $0.409\pm0.025$ & 0.400--0.419 \\
+LGBM (bal.) & 0.422 & $0.409\pm0.024$ & 0.402--0.415 \\
+RF (unbal.) & 0.410 & $0.401\pm0.027$ & 0.395--0.405 \\
+LR (bal.) & 0.396 & $0.387\pm0.025$ & 0.383--0.392 \\
+LR (unbal.) & 0.395 & $0.386\pm0.024$ & 0.383--0.389 \\
+\bottomrule\end{tabular}}
+\par\smallskip
+\begin{minipage}{0.98\linewidth}\footnotesize
+AP denotes average precision. Repeated values are mean $\pm$ population SD across 15 validation folds. The range covers the three five-fold repetition means, not a confidence interval. Parameters were selected in the original development analysis and were not retuned; this is a partition-stability check, not nested validation. TEST was not accessed.
+\end{minipage}
+\end{table}

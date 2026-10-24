@@ -13,7 +13,7 @@
 \label{app:study1_data}
 % ============================================================
 
-This appendix brings together the supplementary data-quality checks and exploratory analyses conducted before model development in Study~I.
+This appendix brings together the Study~I data-quality checks, exploratory analyses and post-hoc preprocessing sensitivities.
 
 \section{Baseline Characteristics and Eligibility}
 \label{app:review_s1_baseline}
@@ -78,6 +78,20 @@ The development estimates differ by at most 0.013 PR-AUC. Iterative imputation g
 
 
 % ============================================================
+\section{Race-Encoding Sensitivity}
+\label{app:review_s1_race}
+
+The seven race fields in the six-month DEV partition match the raw demographic extract, including missing values. Of 1,113 participants, 59 have no recorded value in any of the seven fields and three have an affirmative Unknown indicator. These are distinct recording states. The Other indicator has 22 observed ones and no observed zeros, making its primary median one. Filling every missing indicator with zero would impose a different assumption rather than recover an observed identity.
+
+The complementary analysis retains the unbalanced XGBoost and balanced LR hyperparameters and the 15 folds of the repeated stratified check (Appendix~\ref{app:review_s1_repeated}). It compares the primary numeric-median branch with per-indicator categories for recorded zero, recorded one and unrecorded, and with omission of all seven fields. Categories are learnt from each training fold and one-hot encoded without merging an absent record into an explicit zero. The representation permits multiple affirmative fields, although none occurs in this DEV subset. Other preprocessing, fold-specific target cutoffs and class-weight modes are unchanged. This gives 90 fits, with no TEST evaluation or new optimisation.
+
+\input{images/tables/review_s1_race_sensitivity.tex}
+
+Relative to the same-fold numeric reference, XGBoost's mean AP changes by $+0.0014$ with explicit states and $+0.0026$ after omission. Balanced LR changes by approximately $+0.0003$ in either condition. The numeric reference reproduces the earlier repeated-validation AP and ROC-AUC scores to numerical precision. Individual fold changes can have either sign; the overlapping folds are not independent evidence for a significance test.
+
+Under the fixed LR penalty, all explicit-state race coefficients are zero in every fold. The original numeric Black/African-American coefficient is non-zero in 14 of 15 folds, ranging from $-0.107$ to zero. These coefficients are not directly comparable: the original numeric indicators are standardised, whereas the categorical dummy variables are not, changing the effect of the fixed penalty. Similar ranking scores therefore do not establish equivalent representations, subgroup fairness, or absence of race-related information in other predictors. The primary coefficients and explanations remain the reference, with their encoding limitation explicit.
+
+
 \section{BMI Data-Quality Audit}
 \label{app:bmi_correction}
 
@@ -406,6 +420,16 @@ The Friedman test yields $\chi^2_F(6)=12.43$ ($p=0.053$; Kendall's $W=0.414$), s
 
 
 % ============================================================
+\section{Repeated Stratified Validation with Fixed Parameters}
+\label{app:review_s1_repeated}
+
+The original 13 six-month and eight three-month configurations were evaluated on stratified five-fold CV repeated three times, without another Optuna search. This gives 195 and 120 fits, respectively. All patients remain within their original DEV partition. Provisional DEV labels balance fold allocation, but each training fold supplies its own rapid-progression cutoff and preprocessing estimates.
+
+\input{images/tables/review_s1_repeated_cv.tex}
+
+At six months, balanced Random Forest has the highest repeated mean (0.422), while unbalanced XGBoost obtains 0.414. The ranges of the three repetition means overlap: 0.420--0.423 for balanced Random Forest and 0.410--0.423 for unbalanced XGBoost. At three months, unbalanced XGBoost leads with 0.416, compared with 0.410 for its balanced counterpart. The selected parameters themselves came from the original folds, so this is a sensitivity check of the fitted configurations, not a fresh assessment of the complete selection procedure. No new Friedman or Wilcoxon significance claim treats the 15 overlapping folds as independent blocks, and the primary TEST results are unchanged.
+
+% ============================================================
 \chapter{Study I: Performance Diagnostics and Model Interpretation}
 \label{app:study1_diagnostics}
 % ============================================================
@@ -466,33 +490,37 @@ For this correctly classified slow progressor (Figure~\ref{fig:shap_wf_tn}), hig
 \subsection{LIME Explanations}
 \label{app:local_lime}
 
-LIME was applied to the same four case-study subjects as a complementary local approximation of the classifier. Each explanation used 2{,}000 perturbed samples around the instance and a sparse linear surrogate fitted to the resulting predictions. Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} show the explanation for each confusion-matrix quadrant.
+The four LIME explanations use categorical-aware sampling over the 35 original variables, with 2{,}000 neighbours per case. One-hot groups are sampled jointly and reconstructed before the classifier is queried. The selected XGBoost fit reproduces the original probabilities and case identifiers; no classification result changed. Figures~\ref{fig:lime_tp}--\ref{fig:lime_tn} show the regenerated local surrogates.
+
+\input{images/tables/review_s1_lime_fidelity.tex}
+
+Correcting the categorical representation does not make the surrogate exact. Weighted $R^2$ ranges from 0.198 for FP to 0.456 for TN. For FN, the surrogate probability is 0.247, compared with the classifier's 0.169: its approximation falls above $t=0.21$ even though the classifier assigns the negative class. The bar directions describe that local fitted surrogate, not an exact decomposition of the classifier's probability or decision.
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_TP.pdf}
-  \caption[LIME explanation: true positive case]{LIME explanation for the TP case study (Subject~672752). Respiratory rate shifts the local surrogate towards the rapid class, whereas high ALSFRS-R shifts it towards the slow class.}
+  \caption[LIME explanation: true positive case]{Categorical-aware LIME for the TP case study (Subject~672752). Respiratory rate shifts the local surrogate towards the rapid class, whereas the ALSFRS-R term shifts it towards the slow class. Surrogate fidelity is reported in Table~\ref{tab:review_s1_lime_fidelity}.}
   \label{fig:lime_tp}
 \end{figure}
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FP.pdf}
-  \caption[LIME explanation: false positive case]{LIME explanation for the FP case study (Subject~491257). The local surrogate assigns opposing contributions to age and several respiratory and anthropometric variables.}
+  \caption[LIME explanation: false positive case]{Categorical-aware LIME for the FP case study (Subject~491257). Age and respiratory variables receive opposing local weights. The surrogate has the lowest weighted $R^2$ of the four cases and is not an exact explanation of the classifier.}
   \label{fig:lime_fp}
 \end{figure}
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_FN.pdf}
-  \caption[LIME explanation: false negative case]{LIME explanation for the FN case study (Subject~330379). Respiratory rate and several baseline variables shift the local approximation towards the slow class.}
+  \caption[LIME explanation: false negative case]{Categorical-aware LIME for the FN case study (Subject~330379). Respiratory rate and several baseline variables have negative local weights, but the surrogate's probability (0.247) differs from the classifier's (0.169) and crosses the selected threshold. The negative classifier decision must not be inferred from the surrogate alone.}
   \label{fig:lime_fn}
 \end{figure}
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.72\linewidth]{images/figures/lime_local_TN.pdf}
-  \caption[LIME explanation: true negative case]{LIME explanation for the TN case study (Subject~631435). High ALSFRS-R, lower respiratory rate, age, and pulse shift the local approximation towards the slow class.}
+  \caption[LIME explanation: true negative case]{Categorical-aware LIME for the TN case study (Subject~631435). The baseline ALSFRS-R, age and pulse terms favour the slow class in the local approximation. Weighted $R^2$ is 0.456; clinical plausibility of every sampled combination was not established.}
   \label{fig:lime_tn}
 \end{figure}
 
@@ -500,26 +528,26 @@ LIME was applied to the same four case-study subjects as a complementary local a
 \subsection{SHAP--LIME Concordance}
 \label{app:local_concordance}
 
-Table~\ref{tab:concordance} compares the ten highest-ranked features from SHAP and LIME for each subject. The overlap ranges from five features for the true positive to seven for the false negative.
+Table~\ref{tab:concordance} compares the ten highest-ranked original variables from each method. SHAP contributions within a categorical one-hot group are summed before ranking their absolute magnitude. The overlaps are five, seven, six and seven variables for TP, FP, FN and TN, respectively.
 
 \begin{table}[ht!]
 \centering
-\caption[SHAP--LIME top-10 feature overlap]{Number of overlapping features in the top-10 SHAP vs.\ LIME rankings for each case-study subject.}
+\caption[SHAP--LIME top-10 feature overlap]{Top-ten original-variable overlap between grouped SHAP contributions and categorical-aware LIME weights.}
 \label{tab:concordance}
 \small
 \begin{tabular}{l c l}
 \toprule
 \textbf{Case} & \textbf{Overlap} & \textbf{Shared features} \\
 \midrule
-TP & 5 & ALSFRS-R, FVC (litres), Pulse, Resp.\ Rate, Temperature \\
-FP & 6 & ALSFRS-R, Age, BMI, FVC (litres), Pulse, Resp.\ Rate \\
-FN & 7 & ALSFRS-R, ALT, Age, BMI, FVC (\% normal), Resp.\ Rate, Temperature \\
-TN & 6 & ALSFRS-R, Age, BMI, FVC (litres), Pulse, Temperature \\
+TP & 5 & ALSFRS-R, FVC (litres), Resp.\ Rate, Study arm, Temperature \\
+FP & 7 & ALSFRS-R, Age, BMI, FVC (litres), Height, Pulse, Resp.\ Rate \\
+FN & 6 & ALSFRS-R, ALT, BMI, FVC (\% normal), Resp.\ Rate, Temperature \\
+TN & 7 & ALSFRS-R, Age, BMI, FVC (litres), Pulse, Study arm, Temperature \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The shared features indicate partial agreement about each local prediction. The remaining differences are expected because TreeSHAP distributes the fitted tree model's output among its features, whereas LIME approximates the decision surface in a perturbed neighbourhood around the selected subject.
+The shared variables indicate partial agreement about what is locally prominent. They do not assess how accurately LIME approximates the model; Table~\ref{tab:review_s1_lime_fidelity} addresses that separate question. Race indicators remain subject to the original model's sparse median-imputed coding, and valid binary perturbations do not remove that limitation.
 
 
 % ============================================================
@@ -885,7 +913,7 @@ PRO-ACT expresses assessment deltas in days from the official beginning of each 
 
 \input{images/tables/review_s2_delayed_entry.tex}
 
-None of the 174 Short Survivors has an interval of 24 months or more, compared with 756 of the 1,328 Standard Survival patients. For those entering late, survival past the outcome boundary is partly established before the trial observation. This is the left-truncation problem, distinct from the post-diagnosis timing of predictors and exclusion of patients with unresolved follow-up. The audit identifies the mechanism but neither estimates its contribution to ROC-AUC nor removes it. The original cohort, fitted configurations, and target are unchanged.
+None of the 174 Short Survivors has an interval of 24 months or more, compared with 756 of the 1,328 Standard Survival patients. For those entering late, survival past the outcome boundary is partly established before the trial observation. This is the left-truncation problem, distinct from the post-diagnosis timing of predictors and exclusion of patients with unresolved follow-up. This audit alone identifies rather than removes the mechanism. The original analysis remains the replication reference; the fitted temporal sensitivity analyses are reported in Section~\ref{app:review_s2_temporal_models}.
 
 \section{Calibration and Average Precision}
 \label{app:review_s2_probability}
@@ -911,6 +939,47 @@ The original 15 development folds were rerun using the saved baseline hyperparam
 \input{images/tables/review_s2_bagging_auc.tex}
 
 The ranking gains are much smaller and less consistent than the default-operating-point gains. Decision Tree improves ROC-AUC by 0.026 and KNN by 0.011, while Naive Bayes changes by less than 0.001. The other four families lose ROC-AUC, including SVM ($-0.030$) despite its balanced-accuracy gain of 0.293. This comparison does not isolate undersampling from bagging, but it rules out interpreting every balanced-accuracy increase as an increase in discrimination. One MLP fit emitted a convergence warning under the retained iteration limit; the supplementary run recorded rather than suppressed it, and no parameters were changed in response.
+
+% ============================================================
+\section{Temporal and Encoding Sensitivity}
+\label{app:review_s2_temporal_models}
+
+\subsection{Cohorts and Prediction Time}
+
+The entry limits of 18 and 12 months were defined before the supplementary performance fits. Entry-only restrictions retain the original predictors, outcome and patient assignments. The landmark tasks instead condition on survival to month 18 or 12 and restrict dated predictors to that time, following the distinction described in Section~\ref{sec:s2_temporal_sensitivity}. All seven selected configurations retain their original hyperparameters and resampling strategy; none was retuned for the smaller cohort.
+
+\input{images/tables/review_s2_timed_cohorts.tex}
+
+At month 18, 344 participants satisfy the entry, survival and recorded-diagnosis conditions. Restricting clinical measurements, including height and riluzole, to the permissible past leaves 161 complete cases. Their test partition contains only five subsequent deaths. At month 12, 106 participants meet the initial conditions and 41 remain complete, with only four negative outcomes in total (three in training). The planned five-fold comparison is therefore infeasible and is not replaced with a more favourable validation design.
+
+\subsection{Entry-Only Restrictions}
+
+\input{images/tables/review_s2_entry_restricted.tex}
+
+The test prevalence changes from 0.116 in the original cohort to 0.374 under the 18-month entry limit and 0.786 under the 12-month limit. Average precision must be read against those baselines: LightGBM's 12-month AP of 0.841 accompanies ROC-AUC 0.576 and is not evidence of stronger prognosis than its original AP of 0.704. Its 18-month ROC-AUC is 0.828 rather than 0.923. Restricting the population and refitting the model changes the estimate, but does not identify the amount caused by delayed entry alone.
+
+KNN+RUS cannot complete the 12-month comparison: its first fold has 22 observations after undersampling, fewer than the retained $k=31$. The error is recorded rather than converted to AUC 0.5 or avoided by retuning $k$. The other six configurations complete that comparison, although six negative test patients make specificity and ROC-AUC imprecise.
+
+\subsection{Time-Bounded Landmark Results}
+
+\input{images/tables/review_s2_landmark18.tex}
+
+The 18-month landmark predicts subsequent death by month 24 among observed survivors, not survival from diagnosis. LightGBM detects three of five deaths and MLP two under their native rules. Both detect all five after applying their development-derived sensitivity thresholds, at the cost of specificity 0.321 and 0.107, respectively. This does not validate those thresholds: one positive case changes sensitivity by 20 percentage points, and the estimates condition on the fitted models.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=\linewidth]{images/figures/review_s2_timing_sensitivity.pdf}
+  \caption[Study II temporal sensitivity]{ROC-AUC and average precision for the fixed LightGBM+ROS and MLP configurations. Error bars are pointwise 95\% percentile intervals from 2,000 patient resamples, excluding single-class draws. The ROC-AUC line marks 0.5; crosses mark each cohort's AP prevalence reference. Reference probabilities are the validated original exports; new rows use refitted models. The cohorts and, for landmarking, prediction questions differ, so these are not paired estimates of one isolated bias.}
+  \label{fig:review_s2_timing_sensitivity}
+\end{figure}
+
+\subsection{Encoding and Implementation Checks}
+
+The isolated BMI-boundary correction changes two values in the original cohort. The reported LightGBM/MLP ranking scores and native confusion matrices remain unchanged at the displayed precision. The landmark analyses additionally restrict riluzole to dated use by the prediction time and derive BMI only from permissible height and weight records. Missing dated treatment information is coded as no recorded use, not confirmed absence. Age, diagnostic-delay and slope boundaries retain their documented conventions.
+
+Twenty-seven classifier/cohort combinations completed all 15 development folds and their final training fit, totalling 432 completed evaluations. The KNN exception and infeasible 12-month landmark remain explicit. The final MLP fit in the 18-month entry-restricted cohort reached its retained 1,000-iteration limit without convergence; its warning is reported and no iteration limit was changed after inspecting TEST. Successful fold scores, warnings, cohort counts and failures are exported separately, while patient-level files remain local. The revised primary search code also records future trial/fold histories and stops on errors; it was not used to rerun the original searches or infer their missing history.
+
+No reliable source-trial identifier was found. The available \texttt{Test\_trial} fields identify measurement repetitions, while \texttt{Study\_Arm} identifies treatment assignment; neither establishes membership of a clinical trial. These analyses therefore remain patient-level internal evaluations. They address predictor timing and conditional risk more explicitly, but do not resolve recruitment selection, missing-outcome exclusions, or trial-level transportability.
 
 % ============================================================
 \chapter{Reporting and Reproducibility Checks}
@@ -947,7 +1016,7 @@ Item & Topic & Location and coverage \\
 6 & Participants & Cohort eligibility and treatment variables are described in Chapters~\ref{ch:study1_methods} and~\ref{ch:study2_methods}; Tables~\ref{tab:review_s1_baseline} and~\ref{tab:review_s2_selection} describe selection. \\
 7 & Data preparation & Sections~\ref{sec:methods_preprocessing} and~\ref{subsec:s2_preprocessing}; Appendix~\ref{app:bmi_correction}. Quality checks were not validated separately across demographic groups. \\
 8 & Outcomes & Chapters~\ref{ch:study1_methods} and~\ref{ch:study2_methods} define the slope and survival targets. Source-assessor blinding and qualifications were not established. \\
-9 & Predictors & Feature definitions and timing are given in both methods chapters. Sparse race coding, untimed riluzole use, and post-diagnosis records are disclosed. \\
+9 & Predictors & Feature definitions and timing are given in both methods chapters. Sparse race coding is disclosed and assessed in a DEV-only sensitivity; untimed riluzole and post-diagnosis records are distinguished from time-bounded landmark predictors. \\
 10 & Sample size & Available data and eligibility determined cohort sizes; no prospective sample-size calculation was performed. TEST contains 84 and 35 positive outcomes. \\
 11 & Missing data & Section~\ref{sec:methods_preprocessing}, Appendix~\ref{app:fvc_missingness}, and Appendices~\ref{app:study1_missing_sensitivity} and~\ref{app:study2_missing_sensitivity}. \\
 12 & Analysis & Chapters~\ref{ch:study1_methods} and~\ref{ch:study2_methods} describe splits, transformations, tuning, validation, metrics, and prediction generation. Trial-level heterogeneity was not modelled; no probability recalibration was applied. \\
@@ -961,7 +1030,7 @@ Item & Topic & Location and coverage \\
 20 & Participant results & Cohort flows, class counts, feature coverage, and the additional baseline and selection tables. Dates, assessor characteristics, and trial-level summaries remain incomplete. \\
 21 & Analysis counts & Both methods chapters give training/test sizes and search budgets. Post-hoc expanded-cohort results identify their different split. \\
 22 & Model specification & Reproduction code, selected parameters, and preprocessing are documented. The Study~I full-cohort reporting artefact is distinct from the DEV-fitted model used for evaluation. \\
-23 & Performance & Chapters~\ref{ch:study1_results} and~\ref{ch:study2_results}; supplementary calibration, subgroup-recall, and net-benefit checks. Not every metric has an interval; trial-level performance is unassessed. \\
+23 & Performance & Chapters~\ref{ch:study1_results} and~\ref{ch:study2_results}; supplementary calibration, subgroup-recall, net-benefit, repeated-validation and temporal checks. Not every metric has an interval; trial-level performance is unassessed. \\
 24 & Updating & No test-informed model or threshold replacement was made. Study~I's post-evaluation full-cohort refit is not an independent performance assessment. \\
 25 & Interpretation & Both results chapters and Chapter~\ref{ch:conclusion} distinguish discrimination, threshold behaviour, and replication scope. \\
 26 & Limitations & Missingness, trial clustering, small event counts, entry timing, and predictor availability are discussed explicitly. \\
@@ -974,4 +1043,4 @@ Item & Topic & Location and coverage \\
 
 The two local Python~3.12.10 environments were inspected on 23 October 2026. Exact installed-package inventories are recorded in \path{environments/study1-verified.txt} and \path{environments/study2-verified.txt}, with machine-readable companions. These are current verification snapshots, not historical locks captured at the start of every experiment. The Study~I versions agree with those reported in Section~\ref{sec:methods_environment}. The supplementary Study~II bagging run used scikit-learn~1.8.0, imbalanced-learn~0.14.1, LightGBM~4.6.0, pandas~3.0.2, and NumPy~2.4.4.
 
-Version pins alone do not reconstruct an analysis. Study~I also requires the original input row order and agreement with the saved split manifests, especially near the three-month percentile boundary. The supplementary scripts record input-file hashes, package versions, and aggregate results; patient-level predictions and source data remain outside the public release. The Study~I trial histories contain no recorded zero-score exception fallback. In Study~II, the original aggregate records cannot exclude failures scored as 0.5 within individual folds; a fold-level failure ledger was not available. The supplementary bagging audit stops on errors and records convergence warnings rather than assigning fallback scores.
+Version pins alone do not reconstruct an analysis. Study~I also requires the original input row order and agreement with the saved split manifests, especially near the three-month percentile boundary. The supplementary scripts record input-file hashes and aggregate results; patient-level predictions and source data remain outside the public release. The Study~I trial histories contain no recorded zero-score exception fallback. In Study~II, the original aggregate records cannot exclude failures scored as 0.5 within individual folds; a fold-level failure ledger was not recovered. The supplementary bagging and temporal analyses record failures and convergence warnings rather than assigning scores. Future primary searches now export successful fold metrics and trial histories as well. These checks do not constitute an independent clean-environment reproduction.

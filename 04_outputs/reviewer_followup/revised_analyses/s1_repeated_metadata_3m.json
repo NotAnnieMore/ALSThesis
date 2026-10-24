@@ -1,0 +1,22 @@
+{
+  "input_sha256": {
+    "01_data\\processed\\dataset_3m_v2.csv": "4397f0d2bb12a64cf5d9c0debc9e6e566c260344ad1e33baf3c02bb242bc8001",
+    "01_data\\processed\\holdout_split_3m.csv": "2ec4d92e32b8398fd150e0a42e1330efe25049b7dd0190277b66177225c77fa3",
+    "04_outputs\\tables\\step5_tuning\\LGBM_balanced_3m_best.json": "2bd20538a729898b48e8a42165599f2fdb17b5e14b5233cbc43e0d43579aba31",
+    "04_outputs\\tables\\step5_tuning\\LGBM_unbalanced_3m_best.json": "5cc008fe5d63139fa1f0042b54e91d76f26977e875da3eb318a622216ca8935b",
+    "04_outputs\\tables\\step5_tuning\\LR_balanced_3m_best.json": "1d61c4cea48c12ebc6e7b1f792d8ec155fb91ba0e58dfdf7923c2eba30b8c08f",
+    "04_outputs\\tables\\step5_tuning\\LR_unbalanced_3m_best.json": "a07454365eacaefe8fef8c649b891f12b653dd76f038907ea9b17167ac31ab88",
+    "04_outputs\\tables\\step5_tuning\\RF_balanced_3m_best.json": "a53c6ea678a7ef30e82ad791292d7fbd5bf4d09b93a726ae12af0f4bcd49ee03",
+    "04_outputs\\tables\\step5_tuning\\RF_unbalanced_3m_best.json": "2122b8a36d7a78902aaad3d6f1602f058e507f07f527e0f3922e83c829c522f6",
+    "04_outputs\\tables\\step5_tuning\\XGB_balanced_3m_best.json": "121666c649b68b78fa9962fcd3ad46e12d9d01ba2511947da89befad82a6f245",
+    "04_outputs\\tables\\step5_tuning\\XGB_unbalanced_3m_best.json": "74b7f38dc83198ec66a527460a971abf68b37967f05eb8d1e3abe738c703b4d5"
+  },
+  "n_fits": 120,
+  "n_repeats": 3,
+  "n_splits": 5,
+  "seed": 42,
+  "jobs": 2,
+  "interpretation": "Fixed selected configurations; supplementary partition stability, not nested validation.",
+  "test_accessed": false,
+  "hyperparameters_retuned": false
+}

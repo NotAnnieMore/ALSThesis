@@ -1,0 +1,1042 @@
+[
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "KNN",
+    "resampling": "RUS",
+    "phase": "fold_0",
+    "category": "UserWarning",
+    "message": "Could not find the number of physical cores for the following reason:\n[WinError 2] O sistema n\u00e3o conseguiu localizar o ficheiro especificado\nReturning the number of logical cores instead. You can silence this warning by setting LOKY_MAX_CPU_COUNT to the number of cores you want to use."
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_0",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_0",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_1",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_1",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_2",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_2",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_3",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_3",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_4",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_4",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_5",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_5",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_6",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_6",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_7",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_7",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_8",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_8",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_9",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_9",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_10",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_10",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_11",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_11",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_12",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_12",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_13",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_13",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_14",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_14",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "final_development_fit",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "final_development_fit",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "MLP",
+    "resampling": "None",
+    "phase": "final_development_fit",
+    "category": "ConvergenceWarning",
+    "message": "Stochastic Optimizer: Maximum iterations (1000) reached and the optimization hasn't converged yet."
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_0",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_0",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_1",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_1",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_2",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_2",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_3",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_3",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_4",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_4",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_5",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_5",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_6",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_6",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_7",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_7",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_8",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_8",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_9",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_9",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_10",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_10",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_11",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_11",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_12",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_12",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_13",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_13",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_14",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_14",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "final_development_fit",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "final_development_fit",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_0",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_0",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_1",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_1",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_2",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_2",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_3",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_3",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_4",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_4",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_5",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_5",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_6",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_6",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_7",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_7",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_8",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_8",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_9",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_9",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_10",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_10",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_11",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_11",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_12",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_12",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_13",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_13",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_14",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_14",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "final_development_fit",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "final_development_fit",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_0",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_0",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_1",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_1",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_2",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_2",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_3",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_3",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_4",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_4",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_5",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_5",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_6",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_6",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_7",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_7",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_8",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_8",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_9",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_9",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_10",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_10",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_11",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_11",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_12",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_12",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_13",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_13",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_14",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "fold_14",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "final_development_fit",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "phase": "final_development_fit",
+    "category": "UserWarning",
+    "message": "X does not have valid feature names, but LGBMClassifier was fitted with feature names"
+  }
+]

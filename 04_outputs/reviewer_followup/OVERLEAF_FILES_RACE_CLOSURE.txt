@@ -1,0 +1,7 @@
+Chapters/3-StudyI-Methods.tex
+Chapters/4-StudyI-Results.tex
+Chapters/5-StudyII-Methods.tex
+Chapters/6-StudyII-Results.tex
+Chapters/7-Conclusion.tex
+Chapters/8-Appendices.tex
+images/tables/review_s1_race_sensitivity.tex

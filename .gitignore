@@ -16,6 +16,8 @@ replication/01_data/processed/*
 04_outputs/reports/
 04_outputs/tables/step8_xai/case_study_profiles.csv
 04_outputs/tables/step8_xai/test_predictions.csv
+04_outputs/tables/step8_xai/lime_local_fidelity.csv
+04_outputs/reviewer_followup/revised_analyses/s1_lime_fidelity.csv
 04_outputs/tables/step9_supplementary/error_profile_summary.csv
 replication/03_outputs/step7/step7_*_shap_values.csv
 

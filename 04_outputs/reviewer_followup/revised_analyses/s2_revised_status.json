@@ -1,0 +1,204 @@
+[
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "KNN",
+    "resampling": "RUS",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "NaiveBayes",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "DecisionTree",
+    "resampling": "TomekLinks",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "RandomForest",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "SVM",
+    "resampling": "SMOTEENN",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "MLP",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "bmi_boundary_check",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "KNN",
+    "resampling": "RUS",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "NaiveBayes",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "DecisionTree",
+    "resampling": "TomekLinks",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "RandomForest",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "SVM",
+    "resampling": "SMOTEENN",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "MLP",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "KNN",
+    "resampling": "RUS",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "NaiveBayes",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "DecisionTree",
+    "resampling": "TomekLinks",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "RandomForest",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "SVM",
+    "resampling": "SMOTEENN",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "MLP",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "landmark_18m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "KNN",
+    "resampling": "RUS",
+    "phase": "fold_0",
+    "status": "failed",
+    "traceback": "Traceback (most recent call last):\n  File \"G:\\TESE\\CodigoMain\\replication\\02_scripts\\reviewer_temporal_evaluation.py\", line 156, in main\n    cfg[\"imbalance_technique\"], x[tr], y[tr], x[va], args.jobs)\n  File \"G:\\TESE\\CodigoMain\\replication\\02_scripts\\reviewer_temporal_evaluation.py\", line 57, in fit_predict\n    raise ValueError(\"Non-finite probabilities\")\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"G:\\TESE\\CodigoMain\\replication\\.venv\\Lib\\site-packages\\sklearn\\neighbors\\_classification.py\", line 378, in predict_proba\n    neigh_dist, neigh_ind = self.kneighbors(X)\n                            ^^^^^^^^^^^^^^^^^^\n  File \"G:\\TESE\\CodigoMain\\replication\\.venv\\Lib\\site-packages\\sklearn\\neighbors\\_base.py\", line 847, in kneighbors\n    raise ValueError(\nValueError: Expected n_neighbors <= n_samples_fit, but n_neighbors = 31, n_samples_fit = 22, n_samples = 20\n"
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "NaiveBayes",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "DecisionTree",
+    "resampling": "TomekLinks",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "RandomForest",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "SVM",
+    "resampling": "SMOTEENN",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "MLP",
+    "resampling": "None",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "entry_12m",
+    "classifier": "LightGBM",
+    "resampling": "ROS",
+    "status": "completed",
+    "folds": 15
+  },
+  {
+    "cohort": "landmark_12m",
+    "status": "infeasible_predeclared_validation",
+    "reason": "Fewer than five development cases in an outcome class or single-class TEST."
+  }
+]

@@ -2,11 +2,13 @@
 
 ## Scope
 
-This revision implements textual/documentation corrections and supplementary
-analyses under the original study definitions. It does not replace either primary
-cohort, rerun Optuna, change the original CV schemes, change predictive encodings,
-or replace selected models or operating thresholds. Results remain internal,
-retrospective evaluations, not clinical validation.
+The initial revision implemented textual/documentation corrections and aggregate
+audits under the original study definitions. On 24 October 2026 the author also
+approved categorical-aware LIME, repeated stratified Study I validation without
+Optuna, and Study II temporal/encoding sensitivity. The original primary results
+remain the reference; revised cohorts and conditional prediction tasks are reported
+separately. No new Optuna search, clean-environment reproduction or test-informed
+replacement of the original selected model/threshold was performed.
 
 The pre-revision checkpoint is commit `a3689e7` in the main repository. Revision
 commits and publication status are recorded in the repositories' Git histories.
@@ -34,23 +36,25 @@ Balanced Random Forest technical report use their primary institutional links.
 
 The unsupported count of 23 source trials was removed rather than replaced with
 the current website's trial count, which would not identify this historical extract.
-The original two raster flow diagrams were retained. Their captions now specify
-descriptive cross-horizon comparison, LR explanations, non-clinical review flags,
-both exclusion counts and cohort overlap. Editing those labels inside the images
-remains a separate graphical refinement.
+The two raster flow diagrams retain their original design and dimensions. On
+24 October 2026, their internal labels were brought into agreement with the
+captions: descriptive cross-horizon comparison, LR coefficients, non-clinical
+review flags, both exclusion counts and cohort overlap. The overlap note no
+longer sits on the selection path, and the shared exclusion note has no arrow
+from the six-month cohort. Numerical cohort and split values are unchanged.
 
 ## Main Suggestions
 
 | Report item | Action and evidence |
 | --- | --- |
-| 1. Delayed entry | Audited the final Study II cohort using minus Onset_Delta / 30.44. PRO-ACT defines zero as source-trial onset, so the text calls this an entry-time proxy, not a verified individual enrolment date. Medians: 11.2 months in Short Survivors and 26.1 in Standard Survival. 756/1,328 Standard Survival patients are at or beyond 24 months. Left truncation is named and discussed; no entry-restricted cohort or survival redesign was fitted. |
+| 1. Delayed entry | Audited the onset-to-source-trial-reference proxy, then fitted predeclared 18-/12-month entry restrictions and conditional landmark analyses. At 18 months, entry restriction retains 424 patients; the dated complete-case landmark retains 161, with five test events. LightGBM ROC-AUC changes from reference 0.923 to 0.828 and 0.693, respectively. The 12-month landmark is infeasible for the planned validation. This tests temporal sensitivity, not an isolated causal bias effect or a delayed-entry survival model. |
 | 2. Trial clustering | Both methods/results and the conclusion now distinguish patient separation from source-trial separation. No reliable trial-membership variable was established, and missingness patterns were not asserted to be trial identifiers. No leave-trial-out result is claimed. |
 | 3. Bagging interpretation | Repeated the original 15 development folds with saved baseline parameters, comparing single models with ten-estimator BalancedBagging. All 14 original balanced-accuracy means reproduce to numerical precision. ROC-AUC improves for KNN/DT, is almost unchanged for NB, and falls for RF/SVM/MLP/LightGBM. The ten-configurations versus ten-bags protocol difference is explicit. |
 | 4. Calibration | Reused validated, locally saved test probabilities for all seven selected Study II configurations. Added average precision, Brier scores, means and five-quantile-bin reliability plots. LightGBM+ROS: AP 0.704, Brier 0.1034, mean probability 0.260 versus prevalence 0.116. TreeSHAP's oversampled-model log-odds scale is explicit. No recalibration was used. |
-| 5. Study I CV | Explained the limitations of five unstratified folds, prevalence variation and overlapping CV training samples. No claim of equivalence with a particular sorted/unshuffled KFold partition was adopted. Repeated stratified tuning was not substituted for the original analysis. |
+| 5. Study I CV | Added three repetitions of stratified five-fold CV with saved parameters: 195 six-month and 120 three-month fits. Fold-specific targets/preprocessing remain training-only; TEST was not used. Balanced RF leads at six months (0.422), versus XGBoost 0.414. This is partition stability of selected configurations, not nested validation or a reason to treat 15 overlapping folds as independent tests. |
 | 6. Selection/baseline tables | Added Study I three-month, six-month and six-month-excluded summaries, and Study II complete-case versus incomplete-case summaries. Removed the unsupported inference that attrition alone demonstrates selection for slower progressors. |
-| 7. Encoding | Disclosed numeric median imputation of race indicators. Actual full-DEV medians are one for Caucasian **and Other**, not zero for every non-Caucasian field. Other has only 22 recorded values. The onset-text default was audited: no source record used it in this extract. Riluzole has no time restriction in Study II; exact BMI/age/delay/slope bins are reported without changing fitted features. |
-| 8. Search audit | Checked all 780 six-month and 480 three-month Study I trials: no zero/missing objective, all COMPLETE. Discussed boundary solutions and non-binding LightGBM parameters. Study II's stored aggregate means cannot establish the absence of individual failed folds scored as 0.5; this is now stated. The unused pruner is documented as inactive. |
+| 7. Encoding | Primary Study I race imputation remains disclosed. A DEV-only fixed-parameter sensitivity compares numeric median, explicit recorded states and omission for XGBoost/LR, using 90 fits. Mean AP changes by at most 0.0027 without replacing any primary result or LIME figure. Study II unknown onset text now remains missing; no current record used the old default. Corrected BMI boundaries change two original codes and are evaluated separately. Landmark features use only dated past records, including height and riluzole, and corrected BMI bins; missing dated treatment is no recorded use, not verified absence. The primary replication representation remains explicit. |
+| 8. Search audit | Original Study I trial checks remain unchanged. Historical Study II fold failures cannot be excluded from aggregates. The revised search now logs failures and successful fold metrics, exports trial histories, and stops on errors; the inactive pruner was removed. Supplementary KNN+RUS failure is explicit rather than assigned 0.5. No historical failure-free claim or new search is made. |
 | 9. Reproducibility | Captured both currently inspected runtimes with exact version inventories; documented the lack of a historical freeze and the original row-order/near-tie split caveat. Prepared pinned core requirements, complete snapshots, standalone supplementary analysis scripts and README updates for both study repositories. These do not constitute an independent clean-environment reproduction of the original experiments. |
 | 10. Reporting/literature | Added primary method/staging citations and a retrospective 27-main-item TRIPOD+AI coverage map, explicitly not full compliance or a risk-of-bias certification. Added the author's confirmed absence of dedicated funding/conflicts, planning without public preregistration, and the distinction from the source trials' declarations. |
 
@@ -80,8 +84,10 @@ remains a separate graphical refinement.
   coefficient value-label overlap by replotting saved coefficients, not refitting LR.
 - Masked undefined precision in the original OOF threshold curve. Five fixed-parameter
   DEV fits reproduced the same F1 (0.21), F2 (0.05) and Youden (0.35) choices.
-- LIME's original non-categorical perturbation of binary fields is disclosed, not
-  silently replaced with new explanations or a new concordance result.
+- LIME now samples valid categorical groups and compares original-variable units
+  with grouped SHAP. The original probabilities/cases reproduce. Overlap is
+  5/7/6/7 variables; weighted local R2 ranges from 0.198 to 0.456. The FN surrogate
+  crosses the research threshold, so categorical validity is not treated as fidelity.
 - Added glossary entries for IQR/TRIPOD+AI and a latexmk glossary build rule.
 - The saved SHAP-ranking comparison gives rho=0.389328 and p=0.066321. The thesis's
   p=0.066 was retained; the report's p=0.067 was not copied over it.
@@ -91,7 +97,8 @@ remains a separate graphical refinement.
 `review_validation.json` records active-source checks: no undefined/duplicate
 labels, undefined citations or glossary uses, missing active graphics, or unbalanced
 braces. Existing explicit page-break controls were preserved. Abstract counts,
-including titles and excluding keywords, are 136 EN and 145 PT.
+including titles and excluding keywords, are 138 EN and 147 PT after the temporal
+follow-up was integrated.
 
 The new graph exports were visually inspected. No LaTeX compiler was available in
 the local toolchain; a full Overleaf compilation and pagination check have not been run.
@@ -102,14 +109,36 @@ Exported analysis functions were compared structurally with the canonical source
 the bagging script differs only in standalone paths. This packaging check does not
 constitute an independent reproduction of the primary model development.
 Unused duplicate-label table files remain outside the active input graph; they were
-not deleted. No patient-level predictions or source data are included in this output
-directory. Only aggregate results, figures, input-file hashes and version metadata
-are exported.
+not deleted. Patient-level probability arrays and source data are not part of the
+published outputs. Case-specific fidelity CSVs remain local; the dissertation
+retains its anonymised case-explanation tables and figures. Published numerical
+exports contain aggregate results, input-file hashes and version metadata.
+
+The latest supplementary code, selected parameters, synthetic tests and aggregate
+results were published to the Study I and Study II repositories in commits
+`d66974f` and `d89bc29`. Their standalone paths and test fixtures were checked;
+the aggregate exports match the canonical results. Publication details are in
+`REPOSITORY_SYNC_20261024.md`. This is not a clean-environment study reproduction.
 
 ## Deliberately Not Re-Run
 
-Entry-restricted or delayed-entry survival models, trial-level validation, a changed
-Study I CV design, wider/new Optuna searches, alternative progression target
-percentiles, changed category/race/riluzole encodings, and categorical-aware LIME
-refits are not presented as completed work. These would alter the original design,
-training inputs, or explanations and require a separately agreed analysis plan.
+Delayed-entry survival models retaining censored cases, trial-level validation,
+wider/new Optuna searches, alternative progression target percentiles, replacement
+of the primary Study I race encoding and clean-environment reproduction were not performed. Entry-only
+restrictions and conditional landmarks do not remove all recruitment/missingness
+bias or identify an isolated amount of discrimination attributable to left
+truncation. Detailed results and checks are in `REVISED_ANALYSES_RESULTS.md`.
+
+## Historical Log Search Follow-Up
+
+On 24 October 2026, a read-only search covered the thesis working directories,
+the original Study II directory, seven relevant ZIP archives and one RAR archive.
+No historical Study II fold-failure ledger or persistent Optuna study was found.
+The two local Step 5 result files and the backup in `CodigoMain (4).zip` have the
+same SHA-256 digest. Each contains 70 unique configuration summaries reporting
+50 trials, with no whole-configuration failure row. These checks do not establish
+whether any individual historical fold received the silent AUC-0.5 fallback.
+The existing thesis limitation therefore remains. No model was fitted and no
+primary output was replaced during this search. Search scope and aggregate
+evidence are recorded in `review_s2_historical_log_audit.json` and
+`STUDY2_HISTORICAL_LOG_AUDIT.md`.

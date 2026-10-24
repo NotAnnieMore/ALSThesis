@@ -1,0 +1,6 @@
+cohort,n,short,n_train,train_short,n_test,test_short,test_prevalence,changed_bmi_codes,same_patients_and_partitions,entry_proxy_max_month,predictors_restricted_in_time,interpretation,eligible_alive_and_observed,complete_timed_cases,dropped_for_missing_or_invalid_predictors,no_known_riluzole_record,prediction_month,last_outcome_month,predictor_dates_bounded,riluzole_definition
+bmi_boundary_check,1502,174,1201,139,301,35,0.11627906976744186,2.0,True,,,,,,,,,,,
+entry_18m,424,165,333,131,91,34,0.37362637362637363,,,18.0,False,Entry-only sensitivity; retrospective features retained.,,,,,,,,
+landmark_18m,161,38,128,33,33,5,0.15151515151515152,,,,,,344.0,161.0,183.0,174.0,18.0,24.0,True,Any recorded Yes at/before landmark; absence of a known record coded as no recorded use.
+entry_12m,124,104,96,82,28,22,0.7857142857142857,,,12.0,False,Entry-only sensitivity; retrospective features retained.,,,,,,,,
+landmark_12m,41,37,32,29,9,8,0.8888888888888888,,,,,,106.0,41.0,65.0,56.0,12.0,24.0,True,Any recorded Yes at/before landmark; absence of a known record coded as no recorded use.

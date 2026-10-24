@@ -1,4 +1,4 @@
-﻿\chapter{Survival Prognosis Replication: Results and Discussion}
+﻿﻿\chapter{Survival Prognosis Replication: Results and Discussion}
 \label{ch:study2_results}
 
 This chapter presents and discusses the results of Study~II. It begins with the final cohort and model-selection results, followed by held-out test performance and threshold analysis. The later sections examine the BalancedBagging comparison, interpret the selected models using SHAP, and discuss the main limitations and clinical implications.
@@ -155,14 +155,14 @@ This is an example of ROC-AUC and operating-point performance becoming decoupled
 
 The precision--recall curves in Figure~\ref{fig:s2_pr} provide a second threshold-free view. MLP reached an average precision of 0.669, compared with 0.704 for LightGBM+ROS and 0.595 for SVM+SMOTEENN. Its ranking signal was therefore not absent. The confusion matrix, rather than the precision--recall curve, shows the consequence of applying the 0.50 threshold.
 
-\clearpage
+
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.97\linewidth]{images/figures/fig_confusion_matrices.png}
   \caption[Confusion matrices for three highlighted classifiers]{Confusion matrices on the held-out test set for the three classifiers highlighted in the text. LightGBM+ROS and SVM+SMOTEENN correctly identify the majority of Short Survivors (TP), whereas MLP+None misses 34 of the 35 Short Survivors.}
   \label{fig:s2_cm}
 \end{figure}
-
+\clearpage
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=0.80\linewidth]{images/figures/fig_pr_curves.png}
@@ -256,7 +256,7 @@ These tests describe the consistency of the paired differences within the repeat
 % ============================================================
 
 Table~\ref{tab:s2_comparison} summarises the main methodological differences between the reference study and Study~II. The comparison is not exact: although both studies use the same survival definition and predictor set, they differ in cohort size, model-selection objective, search procedure, and implementation of the balanced ensemble.
-\clearpage
+
 \begin{table}[ht!]
   \centering
   \caption[Comparison with Papaiz et al.\ (2024)]{Methodological comparison between Papaiz et al.~\cite{Papaiz2024} and Study~II. \textsuperscript{a}The reported values correspond to different evaluation stages and are not directly comparable.}
@@ -318,6 +318,20 @@ Across all 23 features, the rank correlation between the two importance lists wa
 The distributions of the two leading LightGBM features are consistent with these attributions. Among Short Survivors, 66.7\% had a diagnostic delay of at most eight months, compared with 28.1\% of Standard Survival patients. Rapid Q8 walking decline occurred in 47.7\% and 5.0\% of the two groups, respectively. These summaries use the same cohort as the modelling analysis and are descriptive rather than independent support for the SHAP findings; the complete figure is provided in Appendix~\ref{app:study2_feature_distributions}.
 
 % ============================================================
+\section{Temporal and Encoding Sensitivity}
+\label{sec:s2r_temporal_sensitivity}
+
+The supplementary analyses retain the preceding results as the replication reference rather than replacing them. Correcting BMI boundaries changes two coded values in the 1,502-patient cohort. LightGBM and MLP retain their reported ROC-AUC and native confusion matrices at the displayed precision, so this correction does not explain their original contrast.
+
+Restricting the entry-time proxy to at most 18 months leaves 424 participants, including 165 Short Survivors. Under the original assignments, 91 remain in TEST, of whom 34 are Short Survivors. With the saved configurations refitted, LightGBM+ROS obtains ROC-AUC 0.828 (95\% CI: $[0.728,0.910]$), sensitivity 0.706 and specificity 0.789. MLP obtains ROC-AUC 0.823, sensitivity 0.735 and specificity 0.860. The original 0.923/0.918 ranking estimates therefore do not persist unchanged in the earlier-entry population. The smaller difference between the models' native sensitivities also shows that the original MLP operating-point failure is not a fixed property of that classifier family.
+
+The time-bounded 18-month landmark asks a different question: death between months 18 and 24 among patients alive and observed at month 18. Of 344 initially eligible participants, only 161 retain complete predictors under the date restrictions. TEST contains 33 participants and five subsequent deaths. LightGBM+ROS reaches ROC-AUC 0.693 ($[0.507,0.863]$) and detects three deaths; MLP reaches 0.764 ($[0.600,0.910]$) and detects two. These are small, uncertain estimates, not a basis for selecting a new best model. Both models detect all five deaths at their development-derived sensitivity thresholds, but specificity falls to 0.321 for LightGBM and 0.107 for MLP.
+
+The 12-month entry restriction is less informative than its average precision might suggest. Its test set contains 22 Short Survivors among only 28 patients, giving an AP reference prevalence of 0.786. LightGBM obtains ROC-AUC 0.576 despite AP 0.841; MLP obtains 0.765 and 0.941 but classifies every test patient as Short at its native rule. KNN+RUS is infeasible because one training fold has only 22 observations after undersampling for a fixed $k=31$. The dated 12-month landmark leaves 41 complete cases, only four without a subsequent death by month 24, and cannot support the planned five-fold comparison. Neither case was assigned a fallback score.
+
+These contrasts show that the performance claim depends on when patients are observed and which measurements are permitted. They do not isolate a numerical amount of left-truncation bias: restriction changes the participants, class balance and fitted models, while landmarking also changes the prediction question. Tables~\ref{tab:review_s2_timed_cohorts}--\ref{tab:review_s2_landmark18} and Figure~\ref{fig:review_s2_timing_sensitivity} report the full comparisons.
+
+% ============================================================
 \section{Clinical Interpretation and Scope}
 \label{sec:s2r_clinical}
 % ============================================================
@@ -345,11 +359,13 @@ Training and test patients can also share a source trial. The split does not iso
 
 The fixed 24-month binary target simplifies censoring. Patients alive with less than 24 months of observed follow-up were excluded because their class was unresolved, while patients known to survive beyond 24 months were assigned to Standard Survival regardless of what occurred later. This is consistent with the replication target, but it discards information about survival beyond the boundary and may select for patients with sufficiently long recorded follow-up. A time-to-event analysis could retain censored observations and address a different, more detailed prognostic question.
 
-Left truncation is separate from censoring and from post-diagnosis predictor timing. The median onset-to-trial-reference interval is 11.2 months in Short Survivors and 26.1 months in Standard Survival patients; 756 of 1,328 Standard Survival patients (56.9\%) are already at or beyond 24 months at the reference day. Surviving to entry thus partly constrains the class before the model is fitted. The ROC-AUC describes retrospective classification in this selected sample, not an unbiased estimate of prognosis from symptom onset. The audit does not quantify how much discrimination is attributable to entry timing. That would require an entry-restricted analysis or a survival model with delayed entry, neither of which was fitted here.
+Left truncation is separate from censoring and from post-diagnosis predictor timing. The median onset-to-trial-reference interval is 11.2 months in Short Survivors and 26.1 months in Standard Survival patients; 756 of 1,328 Standard Survival patients (56.9\%) are already at or beyond 24 months at the reference day. Surviving to entry thus partly constrains the class before the model is fitted. The lower discrimination under entry restriction reinforces the limited scope of the original ROC-AUC. Landmarking makes predictor timing explicit and targets conditional future risk, but its complete-case selection and five test events do not establish unbiased prognosis in the wider ALS population. No delayed-entry survival model or trial-level validation was fitted.
 
 Temporal alignment is a substantive limitation. The closest-record rule selected post-diagnosis measurements for 1,496 ALSFRS assessments, 1,492 FVC assessments, and 1,494 weight records in the 1,502-patient cohort. Median offsets were 314, 310.5, and 311 days. Only five patients had selected records at or before diagnosis for all three sources, so a strict pre-diagnosis analysis is not supported by this extract. The fitted models must not be interpreted as tools for use at the diagnosis encounter.
 
 The feature representation was inherited to preserve comparison with the reference study. Continuous measurements were reduced to broad ordinal or binary categories, which removes within-category variation and makes the chosen cut-offs part of the model definition. In the final implementation, MinMax scaling is fitted after the train/test split and separately within each cross-validation fold. Every predictor had the same minimum and maximum in the complete cohort, training partition, and all 15 fold-training samples. The corrected train and test matrices were therefore identical to the previous matrices (maximum absolute difference 0), and the held-out metrics and confusion matrices did not change.
+
+The historical search also has an audit limit: its aggregate exports cannot establish whether a failed fold ever received the original ROC-AUC fallback of 0.5. The revised code stops and records errors, but this does not retrospectively verify the selected configurations (Section~\ref{subsec:s2_optuna}). The new temporal fits have explicit failure and warning records; the primary searches were not repeated.
 
 Finally, the statistical comparisons do not constitute independent confirmation. Repeated cross-validation folds overlap in their training observations, and the Wilcoxon tests treat the 15 paired fold results as the comparison units. The resulting adjusted $p$-values describe consistency within this resampling design. External validation, preferably with prospectively defined thresholds and a prespecified clinical objective, would be required before drawing conclusions about real-world performance.
 
@@ -363,6 +379,8 @@ Study~II reproduced the main qualitative BalancedBagging pattern reported by Pap
 Selection by mean ROC-AUC retained configurations with similar ranking performance but very different behaviour at the default threshold. On the held-out test set, LightGBM+ROS provided the strongest balance at 0.50, with ROC-AUC 0.923, sensitivity 0.857, and specificity 0.831. The MLP reached ROC-AUC 0.918 but identified only one of 35 Short Survivors. Applying the sensitivity-constrained threshold selected from OOF predictions raised its test sensitivity to 0.771 while retaining specificity of 0.883. The discrepancy was therefore largely tied to the operating point rather than to an absence of ranking signal.
 
 Both SHAP analyses ranked diagnostic delay first and placed several ALSFRS-R slopes among the leading predictors. Agreement across the complete feature rankings was only moderate, and the explanations remain descriptions of fitted-model behaviour. The complete-case cohort, mostly post-diagnosis predictors, small minority-class test sample, onset-based target, and absence of external validation limit any clinical interpretation.
+
+The temporal analyses narrow the performance claim further. Earlier-entry discrimination is lower, and enforcing a common prediction time leaves much smaller complete-case cohorts. The original results remain a retrospective replication reference; the revised tasks do not support diagnosis-time or clinical deployment claims.
 
 The main contribution of Study~II is consequently methodological. It shows why a replication claim must distinguish common findings from protocol changes, and why imbalance handling, ranking metrics, threshold selection, uncertainty, and model explanations must be examined together before performance can be interpreted.
 

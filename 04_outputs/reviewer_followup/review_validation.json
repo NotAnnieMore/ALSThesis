@@ -1,18 +1,69 @@
 {
-  "active_tex_files": 34,
-  "labels": 271,
-  "citations": 47,
+  "active_tex_files": 40,
+  "labels": 285,
+  "citations": 49,
   "glossary_uses": 47,
   "abstract_words": {
     "EN": {
-      "body": 122,
-      "with_title": 136
+      "body": 124,
+      "with_title": 138
     },
     "PT": {
-      "body": 127,
-      "with_title": 145
+      "body": 129,
+      "with_title": 147
     }
   },
+  "page_controls": {
+    "overleaf/Chapters/1-Introduction.tex": {
+      "\\clearpage": 0,
+      "\\cleardoublepage": 0,
+      "\\newpage": 0,
+      "\\break": 0
+    },
+    "overleaf/Chapters/2-State of the Art.tex": {
+      "\\clearpage": 3,
+      "\\cleardoublepage": 0,
+      "\\newpage": 0,
+      "\\break": 0
+    },
+    "overleaf/Chapters/3-StudyI-Methods.tex": {
+      "\\clearpage": 3,
+      "\\cleardoublepage": 0,
+      "\\newpage": 0,
+      "\\break": 0
+    },
+    "overleaf/Chapters/4-StudyI-Results.tex": {
+      "\\clearpage": 6,
+      "\\cleardoublepage": 0,
+      "\\newpage": 4,
+      "\\break": 3
+    },
+    "overleaf/Chapters/5-StudyII-Methods.tex": {
+      "\\clearpage": 0,
+      "\\cleardoublepage": 0,
+      "\\newpage": 0,
+      "\\break": 0
+    },
+    "overleaf/Chapters/6-StudyII-Results.tex": {
+      "\\clearpage": 5,
+      "\\cleardoublepage": 0,
+      "\\newpage": 0,
+      "\\break": 0
+    },
+    "overleaf/Chapters/7-Conclusion.tex": {
+      "\\clearpage": 0,
+      "\\cleardoublepage": 0,
+      "\\newpage": 0,
+      "\\break": 0
+    },
+    "overleaf/Chapters/8-Appendices.tex": {
+      "\\clearpage": 9,
+      "\\cleardoublepage": 0,
+      "\\newpage": 2,
+      "\\break": 1
+    }
+  },
+  "page_controls_checked_against_snapshot": true,
   "bagging_original_balanced_accuracy_reproduced": true,
   "note": "Static source checks, not a LaTeX compilation or pagination check."
 }

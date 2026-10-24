@@ -265,8 +265,19 @@ The exploratory Wilcoxon comparisons are reported in Appendix~\ref{app:stats}. T
 
 Unbalanced XGBoost remains the selected configuration because it has the highest mean cross-validated PR-AUC under the prespecified selection criterion. Its advantage over unbalanced Random Forest is only 0.003, and the statistical analysis does not establish that this difference is systematic. The selection should therefore be understood as a reproducible ranking decision within this development dataset, rather than evidence that XGBoost is intrinsically superior to the other leading models.
 
+\subsection{Repeated Stratified Stability Check}
+\label{subsec:results_repeated_stability}
+
+The supplementary fixed-parameter check changes the ordering of the leading configurations. Across three repetitions of stratified five-fold validation, balanced Random Forest obtains six-month PR-AUC $0.422\pm0.034$, followed by unbalanced Random Forest ($0.415\pm0.039$) and unbalanced XGBoost ($0.414\pm0.033$). The dispersion is again larger than the leading mean differences. At three months, unbalanced XGBoost has the highest repeated mean ($0.416\pm0.034$), rather than its balanced counterpart. These results show that the original top-ranked configuration is not stable to the validation partition; they do not establish a new universally preferable model. The original XGBoost selection, TEST predictions and threshold are retained. Appendix~\ref{app:review_s1_repeated} summarises the 315 fixed-parameter fits.
+
 
 % ============================================================
+\subsection{Race-Encoding Sensitivity}
+\label{subsec:results_race_sensitivity}
+
+Changing the treatment of the seven race indicators has little effect on mean development ranking in the fixed-parameter comparison. Across the same 15 validation folds, XGBoost PR-AUC is 0.414 with numeric median imputation, 0.416 with explicit recording states, and 0.417 without the indicators. Balanced LR remains at approximately 0.397 in all three conditions. These small mean differences do not validate the original encoding or establish that race is uninformative. They show limited sensitivity of these two configurations' ranking scores under the tested representations. The full results and recording audit are in Appendix~\ref{app:review_s1_race}; no TEST result, selected threshold or primary explanation is replaced.
+
+
 \section{Threshold Optimisation}
 \label{sec:results_threshold_xgb}
 % ============================================================
@@ -497,11 +508,11 @@ The case illustrates that the baseline profile can appear insufficiently suggest
 \clearpage
 \phantomsection\label{subsec:results_lime}
 \noindent\textbf{LIME local explanations.}
-LIME was applied to the same four subjects, using 2{,}000 perturbations per case to fit a sparse local surrogate. The resulting explanations provide a methodologically different view of the same predictions; the four plots are presented in Appendix~\ref{app:local_lime}.
+Categorical-aware LIME was applied to the same four subjects using 2{,}000 perturbations per case. The XGBoost probabilities were unchanged, but the local surrogates explain them only approximately: weighted $R^2$ ranges from 0.198 to 0.456. For the false negative, the surrogate probability is 0.247 against the classifier's 0.169, crossing the exploratory threshold of 0.21. Its bars should therefore not be read as an exact reconstruction of the negative classification. Appendix~\ref{app:local_lime} presents the four plots and fidelity checks.
 
 \phantomsection\label{subsec:results_concordance}
 \noindent\textbf{SHAP--LIME concordance.}
-The top-ten SHAP and LIME rankings share five to seven features across the four cases, corresponding to an overlap of 50--70\%. ALSFRS-R appears in every shared set, while age, FVC, respiratory rate, pulse, BMI, and temperature recur in individual cases. The remaining differences reflect what each method measures: TreeSHAP attributes the fitted tree model's output, whereas LIME approximates its decision surface around perturbed observations. The comparison is therefore descriptive agreement, not validation of either explanation. Appendix~\ref{app:local_concordance} reports the shared features for each case.
+Using original-variable groups for both methods, the top-ten rankings share five, seven, six and seven variables for TP, FP, FN and TN, respectively. ALSFRS-R appears in every shared set; respiratory rate, FVC, age, BMI and temperature recur across cases. TreeSHAP attributes the fitted tree model's output, whereas LIME approximates its decision surface around sampled neighbours. The 50--70\% overlap is descriptive agreement, not a fidelity check or validation of either explanation. Appendix~\ref{app:local_concordance} reports the shared variables.
 
 % ------------------------------------------------------------
 \subsection{Logistic Regression Coefficients}
@@ -527,7 +538,7 @@ Numeric features are standardised prior to fitting, whereas one-hot encoded indi
 
 \noindent Functional status and respiratory measurements therefore recur in both the linear and non-linear models, although their exact ranking differs.
 Age ($\beta = +0.076$), the Black/African-American race indicator ($\beta = -0.064$), study-arm assignment ($\beta = -0.062$), FVC percentage of normal ($\beta = -0.052$), temperature ($\beta = -0.050$), and pulse ($\beta = +0.045$) also appear among the larger Logistic Regression coefficients.
-The race coefficient must be read alongside the sparse, median-imputed indicator coding described in Section~\ref{sec:methods_preprocessing}; it is not a biological interpretation of race.
+The race coefficient must be read alongside the sparse, median-imputed indicator coding described in Section~\ref{sec:methods_preprocessing}; it is not a biological interpretation of race. The explicit-state sensitivity in Appendix~\ref{app:review_s1_race} does not retain a non-zero race coefficient under the fixed LR penalty, despite similar ranking performance.
 Of the 42 transformed coefficients, 25 are exactly zero under the selected $\ell_1$ penalty. A zero coefficient does not establish that a variable is uninformative when predictors are correlated or sparsely recorded.
 
 \subsection{Summary of Explainability Findings}
@@ -535,7 +546,7 @@ Of the 42 transformed coefficients, 25 are exactly zero under the selected $\ell
 
 Baseline ALSFRS-R carries the largest global SHAP importance and the largest absolute Logistic Regression coefficient. FVC and respiratory rate also recur in both models and in several local explanations, while age, pulse, and temperature provide smaller predictive signals. The agreement across model families is strongest for baseline function and respiratory status rather than for every individual feature.
 
-The local cases show why this agreement does not make each prediction reliable. For the selected false negative, several baseline measurements push the probability below the threshold even though the participant later meets the rapid-progression definition. SHAP and LIME share 50--70\% of their ten highest-ranked features across the four cases, but their differences remain relevant because the methods explain the prediction in different ways.
+The local cases show why recognisable variables do not make each prediction reliable. The selected false negative later meets the rapid-progression definition, but its XGBoost probability remains below the threshold. Categorical-aware LIME shares 50--70\% of its ten leading variables with grouped SHAP, yet its imperfect local fit can even place that case on the other side of the threshold. The two methods are not interchangeable explanations of the classification rule.
 
 
 % ============================================================
